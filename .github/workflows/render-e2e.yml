@@ -31,9 +31,9 @@ jobs:
       - name: Enable Corepack
         run: corepack enable
 
-      # Unlike the default `verify` job, this job allows the bundled-binary
-      # build scripts (ffmpeg-static is allowlisted via pnpm.onlyBuiltDependencies)
-      # so real rendering can be exercised. The default suite stays binary-free.
+      # Unlike the default `verify` job, this job allows the reviewed
+      # ffmpeg-static build script through pnpm-workspace.yaml so real rendering
+      # can be exercised. The default suite stays binary-free.
       - name: Install dependencies (allow bundled binary builds)
         run: corepack pnpm install --frozen-lockfile
 
