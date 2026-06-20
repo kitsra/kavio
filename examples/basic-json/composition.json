@@ -1,0 +1,134 @@
+{
+  "version": "0.1",
+  "composition": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationFrames": 240,
+    "background": "#000000"
+  },
+  "props": {
+    "headline": {
+      "type": "string",
+      "default": "New collection is live",
+      "maxLength": 80
+    },
+    "clipUrl": {
+      "type": "url",
+      "required": true
+    },
+    "logoUrl": {
+      "type": "url",
+      "required": true
+    }
+  },
+  "assets": {
+    "mainClip": {
+      "type": "video",
+      "src": "{{clipUrl}}"
+    },
+    "logo": {
+      "type": "image",
+      "src": "{{logoUrl}}"
+    }
+  },
+  "layers": [
+    {
+      "id": "background-video",
+      "type": "video",
+      "asset": "mainClip",
+      "startFrame": 0,
+      "durationFrames": 240,
+      "fit": "cover",
+      "crop": {
+        "mode": "subject",
+        "x": 0.48,
+        "y": 0.44,
+        "keyframes": [
+          {
+            "frame": 0,
+            "x": 0.42,
+            "y": 0.44
+          },
+          {
+            "frame": 120,
+            "x": 0.58,
+            "y": 0.46
+          }
+        ],
+        "source": "manual"
+      }
+    },
+    {
+      "id": "headline",
+      "type": "text",
+      "text": "{{headline}}",
+      "startFrame": 20,
+      "durationFrames": 100,
+      "position": {
+        "x": 540,
+        "y": 360
+      },
+      "anchor": "center",
+      "style": {
+        "fontFamily": "Inter",
+        "fontSize": 72,
+        "fontWeight": 800,
+        "color": "#FFFFFF",
+        "align": "center"
+      }
+    }
+  ],
+  "audio": [],
+  "exports": [
+    {
+      "name": "instagram-reels-9x16",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "name": "tiktok-9x16",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "name": "youtube-shorts-9x16",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "name": "facebook-reels-9x16",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1920
+    },
+    {
+      "name": "square-1x1",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1080
+    },
+    {
+      "name": "portrait-4x5",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1350
+    },
+    {
+      "name": "landscape-16x9",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1920,
+      "height": 1080
+    }
+  ]
+}

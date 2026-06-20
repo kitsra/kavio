@@ -1,0 +1,186 @@
+{
+  "version": "0.1",
+  "metadata": {
+    "title": "Browser renderer fixed-frame fixture",
+    "tags": ["visual-fixture", "browser-renderer", "fixed-frame"]
+  },
+  "composition": {
+    "width": 640,
+    "height": 360,
+    "fps": 24,
+    "durationFrames": 48,
+    "background": "#111827"
+  },
+  "assets": {
+    "fixture-poster": {
+      "type": "image",
+      "src": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E"
+    }
+  },
+  "layers": [
+    {
+      "id": "background-matte",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 0,
+      "durationFrames": 48,
+      "position": { "x": 0, "y": 0 },
+      "size": { "width": "100%w", "height": "100%h" },
+      "fill": "#0f172a",
+      "z": 0
+    },
+    {
+      "id": "motion-panel",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 0,
+      "durationFrames": 48,
+      "position": { "x": 80, "y": 68 },
+      "anchor": "top-left",
+      "size": { "width": 220, "height": 128 },
+      "opacity": 0.86,
+      "rotation": -3,
+      "scale": 1,
+      "keyframes": {
+        "x": [
+          { "frame": 0, "value": 80 },
+          { "frame": 24, "value": 112, "easing": "outQuad" },
+          { "frame": 47, "value": 128, "easing": "inOutQuad" }
+        ],
+        "rotation": [
+          { "frame": 0, "value": -3 },
+          { "frame": 24, "value": 2 },
+          { "frame": 47, "value": 5 }
+        ],
+        "scale": [
+          { "frame": 0, "value": 1 },
+          { "frame": 24, "value": 1.08 },
+          { "frame": 47, "value": 0.96 }
+        ]
+      },
+      "fill": "#2563eb",
+      "stroke": { "color": "#bfdbfe", "width": 3 },
+      "radius": 18,
+      "z": 1
+    },
+    {
+      "id": "poster-card",
+      "type": "image",
+      "asset": "fixture-poster",
+      "fit": "contain",
+      "startFrame": 0,
+      "durationFrames": 48,
+      "position": { "x": 430, "y": 92 },
+      "anchor": "center",
+      "size": { "width": 180 },
+      "opacity": 0.95,
+      "z": 2
+    },
+    {
+      "id": "headline",
+      "type": "text",
+      "text": "Fixed Frames\nStay Boring",
+      "startFrame": 8,
+      "durationFrames": 32,
+      "position": { "x": "50%w", "y": "43%h" },
+      "anchor": "center",
+      "size": { "width": 360, "height": 116 },
+      "keyframes": {
+        "opacity": [
+          { "frame": 0, "value": 0 },
+          { "frame": 8, "value": 1, "easing": "outQuad" },
+          { "frame": 31, "value": 0.3 }
+        ],
+        "y": [
+          { "frame": 0, "value": 180 },
+          { "frame": 8, "value": 154.8, "easing": "outBack" },
+          { "frame": 31, "value": 150 }
+        ]
+      },
+      "style": {
+        "fontFamily": "sans-serif",
+        "fontSize": 38,
+        "fontWeight": 800,
+        "color": "#f8fafc",
+        "align": "center",
+        "lineHeight": 1.05,
+        "letterSpacing": 0.4,
+        "maxLines": 2,
+        "wrap": true,
+        "background": "#111827cc",
+        "padding": 10,
+        "stroke": { "color": "#020617", "width": 1 },
+        "shadow": { "color": "#020617", "x": 0, "y": 3, "blur": 8 }
+      },
+      "z": 3
+    },
+    {
+      "id": "caption-track",
+      "type": "caption",
+      "startFrame": 0,
+      "durationFrames": 48,
+      "source": {
+        "kind": "inline",
+        "cues": [
+          {
+            "startFrame": 0,
+            "endFrame": 16,
+            "text": "First fixed frame",
+            "words": [
+              { "startFrame": 0, "endFrame": 5, "text": "First" },
+              { "startFrame": 5, "endFrame": 10, "text": "fixed" },
+              { "startFrame": 10, "endFrame": 16, "text": "frame" }
+            ]
+          },
+          {
+            "startFrame": 16,
+            "endFrame": 36,
+            "text": "Middle parity frame",
+            "words": [
+              { "startFrame": 16, "endFrame": 22, "text": "Middle" },
+              { "startFrame": 22, "endFrame": 29, "text": "parity" },
+              { "startFrame": 29, "endFrame": 36, "text": "frame" }
+            ]
+          },
+          {
+            "startFrame": 36,
+            "endFrame": 48,
+            "text": "Final golden frame",
+            "words": [
+              { "startFrame": 36, "endFrame": 40, "text": "Final" },
+              { "startFrame": 40, "endFrame": 44, "text": "golden" },
+              { "startFrame": 44, "endFrame": 48, "text": "frame" }
+            ]
+          }
+        ]
+      },
+      "style": {
+        "fontFamily": "sans-serif",
+        "fontSize": 24,
+        "fontWeight": 700,
+        "color": "#e5e7eb",
+        "align": "center",
+        "lineHeight": 1.15,
+        "maxCharsPerLine": 18,
+        "maxLines": 2,
+        "highlight": {
+          "mode": "word",
+          "color": "#facc15",
+          "scale": 1.08
+        }
+      },
+      "safeArea": "bottom",
+      "z": 4
+    }
+  ],
+  "exports": [
+    {
+      "name": "golden-sequence",
+      "format": "png-sequence",
+      "width": 640,
+      "height": 360,
+      "fps": 24,
+      "background": "#111827"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "name": "@kavio/mcp",
+  "version": "0.0.0",
+  "description": "Model Context Protocol server and provider tool adapters for Kavio.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": { "kavio-mcp": "./dist/bin.js" },
+  "dependencies": {
+    "@kavio/builder": "workspace:*",
+    "@kavio/core": "workspace:*",
+    "@kavio/render": "workspace:*",
+    "@kavio/render-worker": "workspace:*",
+    "@kavio/schema": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.25.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.tsbuildinfo"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json && node --test test/*.test.mjs"
+  }
+}

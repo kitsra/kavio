@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title desc">
+  <title id="title">Kavio Frame Stack icon</title>
+  <desc id="desc">A compact video frame with a play cue and timeline base.</desc>
+  <rect width="96" height="96" rx="22" fill="#111611"/>
+  <rect x="22" y="25" width="52" height="38" rx="8" fill="none" stroke="#fbfaf5" stroke-width="8"/>
+  <path d="M40 39.5v10.8L53.5 45z" fill="#d79b36"/>
+  <path d="M24 72h48" stroke="#60bfd0" stroke-width="8" stroke-linecap="round"/>
+  <path d="M58 72h14" stroke="#db614d" stroke-width="8" stroke-linecap="round"/>
+</svg>

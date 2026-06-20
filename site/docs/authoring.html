@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio Template Authoring</title>
+    <meta
+      name="description"
+      content="Author Kavio templates with props, assets, layers, exports, animation, and the TypeScript builder SDK."
+    />
+    <meta property="og:title" content="Kavio Template Authoring" />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="../index.html" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="../project.html">Project</a>
+        <a href="../docs.html" aria-current="page">Docs</a>
+        <a href="../examples.html">Examples</a>
+        <a href="../packages.html">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Docs</p>
+        <h1>Author reusable video templates.</h1>
+        <p>
+          Kavio templates can be written directly as JSON or emitted through the
+          TypeScript builder SDK. Both paths produce canonical composition data.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Template Checklist</h2>
+        <ul class="check-list">
+          <li>Declare props with type, defaults, required flags, and validation metadata.</li>
+          <li>Reference props with double braces, for example <code>{{headline}}</code>.</li>
+          <li>Use named assets so layer definitions stay stable and reusable.</li>
+          <li>Give layers clear ids that survive debugging, preview, and export overrides.</li>
+          <li>Define export presets for the aspect ratios and codecs you intend to support.</li>
+          <li>Keep generated outputs out of version control unless they are intentional fixtures.</li>
+        </ul>
+      </section>
+
+      <section class="content-section">
+        <h2>Builder SDK Shape</h2>
+        <p>The builder creates the same composition shape as raw JSON while giving TypeScript projects typed helpers.</p>
+        <pre><code>import { asset, clip, exportPreset, prop, text, video } from "@kavio/builder";
+
+const headline = prop("headline", {
+  type: "string",
+  default: "New collection is live",
+  maxLength: 80
+});
+
+const composition = video({
+  width: 1080,
+  height: 1920,
+  fps: 30,
+  durationFrames: 240,
+  background: "#000000"
+});
+
+composition
+  .props(headline)
+  .assets(asset.video("mainClip", prop("clipUrl", { type: "url", required: true })))
+  .add(
+    clip("background-video", { asset: "mainClip", startFrame: 0, durationFrames: 240, fit: "cover" }),
+    text("headline", { text: headline, startFrame: 20, durationFrames: 100 })
+  )
+  .exports(exportPreset.reels());</code></pre>
+      </section>
+
+      <section class="content-section">
+        <h2>Animation</h2>
+        <p>
+          Kavio supports timeline-safe motion through frame-based timing,
+          keyframes, easing, captions, and layout-aware layer fields. Prefer
+          animation that remains valid across export aspect ratios.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="../docs.html">Docs</a>
+      <a href="../examples.html">Examples</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+  </body>
+</html>

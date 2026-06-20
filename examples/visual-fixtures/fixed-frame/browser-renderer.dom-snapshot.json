@@ -1,0 +1,3355 @@
+{
+  "composition": {
+    "background": "#111827",
+    "durationFrames": 48,
+    "fps": 24,
+    "height": 360,
+    "width": 640
+  },
+  "description": "Stable browser-renderer frames covering shape, image, text, caption, keyframe, and safe-area output.",
+  "frames": [
+    {
+      "frame": 0,
+      "height": 360,
+      "layers": [
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "background-matte",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#0f172a",
+              "border": "0 solid transparent",
+              "borderRadius": "0",
+              "boxSizing": "border-box",
+              "height": "360px",
+              "left": "0px",
+              "opacity": "1",
+              "position": "absolute",
+              "top": "0px",
+              "transform": "translate(0%, 0%) rotate(0deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "640px",
+              "zIndex": "0"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": 0,
+              "y": 0
+            },
+            "id": "background-matte",
+            "localFrame": 0,
+            "opacity": 1,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": 360,
+              "width": 640
+            },
+            "topLeft": {
+              "x": 0,
+              "y": 0
+            },
+            "type": "shape",
+            "visible": true
+          },
+          "id": "background-matte",
+          "localFrame": 0,
+          "type": "shape"
+        },
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "motion-panel",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#2563eb",
+              "border": "3px solid #bfdbfe",
+              "borderRadius": "18px",
+              "boxSizing": "border-box",
+              "height": "128px",
+              "left": "80px",
+              "opacity": "0.86",
+              "position": "absolute",
+              "top": "68px",
+              "transform": "translate(0%, 0%) rotate(-3deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "220px",
+              "zIndex": "1"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": 0,
+              "y": 0
+            },
+            "id": "motion-panel",
+            "localFrame": 0,
+            "opacity": 0.86,
+            "position": {
+              "x": 80,
+              "y": 68
+            },
+            "rotation": -3,
+            "scale": 1,
+            "size": {
+              "height": 128,
+              "width": 220
+            },
+            "topLeft": {
+              "x": 80,
+              "y": 68
+            },
+            "type": "shape",
+            "visible": true
+          },
+          "id": "motion-panel",
+          "localFrame": 0,
+          "type": "shape"
+        },
+        {
+          "element": {
+            "children": [
+              {
+                "children": [],
+                "dataset": {},
+                "nodeType": "element",
+                "style": {
+                  "display": "block",
+                  "height": "100%",
+                  "objectFit": "contain",
+                  "objectPosition": "center center",
+                  "pointerEvents": "none",
+                  "userSelect": "none",
+                  "width": "100%"
+                },
+                "tagName": "img",
+                "textContent": ""
+              }
+            ],
+            "dataset": {
+              "kavioAsset": "fixture-poster",
+              "kavioFit": "contain",
+              "kavioLayerId": "poster-card",
+              "kavioLayerType": "image"
+            },
+            "nodeType": "element",
+            "style": {
+              "boxSizing": "border-box",
+              "height": "90px",
+              "left": "430px",
+              "opacity": "0.95",
+              "overflow": "hidden",
+              "position": "absolute",
+              "top": "92px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "width": "180px",
+              "zIndex": "2"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "anchorOffset": {
+              "x": 90,
+              "y": null
+            },
+            "id": "poster-card",
+            "localFrame": 0,
+            "opacity": 0.95,
+            "position": {
+              "x": 430,
+              "y": 92
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": null,
+              "width": 180
+            },
+            "topLeft": {
+              "x": 340,
+              "y": null
+            },
+            "type": "image",
+            "visible": true
+          },
+          "id": "poster-card",
+          "localFrame": 0,
+          "type": "image"
+        },
+        {
+          "element": {
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordActive": "true",
+                  "kavioCaptionWordIndex": "0",
+                  "kavioCaptionWordState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "color": "#facc15",
+                  "display": "inline-block",
+                  "transform": "scale(1.08)",
+                  "transformOrigin": "center"
+                },
+                "tagName": "span",
+                "textContent": "First"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "1",
+                  "kavioCaptionWordState": "pending"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "fixed"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "2",
+                  "kavioCaptionWordState": "pending"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "frame"
+              }
+            ],
+            "dataset": {
+              "kavioCaptionCueIndex": "0",
+              "kavioCaptionHighlightMode": "word",
+              "kavioCaptionVisible": "true",
+              "kavioLayerId": "caption-track",
+              "kavioLayerType": "caption"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "0 transparent",
+              "backgroundColor": "transparent",
+              "boxSizing": "border-box",
+              "color": "#e5e7eb",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "24px",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "left": "320px",
+              "letterSpacing": "normal",
+              "lineHeight": "1.15",
+              "maxWidth": "18ch",
+              "opacity": "1",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "0",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "none",
+              "top": "331px",
+              "transform": "translate(-50%, -100%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 100%",
+              "whiteSpace": "pre-wrap",
+              "width": "550px",
+              "zIndex": "4"
+            },
+            "tagName": "div",
+            "textContent": "First fixed frame"
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": null,
+              "y": null
+            },
+            "caption": {
+              "activeWord": {
+                "active": true,
+                "endFrame": 5,
+                "index": 0,
+                "startFrame": 0,
+                "state": "active",
+                "text": "First"
+              },
+              "activeWordIndex": 0,
+              "cue": {
+                "endFrame": 16,
+                "startFrame": 0,
+                "text": "First fixed frame",
+                "words": [
+                  {
+                    "endFrame": 5,
+                    "startFrame": 0,
+                    "text": "First"
+                  },
+                  {
+                    "endFrame": 10,
+                    "startFrame": 5,
+                    "text": "fixed"
+                  },
+                  {
+                    "endFrame": 16,
+                    "startFrame": 10,
+                    "text": "frame"
+                  }
+                ]
+              },
+              "cueIndex": 0,
+              "highlightedLineText": null,
+              "highlightedWordIndex": 0,
+              "highlightMode": "word",
+              "lines": [
+                "First fixed frame"
+              ],
+              "lineText": "First fixed frame",
+              "localFrame": 0,
+              "sourceKind": "inline",
+              "visible": true,
+              "words": [
+                {
+                  "active": true,
+                  "endFrame": 5,
+                  "index": 0,
+                  "startFrame": 0,
+                  "state": "active",
+                  "text": "First"
+                },
+                {
+                  "active": false,
+                  "endFrame": 10,
+                  "index": 1,
+                  "startFrame": 5,
+                  "state": "pending",
+                  "text": "fixed"
+                },
+                {
+                  "active": false,
+                  "endFrame": 16,
+                  "index": 2,
+                  "startFrame": 10,
+                  "state": "pending",
+                  "text": "frame"
+                }
+              ]
+            },
+            "id": "caption-track",
+            "localFrame": 0,
+            "opacity": 1,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": null,
+              "width": null
+            },
+            "topLeft": {
+              "x": null,
+              "y": null
+            },
+            "type": "caption",
+            "visible": true
+          },
+          "id": "caption-track",
+          "localFrame": 0,
+          "type": "caption"
+        }
+      ],
+      "stage": {
+        "children": [
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "background-matte",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#0f172a",
+              "border": "0 solid transparent",
+              "borderRadius": "0",
+              "boxSizing": "border-box",
+              "height": "360px",
+              "left": "0px",
+              "opacity": "1",
+              "position": "absolute",
+              "top": "0px",
+              "transform": "translate(0%, 0%) rotate(0deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "640px",
+              "zIndex": "0"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "motion-panel",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#2563eb",
+              "border": "3px solid #bfdbfe",
+              "borderRadius": "18px",
+              "boxSizing": "border-box",
+              "height": "128px",
+              "left": "80px",
+              "opacity": "0.86",
+              "position": "absolute",
+              "top": "68px",
+              "transform": "translate(0%, 0%) rotate(-3deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "220px",
+              "zIndex": "1"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "dataset": {},
+                "nodeType": "element",
+                "style": {
+                  "display": "block",
+                  "height": "100%",
+                  "objectFit": "contain",
+                  "objectPosition": "center center",
+                  "pointerEvents": "none",
+                  "userSelect": "none",
+                  "width": "100%"
+                },
+                "tagName": "img",
+                "textContent": ""
+              }
+            ],
+            "dataset": {
+              "kavioAsset": "fixture-poster",
+              "kavioFit": "contain",
+              "kavioLayerId": "poster-card",
+              "kavioLayerType": "image"
+            },
+            "nodeType": "element",
+            "style": {
+              "boxSizing": "border-box",
+              "height": "90px",
+              "left": "430px",
+              "opacity": "0.95",
+              "overflow": "hidden",
+              "position": "absolute",
+              "top": "92px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "width": "180px",
+              "zIndex": "2"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordActive": "true",
+                  "kavioCaptionWordIndex": "0",
+                  "kavioCaptionWordState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "color": "#facc15",
+                  "display": "inline-block",
+                  "transform": "scale(1.08)",
+                  "transformOrigin": "center"
+                },
+                "tagName": "span",
+                "textContent": "First"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "1",
+                  "kavioCaptionWordState": "pending"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "fixed"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "2",
+                  "kavioCaptionWordState": "pending"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "frame"
+              }
+            ],
+            "dataset": {
+              "kavioCaptionCueIndex": "0",
+              "kavioCaptionHighlightMode": "word",
+              "kavioCaptionVisible": "true",
+              "kavioLayerId": "caption-track",
+              "kavioLayerType": "caption"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "0 transparent",
+              "backgroundColor": "transparent",
+              "boxSizing": "border-box",
+              "color": "#e5e7eb",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "24px",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "left": "320px",
+              "letterSpacing": "normal",
+              "lineHeight": "1.15",
+              "maxWidth": "18ch",
+              "opacity": "1",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "0",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "none",
+              "top": "331px",
+              "transform": "translate(-50%, -100%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 100%",
+              "whiteSpace": "pre-wrap",
+              "width": "550px",
+              "zIndex": "4"
+            },
+            "tagName": "div",
+            "textContent": "First fixed frame"
+          }
+        ],
+        "dataset": {
+          "kavioStage": "true"
+        },
+        "nodeType": "element",
+        "style": {
+          "background": "#111827",
+          "height": "360px",
+          "overflow": "hidden",
+          "position": "relative",
+          "width": "640px"
+        },
+        "tagName": "div",
+        "textContent": "First fixed frame"
+      },
+      "width": 640
+    },
+    {
+      "frame": 12,
+      "height": 360,
+      "layers": [
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "background-matte",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#0f172a",
+              "border": "0 solid transparent",
+              "borderRadius": "0",
+              "boxSizing": "border-box",
+              "height": "360px",
+              "left": "0px",
+              "opacity": "1",
+              "position": "absolute",
+              "top": "0px",
+              "transform": "translate(0%, 0%) rotate(0deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "640px",
+              "zIndex": "0"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": 0,
+              "y": 0
+            },
+            "id": "background-matte",
+            "localFrame": 12,
+            "opacity": 1,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": 360,
+              "width": 640
+            },
+            "topLeft": {
+              "x": 0,
+              "y": 0
+            },
+            "type": "shape",
+            "visible": true
+          },
+          "id": "background-matte",
+          "localFrame": 12,
+          "type": "shape"
+        },
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "motion-panel",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#2563eb",
+              "border": "3px solid #bfdbfe",
+              "borderRadius": "18px",
+              "boxSizing": "border-box",
+              "height": "128px",
+              "left": "96px",
+              "opacity": "0.86",
+              "position": "absolute",
+              "top": "68px",
+              "transform": "translate(0%, 0%) rotate(-0.5deg) scale(1.04)",
+              "transformOrigin": "0% 0%",
+              "width": "220px",
+              "zIndex": "1"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": 0,
+              "y": 0
+            },
+            "id": "motion-panel",
+            "localFrame": 12,
+            "opacity": 0.86,
+            "position": {
+              "x": 96,
+              "y": 68
+            },
+            "rotation": -0.5,
+            "scale": 1.04,
+            "size": {
+              "height": 128,
+              "width": 220
+            },
+            "topLeft": {
+              "x": 96,
+              "y": 68
+            },
+            "type": "shape",
+            "visible": true
+          },
+          "id": "motion-panel",
+          "localFrame": 12,
+          "type": "shape"
+        },
+        {
+          "element": {
+            "children": [
+              {
+                "children": [],
+                "dataset": {},
+                "nodeType": "element",
+                "style": {
+                  "display": "block",
+                  "height": "100%",
+                  "objectFit": "contain",
+                  "objectPosition": "center center",
+                  "pointerEvents": "none",
+                  "userSelect": "none",
+                  "width": "100%"
+                },
+                "tagName": "img",
+                "textContent": ""
+              }
+            ],
+            "dataset": {
+              "kavioAsset": "fixture-poster",
+              "kavioFit": "contain",
+              "kavioLayerId": "poster-card",
+              "kavioLayerType": "image"
+            },
+            "nodeType": "element",
+            "style": {
+              "boxSizing": "border-box",
+              "height": "90px",
+              "left": "430px",
+              "opacity": "0.95",
+              "overflow": "hidden",
+              "position": "absolute",
+              "top": "92px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "width": "180px",
+              "zIndex": "2"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "anchorOffset": {
+              "x": 90,
+              "y": null
+            },
+            "id": "poster-card",
+            "localFrame": 12,
+            "opacity": 0.95,
+            "position": {
+              "x": 430,
+              "y": 92
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": null,
+              "width": 180
+            },
+            "topLeft": {
+              "x": 340,
+              "y": null
+            },
+            "type": "image",
+            "visible": true
+          },
+          "id": "poster-card",
+          "localFrame": 12,
+          "type": "image"
+        },
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "headline",
+              "kavioLayerType": "text"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "1px #020617",
+              "backgroundColor": "#111827cc",
+              "boxSizing": "border-box",
+              "color": "#f8fafc",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "38px",
+              "fontStyle": "normal",
+              "fontWeight": "800",
+              "height": "116px",
+              "left": "320px",
+              "letterSpacing": "0.4px",
+              "lineHeight": "1.05",
+              "opacity": "0.5",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "10px",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "0px 3px 8px #020617",
+              "top": "167.4px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "whiteSpace": "pre-wrap",
+              "width": "360px",
+              "zIndex": "3"
+            },
+            "tagName": "div",
+            "textContent": "Fixed Frames\nStay Boring"
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "anchorOffset": {
+              "x": 180,
+              "y": 58
+            },
+            "id": "headline",
+            "localFrame": 4,
+            "opacity": 0.5,
+            "position": {
+              "x": 320,
+              "y": 167.4
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": 116,
+              "width": 360
+            },
+            "topLeft": {
+              "x": 140,
+              "y": 109.4
+            },
+            "type": "text",
+            "visible": true
+          },
+          "id": "headline",
+          "localFrame": 4,
+          "type": "text"
+        },
+        {
+          "element": {
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "0",
+                  "kavioCaptionWordState": "completed"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "First"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "1",
+                  "kavioCaptionWordState": "completed"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "fixed"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordActive": "true",
+                  "kavioCaptionWordIndex": "2",
+                  "kavioCaptionWordState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "color": "#facc15",
+                  "display": "inline-block",
+                  "transform": "scale(1.08)",
+                  "transformOrigin": "center"
+                },
+                "tagName": "span",
+                "textContent": "frame"
+              }
+            ],
+            "dataset": {
+              "kavioCaptionCueIndex": "0",
+              "kavioCaptionHighlightMode": "word",
+              "kavioCaptionVisible": "true",
+              "kavioLayerId": "caption-track",
+              "kavioLayerType": "caption"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "0 transparent",
+              "backgroundColor": "transparent",
+              "boxSizing": "border-box",
+              "color": "#e5e7eb",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "24px",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "left": "320px",
+              "letterSpacing": "normal",
+              "lineHeight": "1.15",
+              "maxWidth": "18ch",
+              "opacity": "1",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "0",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "none",
+              "top": "331px",
+              "transform": "translate(-50%, -100%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 100%",
+              "whiteSpace": "pre-wrap",
+              "width": "550px",
+              "zIndex": "4"
+            },
+            "tagName": "div",
+            "textContent": "First fixed frame"
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": null,
+              "y": null
+            },
+            "caption": {
+              "activeWord": {
+                "active": true,
+                "endFrame": 16,
+                "index": 2,
+                "startFrame": 10,
+                "state": "active",
+                "text": "frame"
+              },
+              "activeWordIndex": 2,
+              "cue": {
+                "endFrame": 16,
+                "startFrame": 0,
+                "text": "First fixed frame",
+                "words": [
+                  {
+                    "endFrame": 5,
+                    "startFrame": 0,
+                    "text": "First"
+                  },
+                  {
+                    "endFrame": 10,
+                    "startFrame": 5,
+                    "text": "fixed"
+                  },
+                  {
+                    "endFrame": 16,
+                    "startFrame": 10,
+                    "text": "frame"
+                  }
+                ]
+              },
+              "cueIndex": 0,
+              "highlightedLineText": null,
+              "highlightedWordIndex": 2,
+              "highlightMode": "word",
+              "lines": [
+                "First fixed frame"
+              ],
+              "lineText": "First fixed frame",
+              "localFrame": 12,
+              "sourceKind": "inline",
+              "visible": true,
+              "words": [
+                {
+                  "active": false,
+                  "endFrame": 5,
+                  "index": 0,
+                  "startFrame": 0,
+                  "state": "completed",
+                  "text": "First"
+                },
+                {
+                  "active": false,
+                  "endFrame": 10,
+                  "index": 1,
+                  "startFrame": 5,
+                  "state": "completed",
+                  "text": "fixed"
+                },
+                {
+                  "active": true,
+                  "endFrame": 16,
+                  "index": 2,
+                  "startFrame": 10,
+                  "state": "active",
+                  "text": "frame"
+                }
+              ]
+            },
+            "id": "caption-track",
+            "localFrame": 12,
+            "opacity": 1,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": null,
+              "width": null
+            },
+            "topLeft": {
+              "x": null,
+              "y": null
+            },
+            "type": "caption",
+            "visible": true
+          },
+          "id": "caption-track",
+          "localFrame": 12,
+          "type": "caption"
+        }
+      ],
+      "stage": {
+        "children": [
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "background-matte",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#0f172a",
+              "border": "0 solid transparent",
+              "borderRadius": "0",
+              "boxSizing": "border-box",
+              "height": "360px",
+              "left": "0px",
+              "opacity": "1",
+              "position": "absolute",
+              "top": "0px",
+              "transform": "translate(0%, 0%) rotate(0deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "640px",
+              "zIndex": "0"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "motion-panel",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#2563eb",
+              "border": "3px solid #bfdbfe",
+              "borderRadius": "18px",
+              "boxSizing": "border-box",
+              "height": "128px",
+              "left": "96px",
+              "opacity": "0.86",
+              "position": "absolute",
+              "top": "68px",
+              "transform": "translate(0%, 0%) rotate(-0.5deg) scale(1.04)",
+              "transformOrigin": "0% 0%",
+              "width": "220px",
+              "zIndex": "1"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "dataset": {},
+                "nodeType": "element",
+                "style": {
+                  "display": "block",
+                  "height": "100%",
+                  "objectFit": "contain",
+                  "objectPosition": "center center",
+                  "pointerEvents": "none",
+                  "userSelect": "none",
+                  "width": "100%"
+                },
+                "tagName": "img",
+                "textContent": ""
+              }
+            ],
+            "dataset": {
+              "kavioAsset": "fixture-poster",
+              "kavioFit": "contain",
+              "kavioLayerId": "poster-card",
+              "kavioLayerType": "image"
+            },
+            "nodeType": "element",
+            "style": {
+              "boxSizing": "border-box",
+              "height": "90px",
+              "left": "430px",
+              "opacity": "0.95",
+              "overflow": "hidden",
+              "position": "absolute",
+              "top": "92px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "width": "180px",
+              "zIndex": "2"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "headline",
+              "kavioLayerType": "text"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "1px #020617",
+              "backgroundColor": "#111827cc",
+              "boxSizing": "border-box",
+              "color": "#f8fafc",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "38px",
+              "fontStyle": "normal",
+              "fontWeight": "800",
+              "height": "116px",
+              "left": "320px",
+              "letterSpacing": "0.4px",
+              "lineHeight": "1.05",
+              "opacity": "0.5",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "10px",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "0px 3px 8px #020617",
+              "top": "167.4px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "whiteSpace": "pre-wrap",
+              "width": "360px",
+              "zIndex": "3"
+            },
+            "tagName": "div",
+            "textContent": "Fixed Frames\nStay Boring"
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "0",
+                  "kavioCaptionWordState": "completed"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "First"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "1",
+                  "kavioCaptionWordState": "completed"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "fixed"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordActive": "true",
+                  "kavioCaptionWordIndex": "2",
+                  "kavioCaptionWordState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "color": "#facc15",
+                  "display": "inline-block",
+                  "transform": "scale(1.08)",
+                  "transformOrigin": "center"
+                },
+                "tagName": "span",
+                "textContent": "frame"
+              }
+            ],
+            "dataset": {
+              "kavioCaptionCueIndex": "0",
+              "kavioCaptionHighlightMode": "word",
+              "kavioCaptionVisible": "true",
+              "kavioLayerId": "caption-track",
+              "kavioLayerType": "caption"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "0 transparent",
+              "backgroundColor": "transparent",
+              "boxSizing": "border-box",
+              "color": "#e5e7eb",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "24px",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "left": "320px",
+              "letterSpacing": "normal",
+              "lineHeight": "1.15",
+              "maxWidth": "18ch",
+              "opacity": "1",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "0",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "none",
+              "top": "331px",
+              "transform": "translate(-50%, -100%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 100%",
+              "whiteSpace": "pre-wrap",
+              "width": "550px",
+              "zIndex": "4"
+            },
+            "tagName": "div",
+            "textContent": "First fixed frame"
+          }
+        ],
+        "dataset": {
+          "kavioStage": "true"
+        },
+        "nodeType": "element",
+        "style": {
+          "background": "#111827",
+          "height": "360px",
+          "overflow": "hidden",
+          "position": "relative",
+          "width": "640px"
+        },
+        "tagName": "div",
+        "textContent": "Fixed Frames\nStay BoringFirst fixed frame"
+      },
+      "width": 640
+    },
+    {
+      "frame": 24,
+      "height": 360,
+      "layers": [
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "background-matte",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#0f172a",
+              "border": "0 solid transparent",
+              "borderRadius": "0",
+              "boxSizing": "border-box",
+              "height": "360px",
+              "left": "0px",
+              "opacity": "1",
+              "position": "absolute",
+              "top": "0px",
+              "transform": "translate(0%, 0%) rotate(0deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "640px",
+              "zIndex": "0"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": 0,
+              "y": 0
+            },
+            "id": "background-matte",
+            "localFrame": 24,
+            "opacity": 1,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": 360,
+              "width": 640
+            },
+            "topLeft": {
+              "x": 0,
+              "y": 0
+            },
+            "type": "shape",
+            "visible": true
+          },
+          "id": "background-matte",
+          "localFrame": 24,
+          "type": "shape"
+        },
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "motion-panel",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#2563eb",
+              "border": "3px solid #bfdbfe",
+              "borderRadius": "18px",
+              "boxSizing": "border-box",
+              "height": "128px",
+              "left": "112px",
+              "opacity": "0.86",
+              "position": "absolute",
+              "top": "68px",
+              "transform": "translate(0%, 0%) rotate(2deg) scale(1.08)",
+              "transformOrigin": "0% 0%",
+              "width": "220px",
+              "zIndex": "1"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": 0,
+              "y": 0
+            },
+            "id": "motion-panel",
+            "localFrame": 24,
+            "opacity": 0.86,
+            "position": {
+              "x": 112,
+              "y": 68
+            },
+            "rotation": 2,
+            "scale": 1.08,
+            "size": {
+              "height": 128,
+              "width": 220
+            },
+            "topLeft": {
+              "x": 112,
+              "y": 68
+            },
+            "type": "shape",
+            "visible": true
+          },
+          "id": "motion-panel",
+          "localFrame": 24,
+          "type": "shape"
+        },
+        {
+          "element": {
+            "children": [
+              {
+                "children": [],
+                "dataset": {},
+                "nodeType": "element",
+                "style": {
+                  "display": "block",
+                  "height": "100%",
+                  "objectFit": "contain",
+                  "objectPosition": "center center",
+                  "pointerEvents": "none",
+                  "userSelect": "none",
+                  "width": "100%"
+                },
+                "tagName": "img",
+                "textContent": ""
+              }
+            ],
+            "dataset": {
+              "kavioAsset": "fixture-poster",
+              "kavioFit": "contain",
+              "kavioLayerId": "poster-card",
+              "kavioLayerType": "image"
+            },
+            "nodeType": "element",
+            "style": {
+              "boxSizing": "border-box",
+              "height": "90px",
+              "left": "430px",
+              "opacity": "0.95",
+              "overflow": "hidden",
+              "position": "absolute",
+              "top": "92px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "width": "180px",
+              "zIndex": "2"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "anchorOffset": {
+              "x": 90,
+              "y": null
+            },
+            "id": "poster-card",
+            "localFrame": 24,
+            "opacity": 0.95,
+            "position": {
+              "x": 430,
+              "y": 92
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": null,
+              "width": 180
+            },
+            "topLeft": {
+              "x": 340,
+              "y": null
+            },
+            "type": "image",
+            "visible": true
+          },
+          "id": "poster-card",
+          "localFrame": 24,
+          "type": "image"
+        },
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "headline",
+              "kavioLayerType": "text"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "1px #020617",
+              "backgroundColor": "#111827cc",
+              "boxSizing": "border-box",
+              "color": "#f8fafc",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "38px",
+              "fontStyle": "normal",
+              "fontWeight": "800",
+              "height": "116px",
+              "left": "320px",
+              "letterSpacing": "0.4px",
+              "lineHeight": "1.05",
+              "opacity": "0.5977315689981098",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "10px",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "0px 3px 8px #020617",
+              "top": "150.1231485822306px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "whiteSpace": "pre-wrap",
+              "width": "360px",
+              "zIndex": "3"
+            },
+            "tagName": "div",
+            "textContent": "Fixed Frames\nStay Boring"
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "anchorOffset": {
+              "x": 180,
+              "y": 58
+            },
+            "id": "headline",
+            "localFrame": 16,
+            "opacity": 0.597732,
+            "position": {
+              "x": 320,
+              "y": 150.123149
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": 116,
+              "width": 360
+            },
+            "topLeft": {
+              "x": 140,
+              "y": 92.123149
+            },
+            "type": "text",
+            "visible": true
+          },
+          "id": "headline",
+          "localFrame": 16,
+          "type": "text"
+        },
+        {
+          "element": {
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "0",
+                  "kavioCaptionWordState": "completed"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "Middle"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordActive": "true",
+                  "kavioCaptionWordIndex": "1",
+                  "kavioCaptionWordState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "color": "#facc15",
+                  "display": "inline-block",
+                  "transform": "scale(1.08)",
+                  "transformOrigin": "center"
+                },
+                "tagName": "span",
+                "textContent": "parity"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "2",
+                  "kavioCaptionWordState": "pending"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "frame"
+              }
+            ],
+            "dataset": {
+              "kavioCaptionCueIndex": "1",
+              "kavioCaptionHighlightMode": "word",
+              "kavioCaptionVisible": "true",
+              "kavioLayerId": "caption-track",
+              "kavioLayerType": "caption"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "0 transparent",
+              "backgroundColor": "transparent",
+              "boxSizing": "border-box",
+              "color": "#e5e7eb",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "24px",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "left": "320px",
+              "letterSpacing": "normal",
+              "lineHeight": "1.15",
+              "maxWidth": "18ch",
+              "opacity": "1",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "0",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "none",
+              "top": "331px",
+              "transform": "translate(-50%, -100%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 100%",
+              "whiteSpace": "pre-wrap",
+              "width": "550px",
+              "zIndex": "4"
+            },
+            "tagName": "div",
+            "textContent": "Middle parity frame"
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": null,
+              "y": null
+            },
+            "caption": {
+              "activeWord": {
+                "active": true,
+                "endFrame": 29,
+                "index": 1,
+                "startFrame": 22,
+                "state": "active",
+                "text": "parity"
+              },
+              "activeWordIndex": 1,
+              "cue": {
+                "endFrame": 36,
+                "startFrame": 16,
+                "text": "Middle parity frame",
+                "words": [
+                  {
+                    "endFrame": 22,
+                    "startFrame": 16,
+                    "text": "Middle"
+                  },
+                  {
+                    "endFrame": 29,
+                    "startFrame": 22,
+                    "text": "parity"
+                  },
+                  {
+                    "endFrame": 36,
+                    "startFrame": 29,
+                    "text": "frame"
+                  }
+                ]
+              },
+              "cueIndex": 1,
+              "highlightedLineText": null,
+              "highlightedWordIndex": 1,
+              "highlightMode": "word",
+              "lines": [
+                "Middle parity frame"
+              ],
+              "lineText": "Middle parity frame",
+              "localFrame": 24,
+              "sourceKind": "inline",
+              "visible": true,
+              "words": [
+                {
+                  "active": false,
+                  "endFrame": 22,
+                  "index": 0,
+                  "startFrame": 16,
+                  "state": "completed",
+                  "text": "Middle"
+                },
+                {
+                  "active": true,
+                  "endFrame": 29,
+                  "index": 1,
+                  "startFrame": 22,
+                  "state": "active",
+                  "text": "parity"
+                },
+                {
+                  "active": false,
+                  "endFrame": 36,
+                  "index": 2,
+                  "startFrame": 29,
+                  "state": "pending",
+                  "text": "frame"
+                }
+              ]
+            },
+            "id": "caption-track",
+            "localFrame": 24,
+            "opacity": 1,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": null,
+              "width": null
+            },
+            "topLeft": {
+              "x": null,
+              "y": null
+            },
+            "type": "caption",
+            "visible": true
+          },
+          "id": "caption-track",
+          "localFrame": 24,
+          "type": "caption"
+        }
+      ],
+      "stage": {
+        "children": [
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "background-matte",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#0f172a",
+              "border": "0 solid transparent",
+              "borderRadius": "0",
+              "boxSizing": "border-box",
+              "height": "360px",
+              "left": "0px",
+              "opacity": "1",
+              "position": "absolute",
+              "top": "0px",
+              "transform": "translate(0%, 0%) rotate(0deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "640px",
+              "zIndex": "0"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "motion-panel",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#2563eb",
+              "border": "3px solid #bfdbfe",
+              "borderRadius": "18px",
+              "boxSizing": "border-box",
+              "height": "128px",
+              "left": "112px",
+              "opacity": "0.86",
+              "position": "absolute",
+              "top": "68px",
+              "transform": "translate(0%, 0%) rotate(2deg) scale(1.08)",
+              "transformOrigin": "0% 0%",
+              "width": "220px",
+              "zIndex": "1"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "dataset": {},
+                "nodeType": "element",
+                "style": {
+                  "display": "block",
+                  "height": "100%",
+                  "objectFit": "contain",
+                  "objectPosition": "center center",
+                  "pointerEvents": "none",
+                  "userSelect": "none",
+                  "width": "100%"
+                },
+                "tagName": "img",
+                "textContent": ""
+              }
+            ],
+            "dataset": {
+              "kavioAsset": "fixture-poster",
+              "kavioFit": "contain",
+              "kavioLayerId": "poster-card",
+              "kavioLayerType": "image"
+            },
+            "nodeType": "element",
+            "style": {
+              "boxSizing": "border-box",
+              "height": "90px",
+              "left": "430px",
+              "opacity": "0.95",
+              "overflow": "hidden",
+              "position": "absolute",
+              "top": "92px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "width": "180px",
+              "zIndex": "2"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "headline",
+              "kavioLayerType": "text"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "1px #020617",
+              "backgroundColor": "#111827cc",
+              "boxSizing": "border-box",
+              "color": "#f8fafc",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "38px",
+              "fontStyle": "normal",
+              "fontWeight": "800",
+              "height": "116px",
+              "left": "320px",
+              "letterSpacing": "0.4px",
+              "lineHeight": "1.05",
+              "opacity": "0.5977315689981098",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "10px",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "0px 3px 8px #020617",
+              "top": "150.1231485822306px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "whiteSpace": "pre-wrap",
+              "width": "360px",
+              "zIndex": "3"
+            },
+            "tagName": "div",
+            "textContent": "Fixed Frames\nStay Boring"
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "0",
+                  "kavioCaptionWordState": "completed"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "Middle"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordActive": "true",
+                  "kavioCaptionWordIndex": "1",
+                  "kavioCaptionWordState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "color": "#facc15",
+                  "display": "inline-block",
+                  "transform": "scale(1.08)",
+                  "transformOrigin": "center"
+                },
+                "tagName": "span",
+                "textContent": "parity"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "2",
+                  "kavioCaptionWordState": "pending"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "frame"
+              }
+            ],
+            "dataset": {
+              "kavioCaptionCueIndex": "1",
+              "kavioCaptionHighlightMode": "word",
+              "kavioCaptionVisible": "true",
+              "kavioLayerId": "caption-track",
+              "kavioLayerType": "caption"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "0 transparent",
+              "backgroundColor": "transparent",
+              "boxSizing": "border-box",
+              "color": "#e5e7eb",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "24px",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "left": "320px",
+              "letterSpacing": "normal",
+              "lineHeight": "1.15",
+              "maxWidth": "18ch",
+              "opacity": "1",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "0",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "none",
+              "top": "331px",
+              "transform": "translate(-50%, -100%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 100%",
+              "whiteSpace": "pre-wrap",
+              "width": "550px",
+              "zIndex": "4"
+            },
+            "tagName": "div",
+            "textContent": "Middle parity frame"
+          }
+        ],
+        "dataset": {
+          "kavioStage": "true"
+        },
+        "nodeType": "element",
+        "style": {
+          "background": "#111827",
+          "height": "360px",
+          "overflow": "hidden",
+          "position": "relative",
+          "width": "640px"
+        },
+        "tagName": "div",
+        "textContent": "Fixed Frames\nStay BoringMiddle parity frame"
+      },
+      "width": 640
+    },
+    {
+      "frame": 36,
+      "height": 360,
+      "layers": [
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "background-matte",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#0f172a",
+              "border": "0 solid transparent",
+              "borderRadius": "0",
+              "boxSizing": "border-box",
+              "height": "360px",
+              "left": "0px",
+              "opacity": "1",
+              "position": "absolute",
+              "top": "0px",
+              "transform": "translate(0%, 0%) rotate(0deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "640px",
+              "zIndex": "0"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": 0,
+              "y": 0
+            },
+            "id": "background-matte",
+            "localFrame": 36,
+            "opacity": 1,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": 360,
+              "width": 640
+            },
+            "topLeft": {
+              "x": 0,
+              "y": 0
+            },
+            "type": "shape",
+            "visible": true
+          },
+          "id": "background-matte",
+          "localFrame": 36,
+          "type": "shape"
+        },
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "motion-panel",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#2563eb",
+              "border": "3px solid #bfdbfe",
+              "borderRadius": "18px",
+              "boxSizing": "border-box",
+              "height": "128px",
+              "left": "124.34026465028356px",
+              "opacity": "0.86",
+              "position": "absolute",
+              "top": "68px",
+              "transform": "translate(0%, 0%) rotate(3.5652173913043477deg) scale(1.017391304347826)",
+              "transformOrigin": "0% 0%",
+              "width": "220px",
+              "zIndex": "1"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": 0,
+              "y": 0
+            },
+            "id": "motion-panel",
+            "localFrame": 36,
+            "opacity": 0.86,
+            "position": {
+              "x": 124.340265,
+              "y": 68
+            },
+            "rotation": 3.565217,
+            "scale": 1.017391,
+            "size": {
+              "height": 128,
+              "width": 220
+            },
+            "topLeft": {
+              "x": 124.340265,
+              "y": 68
+            },
+            "type": "shape",
+            "visible": true
+          },
+          "id": "motion-panel",
+          "localFrame": 36,
+          "type": "shape"
+        },
+        {
+          "element": {
+            "children": [
+              {
+                "children": [],
+                "dataset": {},
+                "nodeType": "element",
+                "style": {
+                  "display": "block",
+                  "height": "100%",
+                  "objectFit": "contain",
+                  "objectPosition": "center center",
+                  "pointerEvents": "none",
+                  "userSelect": "none",
+                  "width": "100%"
+                },
+                "tagName": "img",
+                "textContent": ""
+              }
+            ],
+            "dataset": {
+              "kavioAsset": "fixture-poster",
+              "kavioFit": "contain",
+              "kavioLayerId": "poster-card",
+              "kavioLayerType": "image"
+            },
+            "nodeType": "element",
+            "style": {
+              "boxSizing": "border-box",
+              "height": "90px",
+              "left": "430px",
+              "opacity": "0.95",
+              "overflow": "hidden",
+              "position": "absolute",
+              "top": "92px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "width": "180px",
+              "zIndex": "2"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "anchorOffset": {
+              "x": 90,
+              "y": null
+            },
+            "id": "poster-card",
+            "localFrame": 36,
+            "opacity": 0.95,
+            "position": {
+              "x": 430,
+              "y": 92
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": null,
+              "width": 180
+            },
+            "topLeft": {
+              "x": 340,
+              "y": null
+            },
+            "type": "image",
+            "visible": true
+          },
+          "id": "poster-card",
+          "localFrame": 36,
+          "type": "image"
+        },
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "headline",
+              "kavioLayerType": "text"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "1px #020617",
+              "backgroundColor": "#111827cc",
+              "boxSizing": "border-box",
+              "color": "#f8fafc",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "38px",
+              "fontStyle": "normal",
+              "fontWeight": "800",
+              "height": "116px",
+              "left": "320px",
+              "letterSpacing": "0.4px",
+              "lineHeight": "1.05",
+              "opacity": "0.3119092627599245",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "10px",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "0px 3px 8px #020617",
+              "top": "149.88981958412097px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "whiteSpace": "pre-wrap",
+              "width": "360px",
+              "zIndex": "3"
+            },
+            "tagName": "div",
+            "textContent": "Fixed Frames\nStay Boring"
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "anchorOffset": {
+              "x": 180,
+              "y": 58
+            },
+            "id": "headline",
+            "localFrame": 28,
+            "opacity": 0.311909,
+            "position": {
+              "x": 320,
+              "y": 149.88982
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": 116,
+              "width": 360
+            },
+            "topLeft": {
+              "x": 140,
+              "y": 91.88982
+            },
+            "type": "text",
+            "visible": true
+          },
+          "id": "headline",
+          "localFrame": 28,
+          "type": "text"
+        },
+        {
+          "element": {
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordActive": "true",
+                  "kavioCaptionWordIndex": "0",
+                  "kavioCaptionWordState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "color": "#facc15",
+                  "display": "inline-block",
+                  "transform": "scale(1.08)",
+                  "transformOrigin": "center"
+                },
+                "tagName": "span",
+                "textContent": "Final"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "1",
+                  "kavioCaptionWordState": "pending"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "golden"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "2",
+                  "kavioCaptionWordState": "pending"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "frame"
+              }
+            ],
+            "dataset": {
+              "kavioCaptionCueIndex": "2",
+              "kavioCaptionHighlightMode": "word",
+              "kavioCaptionVisible": "true",
+              "kavioLayerId": "caption-track",
+              "kavioLayerType": "caption"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "0 transparent",
+              "backgroundColor": "transparent",
+              "boxSizing": "border-box",
+              "color": "#e5e7eb",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "24px",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "left": "320px",
+              "letterSpacing": "normal",
+              "lineHeight": "1.15",
+              "maxWidth": "18ch",
+              "opacity": "1",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "0",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "none",
+              "top": "331px",
+              "transform": "translate(-50%, -100%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 100%",
+              "whiteSpace": "pre-wrap",
+              "width": "550px",
+              "zIndex": "4"
+            },
+            "tagName": "div",
+            "textContent": "Final golden frame"
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": null,
+              "y": null
+            },
+            "caption": {
+              "activeWord": {
+                "active": true,
+                "endFrame": 40,
+                "index": 0,
+                "startFrame": 36,
+                "state": "active",
+                "text": "Final"
+              },
+              "activeWordIndex": 0,
+              "cue": {
+                "endFrame": 48,
+                "startFrame": 36,
+                "text": "Final golden frame",
+                "words": [
+                  {
+                    "endFrame": 40,
+                    "startFrame": 36,
+                    "text": "Final"
+                  },
+                  {
+                    "endFrame": 44,
+                    "startFrame": 40,
+                    "text": "golden"
+                  },
+                  {
+                    "endFrame": 48,
+                    "startFrame": 44,
+                    "text": "frame"
+                  }
+                ]
+              },
+              "cueIndex": 2,
+              "highlightedLineText": null,
+              "highlightedWordIndex": 0,
+              "highlightMode": "word",
+              "lines": [
+                "Final golden frame"
+              ],
+              "lineText": "Final golden frame",
+              "localFrame": 36,
+              "sourceKind": "inline",
+              "visible": true,
+              "words": [
+                {
+                  "active": true,
+                  "endFrame": 40,
+                  "index": 0,
+                  "startFrame": 36,
+                  "state": "active",
+                  "text": "Final"
+                },
+                {
+                  "active": false,
+                  "endFrame": 44,
+                  "index": 1,
+                  "startFrame": 40,
+                  "state": "pending",
+                  "text": "golden"
+                },
+                {
+                  "active": false,
+                  "endFrame": 48,
+                  "index": 2,
+                  "startFrame": 44,
+                  "state": "pending",
+                  "text": "frame"
+                }
+              ]
+            },
+            "id": "caption-track",
+            "localFrame": 36,
+            "opacity": 1,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": null,
+              "width": null
+            },
+            "topLeft": {
+              "x": null,
+              "y": null
+            },
+            "type": "caption",
+            "visible": true
+          },
+          "id": "caption-track",
+          "localFrame": 36,
+          "type": "caption"
+        }
+      ],
+      "stage": {
+        "children": [
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "background-matte",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#0f172a",
+              "border": "0 solid transparent",
+              "borderRadius": "0",
+              "boxSizing": "border-box",
+              "height": "360px",
+              "left": "0px",
+              "opacity": "1",
+              "position": "absolute",
+              "top": "0px",
+              "transform": "translate(0%, 0%) rotate(0deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "640px",
+              "zIndex": "0"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "motion-panel",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#2563eb",
+              "border": "3px solid #bfdbfe",
+              "borderRadius": "18px",
+              "boxSizing": "border-box",
+              "height": "128px",
+              "left": "124.34026465028356px",
+              "opacity": "0.86",
+              "position": "absolute",
+              "top": "68px",
+              "transform": "translate(0%, 0%) rotate(3.5652173913043477deg) scale(1.017391304347826)",
+              "transformOrigin": "0% 0%",
+              "width": "220px",
+              "zIndex": "1"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "dataset": {},
+                "nodeType": "element",
+                "style": {
+                  "display": "block",
+                  "height": "100%",
+                  "objectFit": "contain",
+                  "objectPosition": "center center",
+                  "pointerEvents": "none",
+                  "userSelect": "none",
+                  "width": "100%"
+                },
+                "tagName": "img",
+                "textContent": ""
+              }
+            ],
+            "dataset": {
+              "kavioAsset": "fixture-poster",
+              "kavioFit": "contain",
+              "kavioLayerId": "poster-card",
+              "kavioLayerType": "image"
+            },
+            "nodeType": "element",
+            "style": {
+              "boxSizing": "border-box",
+              "height": "90px",
+              "left": "430px",
+              "opacity": "0.95",
+              "overflow": "hidden",
+              "position": "absolute",
+              "top": "92px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "width": "180px",
+              "zIndex": "2"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "headline",
+              "kavioLayerType": "text"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "1px #020617",
+              "backgroundColor": "#111827cc",
+              "boxSizing": "border-box",
+              "color": "#f8fafc",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "38px",
+              "fontStyle": "normal",
+              "fontWeight": "800",
+              "height": "116px",
+              "left": "320px",
+              "letterSpacing": "0.4px",
+              "lineHeight": "1.05",
+              "opacity": "0.3119092627599245",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "10px",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "0px 3px 8px #020617",
+              "top": "149.88981958412097px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "whiteSpace": "pre-wrap",
+              "width": "360px",
+              "zIndex": "3"
+            },
+            "tagName": "div",
+            "textContent": "Fixed Frames\nStay Boring"
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordActive": "true",
+                  "kavioCaptionWordIndex": "0",
+                  "kavioCaptionWordState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "color": "#facc15",
+                  "display": "inline-block",
+                  "transform": "scale(1.08)",
+                  "transformOrigin": "center"
+                },
+                "tagName": "span",
+                "textContent": "Final"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "1",
+                  "kavioCaptionWordState": "pending"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "golden"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "2",
+                  "kavioCaptionWordState": "pending"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "frame"
+              }
+            ],
+            "dataset": {
+              "kavioCaptionCueIndex": "2",
+              "kavioCaptionHighlightMode": "word",
+              "kavioCaptionVisible": "true",
+              "kavioLayerId": "caption-track",
+              "kavioLayerType": "caption"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "0 transparent",
+              "backgroundColor": "transparent",
+              "boxSizing": "border-box",
+              "color": "#e5e7eb",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "24px",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "left": "320px",
+              "letterSpacing": "normal",
+              "lineHeight": "1.15",
+              "maxWidth": "18ch",
+              "opacity": "1",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "0",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "none",
+              "top": "331px",
+              "transform": "translate(-50%, -100%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 100%",
+              "whiteSpace": "pre-wrap",
+              "width": "550px",
+              "zIndex": "4"
+            },
+            "tagName": "div",
+            "textContent": "Final golden frame"
+          }
+        ],
+        "dataset": {
+          "kavioStage": "true"
+        },
+        "nodeType": "element",
+        "style": {
+          "background": "#111827",
+          "height": "360px",
+          "overflow": "hidden",
+          "position": "relative",
+          "width": "640px"
+        },
+        "tagName": "div",
+        "textContent": "Fixed Frames\nStay BoringFinal golden frame"
+      },
+      "width": 640
+    },
+    {
+      "frame": 47,
+      "height": 360,
+      "layers": [
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "background-matte",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#0f172a",
+              "border": "0 solid transparent",
+              "borderRadius": "0",
+              "boxSizing": "border-box",
+              "height": "360px",
+              "left": "0px",
+              "opacity": "1",
+              "position": "absolute",
+              "top": "0px",
+              "transform": "translate(0%, 0%) rotate(0deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "640px",
+              "zIndex": "0"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": 0,
+              "y": 0
+            },
+            "id": "background-matte",
+            "localFrame": 47,
+            "opacity": 1,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": 360,
+              "width": 640
+            },
+            "topLeft": {
+              "x": 0,
+              "y": 0
+            },
+            "type": "shape",
+            "visible": true
+          },
+          "id": "background-matte",
+          "localFrame": 47,
+          "type": "shape"
+        },
+        {
+          "element": {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "motion-panel",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#2563eb",
+              "border": "3px solid #bfdbfe",
+              "borderRadius": "18px",
+              "boxSizing": "border-box",
+              "height": "128px",
+              "left": "128px",
+              "opacity": "0.86",
+              "position": "absolute",
+              "top": "68px",
+              "transform": "translate(0%, 0%) rotate(5deg) scale(0.96)",
+              "transformOrigin": "0% 0%",
+              "width": "220px",
+              "zIndex": "1"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": 0,
+              "y": 0
+            },
+            "id": "motion-panel",
+            "localFrame": 47,
+            "opacity": 0.86,
+            "position": {
+              "x": 128,
+              "y": 68
+            },
+            "rotation": 5,
+            "scale": 0.96,
+            "size": {
+              "height": 128,
+              "width": 220
+            },
+            "topLeft": {
+              "x": 128,
+              "y": 68
+            },
+            "type": "shape",
+            "visible": true
+          },
+          "id": "motion-panel",
+          "localFrame": 47,
+          "type": "shape"
+        },
+        {
+          "element": {
+            "children": [
+              {
+                "children": [],
+                "dataset": {},
+                "nodeType": "element",
+                "style": {
+                  "display": "block",
+                  "height": "100%",
+                  "objectFit": "contain",
+                  "objectPosition": "center center",
+                  "pointerEvents": "none",
+                  "userSelect": "none",
+                  "width": "100%"
+                },
+                "tagName": "img",
+                "textContent": ""
+              }
+            ],
+            "dataset": {
+              "kavioAsset": "fixture-poster",
+              "kavioFit": "contain",
+              "kavioLayerId": "poster-card",
+              "kavioLayerType": "image"
+            },
+            "nodeType": "element",
+            "style": {
+              "boxSizing": "border-box",
+              "height": "90px",
+              "left": "430px",
+              "opacity": "0.95",
+              "overflow": "hidden",
+              "position": "absolute",
+              "top": "92px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "width": "180px",
+              "zIndex": "2"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "anchorOffset": {
+              "x": 90,
+              "y": null
+            },
+            "id": "poster-card",
+            "localFrame": 47,
+            "opacity": 0.95,
+            "position": {
+              "x": 430,
+              "y": 92
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": null,
+              "width": 180
+            },
+            "topLeft": {
+              "x": 340,
+              "y": null
+            },
+            "type": "image",
+            "visible": true
+          },
+          "id": "poster-card",
+          "localFrame": 47,
+          "type": "image"
+        },
+        {
+          "element": {
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "0",
+                  "kavioCaptionWordState": "completed"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "Final"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "1",
+                  "kavioCaptionWordState": "completed"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "golden"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordActive": "true",
+                  "kavioCaptionWordIndex": "2",
+                  "kavioCaptionWordState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "color": "#facc15",
+                  "display": "inline-block",
+                  "transform": "scale(1.08)",
+                  "transformOrigin": "center"
+                },
+                "tagName": "span",
+                "textContent": "frame"
+              }
+            ],
+            "dataset": {
+              "kavioCaptionCueIndex": "2",
+              "kavioCaptionHighlightMode": "word",
+              "kavioCaptionVisible": "true",
+              "kavioLayerId": "caption-track",
+              "kavioLayerType": "caption"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "0 transparent",
+              "backgroundColor": "transparent",
+              "boxSizing": "border-box",
+              "color": "#e5e7eb",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "24px",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "left": "320px",
+              "letterSpacing": "normal",
+              "lineHeight": "1.15",
+              "maxWidth": "18ch",
+              "opacity": "1",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "0",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "none",
+              "top": "331px",
+              "transform": "translate(-50%, -100%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 100%",
+              "whiteSpace": "pre-wrap",
+              "width": "550px",
+              "zIndex": "4"
+            },
+            "tagName": "div",
+            "textContent": "Final golden frame"
+          },
+          "evaluation": {
+            "anchor": {
+              "x": 0,
+              "y": 0
+            },
+            "anchorOffset": {
+              "x": null,
+              "y": null
+            },
+            "caption": {
+              "activeWord": {
+                "active": true,
+                "endFrame": 48,
+                "index": 2,
+                "startFrame": 44,
+                "state": "active",
+                "text": "frame"
+              },
+              "activeWordIndex": 2,
+              "cue": {
+                "endFrame": 48,
+                "startFrame": 36,
+                "text": "Final golden frame",
+                "words": [
+                  {
+                    "endFrame": 40,
+                    "startFrame": 36,
+                    "text": "Final"
+                  },
+                  {
+                    "endFrame": 44,
+                    "startFrame": 40,
+                    "text": "golden"
+                  },
+                  {
+                    "endFrame": 48,
+                    "startFrame": 44,
+                    "text": "frame"
+                  }
+                ]
+              },
+              "cueIndex": 2,
+              "highlightedLineText": null,
+              "highlightedWordIndex": 2,
+              "highlightMode": "word",
+              "lines": [
+                "Final golden frame"
+              ],
+              "lineText": "Final golden frame",
+              "localFrame": 47,
+              "sourceKind": "inline",
+              "visible": true,
+              "words": [
+                {
+                  "active": false,
+                  "endFrame": 40,
+                  "index": 0,
+                  "startFrame": 36,
+                  "state": "completed",
+                  "text": "Final"
+                },
+                {
+                  "active": false,
+                  "endFrame": 44,
+                  "index": 1,
+                  "startFrame": 40,
+                  "state": "completed",
+                  "text": "golden"
+                },
+                {
+                  "active": true,
+                  "endFrame": 48,
+                  "index": 2,
+                  "startFrame": 44,
+                  "state": "active",
+                  "text": "frame"
+                }
+              ]
+            },
+            "id": "caption-track",
+            "localFrame": 47,
+            "opacity": 1,
+            "position": {
+              "x": 0,
+              "y": 0
+            },
+            "rotation": 0,
+            "scale": 1,
+            "size": {
+              "height": null,
+              "width": null
+            },
+            "topLeft": {
+              "x": null,
+              "y": null
+            },
+            "type": "caption",
+            "visible": true
+          },
+          "id": "caption-track",
+          "localFrame": 47,
+          "type": "caption"
+        }
+      ],
+      "stage": {
+        "children": [
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "background-matte",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#0f172a",
+              "border": "0 solid transparent",
+              "borderRadius": "0",
+              "boxSizing": "border-box",
+              "height": "360px",
+              "left": "0px",
+              "opacity": "1",
+              "position": "absolute",
+              "top": "0px",
+              "transform": "translate(0%, 0%) rotate(0deg) scale(1)",
+              "transformOrigin": "0% 0%",
+              "width": "640px",
+              "zIndex": "0"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [],
+            "dataset": {
+              "kavioLayerId": "motion-panel",
+              "kavioLayerType": "shape",
+              "kavioShape": "rect"
+            },
+            "nodeType": "element",
+            "style": {
+              "backgroundColor": "#2563eb",
+              "border": "3px solid #bfdbfe",
+              "borderRadius": "18px",
+              "boxSizing": "border-box",
+              "height": "128px",
+              "left": "128px",
+              "opacity": "0.86",
+              "position": "absolute",
+              "top": "68px",
+              "transform": "translate(0%, 0%) rotate(5deg) scale(0.96)",
+              "transformOrigin": "0% 0%",
+              "width": "220px",
+              "zIndex": "1"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "dataset": {},
+                "nodeType": "element",
+                "style": {
+                  "display": "block",
+                  "height": "100%",
+                  "objectFit": "contain",
+                  "objectPosition": "center center",
+                  "pointerEvents": "none",
+                  "userSelect": "none",
+                  "width": "100%"
+                },
+                "tagName": "img",
+                "textContent": ""
+              }
+            ],
+            "dataset": {
+              "kavioAsset": "fixture-poster",
+              "kavioFit": "contain",
+              "kavioLayerId": "poster-card",
+              "kavioLayerType": "image"
+            },
+            "nodeType": "element",
+            "style": {
+              "boxSizing": "border-box",
+              "height": "90px",
+              "left": "430px",
+              "opacity": "0.95",
+              "overflow": "hidden",
+              "position": "absolute",
+              "top": "92px",
+              "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 50%",
+              "width": "180px",
+              "zIndex": "2"
+            },
+            "tagName": "div",
+            "textContent": ""
+          },
+          {
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "0",
+                  "kavioCaptionWordState": "completed"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "Final"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordIndex": "1",
+                  "kavioCaptionWordState": "completed"
+                },
+                "nodeType": "element",
+                "style": {},
+                "tagName": "span",
+                "textContent": "golden"
+              },
+              {
+                "nodeType": "text",
+                "textContent": " "
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioCaptionWordActive": "true",
+                  "kavioCaptionWordIndex": "2",
+                  "kavioCaptionWordState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "color": "#facc15",
+                  "display": "inline-block",
+                  "transform": "scale(1.08)",
+                  "transformOrigin": "center"
+                },
+                "tagName": "span",
+                "textContent": "frame"
+              }
+            ],
+            "dataset": {
+              "kavioCaptionCueIndex": "2",
+              "kavioCaptionHighlightMode": "word",
+              "kavioCaptionVisible": "true",
+              "kavioLayerId": "caption-track",
+              "kavioLayerType": "caption"
+            },
+            "nodeType": "element",
+            "style": {
+              "-webkit-box-orient": "vertical",
+              "-webkit-line-clamp": "2",
+              "-webkit-text-stroke": "0 transparent",
+              "backgroundColor": "transparent",
+              "boxSizing": "border-box",
+              "color": "#e5e7eb",
+              "display": "-webkit-box",
+              "fontFamily": "sans-serif",
+              "fontSize": "24px",
+              "fontStyle": "normal",
+              "fontWeight": "700",
+              "left": "320px",
+              "letterSpacing": "normal",
+              "lineHeight": "1.15",
+              "maxWidth": "18ch",
+              "opacity": "1",
+              "overflow": "hidden",
+              "overflowWrap": "break-word",
+              "padding": "0",
+              "position": "absolute",
+              "textAlign": "center",
+              "textShadow": "none",
+              "top": "331px",
+              "transform": "translate(-50%, -100%) rotate(0deg) scale(1)",
+              "transformOrigin": "50% 100%",
+              "whiteSpace": "pre-wrap",
+              "width": "550px",
+              "zIndex": "4"
+            },
+            "tagName": "div",
+            "textContent": "Final golden frame"
+          }
+        ],
+        "dataset": {
+          "kavioStage": "true"
+        },
+        "nodeType": "element",
+        "style": {
+          "background": "#111827",
+          "height": "360px",
+          "overflow": "hidden",
+          "position": "relative",
+          "width": "640px"
+        },
+        "tagName": "div",
+        "textContent": "Final golden frame"
+      },
+      "width": 640
+    }
+  ],
+  "name": "browser-renderer-fixed-frame"
+}

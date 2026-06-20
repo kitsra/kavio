@@ -1,0 +1,33 @@
+{
+  "name": "@kavio/cli",
+  "version": "0.0.0",
+  "description": "Local CLI for Kavio validation, migration, preview, and rendering.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "bin": {
+    "kavio": "./dist/index.js"
+  },
+  "dependencies": {
+    "@kavio/builder": "workspace:*",
+    "@kavio/render": "workspace:*",
+    "@kavio/schema": "workspace:*"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.tsbuildinfo"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -b tsconfig.json && node --test test/*.test.mjs"
+  }
+}

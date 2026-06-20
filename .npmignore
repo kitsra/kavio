@@ -1,0 +1,30 @@
+# Root git/package installs should not ship the presentation site or local
+# repository-only material. Workspace packages use their own package.json
+# "files" allowlists for npm publishing.
+
+site/
+dist/
+docs/plan/
+examples/*/dist/
+examples/kavio-promo/generated/
+examples/kavio-promo/assets/screenshots/
+examples/visual-fixtures/
+renders/
+tmp/
+
+.agents/
+.claude/
+.github/
+.DS_Store
+**/.DS_Store
+
+!bin/
+!bin/*.js
+
+node_modules/
+*.tgz
+*.tsbuildinfo
+packages/*/dist/self-check.*
+packages/*/src/
+packages/*/test/
+packages/*/tsconfig.json

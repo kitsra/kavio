@@ -1,0 +1,50 @@
+{
+  "title": "Kavio",
+  "subtitle": "Programmable video editing",
+  "repoUrl": "github.com/Kitsra/Kavio",
+  "proofLabels": [
+    "Portable video templates",
+    "Author once, expand across formats",
+    "Docs, examples, packages"
+  ],
+  "features": [
+    {
+      "headline": "JSON-first templates",
+      "line": "Portable compositions for automated video workflows.",
+      "source": "README.md"
+    },
+    {
+      "headline": "Frame-based timeline",
+      "line": "Deterministic timing for preview, exports, and jobs.",
+      "source": "site/index.html"
+    },
+    {
+      "headline": "TypeScript builder",
+      "line": "Generate canonical Kavio JSON from code.",
+      "source": "docs/builder.md"
+    },
+    {
+      "headline": "Browser preview",
+      "line": "Scrub frames and inspect export overrides.",
+      "source": "docs/preview.md"
+    },
+    {
+      "headline": "Render pipeline",
+      "line": "Browser capture plus FFmpeg MP4 output.",
+      "source": "docs/rendering.md"
+    },
+    {
+      "headline": "CLI, MCP, social",
+      "line": "Validate, plan, render, and target Reels output.",
+      "source": "README.md + docs/builder.md"
+    }
+  ],
+  "sources": [
+    "README.md",
+    "docs/rendering.md",
+    "docs/builder.md",
+    "docs/preview.md",
+    "site/index.html",
+    "package.json"
+  ]
+}

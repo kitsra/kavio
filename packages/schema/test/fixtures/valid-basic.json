@@ -1,0 +1,69 @@
+{
+  "version": "0.1",
+  "composition": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationFrames": 60
+  },
+  "props": {
+    "headline": {
+      "type": "string",
+      "default": "New collection is live"
+    },
+    "clipUrl": {
+      "type": "url",
+      "required": true
+    }
+  },
+  "assets": {
+    "clip": {
+      "type": "video",
+      "src": "{{clipUrl}}"
+    }
+  },
+  "layers": [
+    {
+      "id": "clip",
+      "type": "video",
+      "asset": "clip",
+      "startFrame": 0,
+      "durationFrames": 60,
+      "fit": "cover",
+      "crop": {
+        "mode": "subject",
+        "x": 0.42,
+        "y": 0.5,
+        "keyframes": [
+          {
+            "frame": 0,
+            "x": 0.42,
+            "y": 0.5
+          },
+          {
+            "frame": 45,
+            "x": 0.58,
+            "y": 0.48
+          }
+        ],
+        "source": "manual"
+      }
+    },
+    {
+      "id": "headline",
+      "type": "text",
+      "text": "{{headline}}",
+      "startFrame": 0,
+      "durationFrames": 30
+    }
+  ],
+  "exports": [
+    {
+      "name": "reels",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1920
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio Packages</title>
+    <meta
+      name="description"
+      content="Package boundaries for the Kavio TypeScript monorepo, including schema, core, builder, browser-renderer, render-worker, ffmpeg, render, CLI, and MCP packages."
+    />
+    <meta property="og:title" content="Kavio Packages" />
+    <meta
+      property="og:description"
+      content="Understand the package boundaries in the Kavio TypeScript monorepo."
+    />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Kavio Packages",
+        "about": "TypeScript workspace package boundaries for Kavio"
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="index.html" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="project.html">Project</a>
+        <a href="docs.html">Docs</a>
+        <a href="examples.html">Examples</a>
+        <a href="packages.html" aria-current="page">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Packages</p>
+        <h1>A small TypeScript workspace with explicit ownership.</h1>
+        <p>
+          Kavio keeps the data contract, timeline evaluation, authoring API,
+          preview runtime, render orchestration, media planning, and CLI in
+          separate packages.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <dl class="definition-list">
+          <div>
+            <dt>@kavio/schema</dt>
+            <dd>JSON Schema, shared types, validation, and migration scaffold.</dd>
+          </div>
+          <div>
+            <dt>@kavio/core</dt>
+            <dd>Pure timeline evaluation, frame math, easing, prop resolution, layout, captions, and resource limits.</dd>
+          </div>
+          <div>
+            <dt>@kavio/builder</dt>
+            <dd>TypeScript authoring SDK with social export presets that outputs canonical Kavio JSON.</dd>
+          </div>
+          <div>
+            <dt>@kavio/browser-renderer</dt>
+            <dd>Browser preview and DOM rendering runtime for text, video, image, shape, and captions.</dd>
+          </div>
+          <div>
+            <dt>@kavio/render-worker</dt>
+            <dd>Browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.</dd>
+          </div>
+          <div>
+            <dt>@kavio/ffmpeg</dt>
+            <dd>Inspectable FFmpeg plan construction.</dd>
+          </div>
+          <div>
+            <dt>@kavio/cli</dt>
+            <dd>Local command line for validation, inspection, migration, preview, presets, and rendering.</dd>
+          </div>
+          <div>
+            <dt>@kavio/render</dt>
+            <dd>Render execution layer for browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.</dd>
+          </div>
+          <div>
+            <dt>@kavio/mcp</dt>
+            <dd>MCP server and provider tool adapters for agent-facing validation, planning, authoring, and render workflows.</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="content-section">
+        <h2>Workspace References</h2>
+        <ul class="plain-links">
+          <li><a href="docs/api.html">Website API overview</a></li>
+          <li><a href="docs/mcp.html">MCP server docs</a></li>
+          <li><a href="docs/authoring.html">Authoring guide</a></li>
+          <li><a href="docs/cli.html">CLI reference</a></li>
+          <li><a href="https://github.com/Kitsra/Kavio">GitHub repository</a></li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="index.html">Home</a>
+      <a href="project.html">Project</a>
+      <a href="docs.html">Docs</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+  </body>
+</html>

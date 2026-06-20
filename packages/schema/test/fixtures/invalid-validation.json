@@ -1,0 +1,74 @@
+{
+  "version": "0.1",
+  "composition": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationFrames": 60
+  },
+  "props": {
+    "headline": {
+      "type": "number",
+      "default": "wrong"
+    }
+  },
+  "assets": {
+    "clip": {
+      "type": "image",
+      "src": "https://example.com/clip.png"
+    },
+    "logo": {
+      "type": "image",
+      "src": "https://example.com/logo.png"
+    }
+  },
+  "layers": [
+    {
+      "id": "hero",
+      "type": "video",
+      "asset": "clip",
+      "startFrame": 0,
+      "durationFrames": 90
+    },
+    {
+      "id": "hero",
+      "type": "image",
+      "asset": "missing",
+      "startFrame": 0,
+      "durationFrames": 30,
+      "keyframes": {
+        "opacity": [
+          {
+            "frame": 12,
+            "value": 1,
+            "easing": "linear"
+          },
+          {
+            "frame": 6,
+            "value": "opaque",
+            "easing": "bounce"
+          }
+        ]
+      }
+    },
+    {
+      "id": "headline",
+      "type": "text",
+      "text": "{{missingProp}}",
+      "startFrame": 0,
+      "durationFrames": 30,
+      "style": {
+        "fontSize": "{{headline}}"
+      }
+    }
+  ],
+  "exports": [
+    {
+      "name": "bad",
+      "format": "gif",
+      "codec": "h264",
+      "width": 0,
+      "height": 1920
+    }
+  ]
+}

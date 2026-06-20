@@ -1,0 +1,50 @@
+name: Render E2E
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render-e2e:
+    name: Render end-to-end smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      # Unlike the default `verify` job, this job allows the bundled-binary
+      # build scripts (ffmpeg-static is allowlisted via pnpm.onlyBuiltDependencies)
+      # so real rendering can be exercised. The default suite stays binary-free.
+      - name: Install dependencies (allow bundled binary builds)
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Verify render optional packages
+        run: corepack pnpm run verify:render-optional-deps
+
+      - name: Install Chromium
+        run: corepack pnpm exec playwright install --with-deps chromium
+
+      - name: Build
+        run: corepack pnpm run build
+
+      - name: Render end-to-end smoke
+        run: corepack pnpm --filter @kavio/render run test:e2e

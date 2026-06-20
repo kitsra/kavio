@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio Browser Preview</title>
+    <meta
+      name="description"
+      content="How Kavio browser preview works today, including local preview server behavior and export-aspect overrides."
+    />
+    <meta property="og:title" content="Kavio Browser Preview" />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="../index.html" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="../project.html">Project</a>
+        <a href="../docs.html" aria-current="page">Docs</a>
+        <a href="../examples.html">Examples</a>
+        <a href="../packages.html">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Docs</p>
+        <h1>Preview compositions in the browser.</h1>
+        <p>
+          Kavio preview gives contributors a local way to inspect composition
+          timing, safe zones, layout, and export-aspect overrides.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Start Preview</h2>
+        <pre><code>node packages/cli/dist/index.js preview examples/basic-json/composition.json</code></pre>
+        <p>
+          The CLI starts a local server and prints a <code>http://127.0.0.1:&lt;port&gt;/</code>
+          URL. Open the URL to scrub frames, play and pause, toggle safe zones,
+          and inspect export variants.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>What Preview Is For</h2>
+        <ul class="check-list">
+          <li>Checking that frame timing matches expectations.</li>
+          <li>Reviewing text, image, video, shape, and caption layer layout.</li>
+          <li>Testing export-aspect overrides before batch rendering.</li>
+          <li>Debugging template props and asset references early.</li>
+        </ul>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="../docs.html">Docs</a>
+      <a href="rendering.html">Rendering</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+  </body>
+</html>

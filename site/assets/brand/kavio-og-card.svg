@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Kavio Open Graph card</title>
+  <desc id="desc">Kavio brand card with the Frame Stack mark and product positioning.</desc>
+  <rect width="1200" height="630" fill="#111611"/>
+  <path d="M0 0h1200v630H0z" fill="#111611"/>
+  <path d="M820 0h380v630H720z" fill="#223726"/>
+  <path d="M788 0h94L638 630h-94z" fill="#60bfd0" opacity=".18"/>
+  <path d="M920 0h82L758 630h-82z" fill="#d79b36" opacity=".2"/>
+  <path d="M1044 0h72L872 630h-72z" fill="#db614d" opacity=".22"/>
+
+  <rect x="84" y="112" width="132" height="132" rx="32" fill="#fbfaf5"/>
+  <rect x="108" y="143" width="84" height="61" rx="13" fill="none" stroke="#111611" stroke-width="12"/>
+  <path d="M138 164v22l27-11z" fill="#d79b36"/>
+  <path d="M111 219h80" stroke="#60bfd0" stroke-width="12" stroke-linecap="round"/>
+  <path d="M166 219h25" stroke="#db614d" stroke-width="12" stroke-linecap="round"/>
+
+  <text x="252" y="204" fill="#fbfaf5" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="92" font-weight="900" letter-spacing="0">Kavio</text>
+  <text x="88" y="348" fill="#fbfaf5" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="54" font-weight="850" letter-spacing="0">JSON-first programmable video</text>
+  <text x="90" y="424" fill="#d8ded4" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="30" font-weight="650" letter-spacing="0">Automation, templates, browser preview, and agent workflows.</text>
+
+  <rect x="90" y="496" width="176" height="44" rx="8" fill="#d79b36"/>
+  <text x="120" y="526" fill="#111611" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="900" letter-spacing="0">Open source</text>
+  <rect x="286" y="496" width="246" height="44" rx="8" fill="none" stroke="#fbfaf5" stroke-opacity=".35" stroke-width="2"/>
+  <text x="316" y="526" fill="#fbfaf5" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20" font-weight="800" letter-spacing="0">github.com/Kitsra/Kavio</text>
+</svg>

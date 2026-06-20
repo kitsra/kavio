@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio CLI Reference</title>
+    <meta
+      name="description"
+      content="Kavio CLI reference for validate, inspect, migrate, preview, JSON output, and current render status."
+    />
+    <meta property="og:title" content="Kavio CLI Reference" />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="../index.html" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="../project.html">Project</a>
+        <a href="../docs.html" aria-current="page">Docs</a>
+        <a href="../examples.html">Examples</a>
+        <a href="../packages.html">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Docs</p>
+        <h1>Kavio CLI reference.</h1>
+        <p>
+          The local CLI validates compositions, inspects timelines, migrates
+          supported formats, and starts browser previews.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Commands</h2>
+        <dl class="definition-list">
+          <div><dt>validate</dt><dd>Validate a Kavio composition file and report schema or composition errors.</dd></div>
+          <div><dt>inspect</dt><dd>Print duration, dimensions, asset counts, layer counts, audio, and export presets.</dd></div>
+          <div><dt>migrate</dt><dd>Run supported migration scaffolding for composition documents.</dd></div>
+          <div><dt>preview</dt><dd>Start a local preview server for scrubbing, playback, safe zones, and export-aspect overrides.</dd></div>
+        </dl>
+      </section>
+
+      <section class="content-section">
+        <h2>Examples</h2>
+        <pre><code>node packages/cli/dist/index.js validate examples/basic-json/composition.json
+node packages/cli/dist/index.js inspect examples/basic-json/composition.json
+node packages/cli/dist/index.js preview examples/basic-json/composition.json</code></pre>
+        <p>Use <code>--json</code> for machine-readable output where supported.</p>
+        <pre><code>node packages/cli/dist/index.js --json validate examples/basic-json/composition.json</code></pre>
+      </section>
+
+      <section class="content-section">
+        <h2>Render</h2>
+        <p>
+          The general <code>kavio render</code> command supports opaque
+          <code>mp4</code>, <code>webm</code>, and <code>mov</code> outputs. It
+          can render every export by default, or one named export with
+          <code>--export</code>, and supports props, batch rows, output
+          directories, concurrency, fail-fast, and JSON output.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="../docs.html">Docs</a>
+      <a href="rendering.html">Rendering</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+  </body>
+</html>

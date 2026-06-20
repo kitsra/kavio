@@ -1,0 +1,21 @@
+{
+  "name": "@kavio/example-mvp-demo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "emit": "node dist/emit-template.js",
+    "emit:batch": "node dist/emit-batch.js",
+    "emit:expanded": "node dist/emit-expanded.js",
+    "prepare-assets": "node dist/prepare-assets.js",
+    "render": "node dist/render.js",
+    "validate": "node dist/validate.js"
+  },
+  "dependencies": {
+    "@kavio/builder": "workspace:*",
+    "@kavio/render": "workspace:*",
+    "@kavio/render-worker": "workspace:*"
+  }
+}

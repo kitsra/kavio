@@ -1,0 +1,30 @@
+{
+  "name": "@kavio/ffmpeg",
+  "version": "0.0.0",
+  "description": "FFmpeg planning primitives for Kavio rendering.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@kavio/schema": "workspace:*"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.tsbuildinfo",
+    "!dist/self-check.*"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "test": "tsc -p tsconfig.json && node dist/self-check.js"
+  }
+}

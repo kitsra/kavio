@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
+  <title id="title">Kavio square social card</title>
+  <desc id="desc">Square Kavio brand card with the Frame Stack mark.</desc>
+  <rect width="1200" height="1200" fill="#111611"/>
+  <path d="M0 0h1200v1200H0z" fill="#111611"/>
+  <path d="M820 0h380v1200H620z" fill="#223726"/>
+  <path d="M760 0h120L420 1200H300z" fill="#60bfd0" opacity=".16"/>
+  <path d="M920 0h104L464 1200H360z" fill="#d79b36" opacity=".18"/>
+  <path d="M1072 0h92L600 1200h-92z" fill="#db614d" opacity=".22"/>
+
+  <rect x="394" y="214" width="412" height="412" rx="98" fill="#fbfaf5"/>
+  <rect x="468" y="312" width="264" height="190" rx="40" fill="none" stroke="#111611" stroke-width="36"/>
+  <path d="M560 378v78l96-39z" fill="#d79b36"/>
+  <path d="M476 548h248" stroke="#60bfd0" stroke-width="36" stroke-linecap="round"/>
+  <path d="M648 548h76" stroke="#db614d" stroke-width="36" stroke-linecap="round"/>
+
+  <text x="600" y="782" text-anchor="middle" fill="#fbfaf5" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="126" font-weight="900" letter-spacing="0">Kavio</text>
+  <text x="600" y="850" text-anchor="middle" fill="#d8ded4" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="34" font-weight="700" letter-spacing="0">JSON-first programmable video</text>
+</svg>

@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    "lib": ["ES2023", "DOM"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true,
+    "outDir": "dist",
+    "paths": {
+      "@kavio/browser-renderer": ["./packages/browser-renderer/src/index.ts"],
+      "@kavio/builder": ["./packages/builder/src/index.ts"],
+      "@kavio/cli": ["./packages/cli/src/index.ts"],
+      "@kavio/core": ["./packages/core/src/index.ts"],
+      "@kavio/ffmpeg": ["./packages/ffmpeg/src/index.ts"],
+      "@kavio/mcp": ["./packages/mcp/src/index.ts"],
+      "@kavio/render": ["./packages/render/src/index.ts"],
+      "@kavio/render-worker": ["./packages/render-worker/src/index.ts"],
+      "@kavio/schema": ["./packages/schema/src/index.ts"]
+    },
+    "resolveJsonModule": true,
+    "rootDir": "src",
+    "strict": true,
+    "target": "ES2023",
+    "verbatimModuleSyntax": true
+  }
+}

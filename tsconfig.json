@@ -1,0 +1,15 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/schema" },
+    { "path": "./packages/core" },
+    { "path": "./packages/builder" },
+    { "path": "./packages/browser-renderer" },
+    { "path": "./packages/render-worker" },
+    { "path": "./packages/ffmpeg" },
+    { "path": "./packages/render" },
+    { "path": "./packages/mcp" },
+    { "path": "./packages/cli" },
+    { "path": "./examples/mvp-demo" }
+  ]
+}

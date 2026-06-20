@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio Rendering Status</title>
+    <meta
+      name="description"
+      content="Kavio rendering status, render pipeline direction, current preview support, and MVP demo MP4 limitations."
+    />
+    <meta property="og:title" content="Kavio Rendering Status" />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="../index.html" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="../project.html">Project</a>
+        <a href="../docs.html" aria-current="page">Docs</a>
+        <a href="../examples.html">Examples</a>
+        <a href="../packages.html">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Docs</p>
+        <h1>Rendering is pre-release but wired end to end.</h1>
+        <p>
+          The production end-to-end <code>kavio render</code> command exists for
+          opaque video outputs, with some formats reserved for later render
+          paths.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Implemented Pieces</h2>
+        <ul class="check-list">
+          <li>Schema validation for composition documents.</li>
+          <li>Timeline evaluation and frame math in the core package.</li>
+          <li>Browser preview runtime for visual inspection.</li>
+          <li>Render-worker contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.</li>
+          <li>Inspectable FFmpeg plan construction.</li>
+          <li>Playwright-backed browser capture, FFmpeg execution, and CLI rendering.</li>
+          <li>MVP demo rendering through the shared render pipeline.</li>
+        </ul>
+      </section>
+
+      <section class="content-section">
+        <h2>Intended Pipeline</h2>
+        <ol class="number-list">
+          <li>Validate the composition and prop rows.</li>
+          <li>Expand template rows across export presets into stable jobs.</li>
+          <li>Capture frames through the browser renderer.</li>
+          <li>Build an inspectable FFmpeg plan.</li>
+          <li>Encode media outputs and write metadata.</li>
+          <li>Clean temporary files according to job policy.</li>
+        </ol>
+      </section>
+
+      <section class="content-section">
+        <h2>Current Limits</h2>
+        <p>
+          The current render path supports opaque <code>mp4</code>,
+          <code>webm</code>, and <code>mov</code> outputs. <code>gif</code>,
+          <code>png-sequence</code>, transparent final outputs, golden-frame
+          comparison, and performance measurements remain future work.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="../docs.html">Docs</a>
+      <a href="../examples.html">Examples</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+  </body>
+</html>

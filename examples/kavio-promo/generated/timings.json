@@ -1,0 +1,44 @@
+[
+  {
+    "label": "Logo reveal",
+    "startFrame": 0,
+    "endFrame": 90,
+    "start": "00:00.0",
+    "end": "00:03.0"
+  },
+  {
+    "label": "Problem and promise",
+    "startFrame": 90,
+    "endFrame": 210,
+    "start": "00:03.0",
+    "end": "00:07.0"
+  },
+  {
+    "label": "Feature cards",
+    "startFrame": 210,
+    "endFrame": 510,
+    "start": "00:07.0",
+    "end": "00:17.0"
+  },
+  {
+    "label": "Mobile website proof",
+    "startFrame": 516,
+    "endFrame": 682,
+    "start": "00:17.2",
+    "end": "00:22.7"
+  },
+  {
+    "label": "Idea to final video",
+    "startFrame": 690,
+    "endFrame": 750,
+    "start": "00:23.0",
+    "end": "00:25.0"
+  },
+  {
+    "label": "Call to action",
+    "startFrame": 750,
+    "endFrame": 810,
+    "start": "00:25.0",
+    "end": "00:27.0"
+  }
+]

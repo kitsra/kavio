@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio Concepts</title>
+    <meta
+      name="description"
+      content="Core Kavio concepts: compositions, frames, props, assets, layers, exports, preview, rendering, and batch jobs."
+    />
+    <meta property="og:title" content="Kavio Concepts" />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="../index.html" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="../project.html">Project</a>
+        <a href="../docs.html" aria-current="page">Docs</a>
+        <a href="../examples.html">Examples</a>
+        <a href="../packages.html">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Docs</p>
+        <h1>Kavio concepts.</h1>
+        <p>
+          Kavio is built around one portable composition document. Raw JSON,
+          builder SDKs, batch jobs, preview, and future render services should
+          all agree on the same document shape.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>The Composition Document</h2>
+        <dl class="definition-list">
+          <div><dt>Composition</dt><dd>Canvas size, FPS, duration, background, and color-space details.</dd></div>
+          <div><dt>Props</dt><dd>Declared placeholders for reusable templates, such as <code>{{headline}}</code>.</dd></div>
+          <div><dt>Assets</dt><dd>Named video, image, audio, and font references used by layers.</dd></div>
+          <div><dt>Layers</dt><dd>Ordered visual timeline items for video, image, text, shape, and captions.</dd></div>
+          <div><dt>Audio</dt><dd>Timeline-level audio tracks.</dd></div>
+          <div><dt>Exports</dt><dd>Target output presets and layout overrides for formats such as reels, square, and landscape.</dd></div>
+        </dl>
+      </section>
+
+      <section class="content-section">
+        <h2>Frames</h2>
+        <p>Kavio timelines are frame-based. A layer is active for this interval:</p>
+        <pre><code>startFrame &lt;= frame &lt; startFrame + durationFrames</code></pre>
+        <p>
+          This makes validation, browser preview, batch expansion, and render
+          planning deterministic.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Preview Versus Render</h2>
+        <p>
+          Preview is available today through the local CLI and browser renderer.
+          Rendering is available through <code>kavio render</code> for opaque
+          <code>mp4</code>, <code>webm</code>, and <code>mov</code> outputs.
+          Schema-valid <code>gif</code>, <code>png-sequence</code>, and
+          transparent final outputs are reserved for later render paths.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Batch Jobs</h2>
+        <p>A batch job combines one template, one prop row, one export preset, and one stable output name.</p>
+        <p>The MVP demo expands five rows times three export presets into 15 outputs.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="../docs.html">Docs</a>
+      <a href="authoring.html">Authoring</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+  </body>
+</html>

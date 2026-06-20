@@ -1,0 +1,1473 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kavio.dev/schemas/kavio-0.1.schema.json",
+  "title": "Kavio Composition",
+  "description": "Canonical Kavio 0.1 JSON timeline document.",
+  "type": "object",
+  "required": ["version", "composition", "assets", "layers", "exports"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": "0.1"
+    },
+    "metadata": {
+      "$ref": "#/$defs/metadata"
+    },
+    "composition": {
+      "$ref": "#/$defs/composition"
+    },
+    "props": {
+      "$ref": "#/$defs/props"
+    },
+    "assets": {
+      "$ref": "#/$defs/assets"
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/layer"
+      },
+      "maxItems": 512
+    },
+    "audio": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/audioTrack"
+      },
+      "maxItems": 64
+    },
+    "exports": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "$ref": "#/$defs/exportPreset"
+      }
+    }
+  },
+  "$defs": {
+    "jsonValue": {
+      "oneOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/jsonValue"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/jsonValue"
+          }
+        }
+      ]
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/jsonValue"
+      },
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "author": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "required": ["width", "height", "fps", "durationFrames"],
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7680
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7680
+        },
+        "fps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 216000
+        },
+        "background": {
+          "$ref": "#/$defs/colorOrTransparent"
+        },
+        "colorSpace": {
+          "enum": ["srgb", "display-p3"]
+        }
+      }
+    },
+    "props": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/identifier"
+      },
+      "additionalProperties": {
+        "$ref": "#/$defs/propDefinition"
+      }
+    },
+    "propDefinition": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": ["string", "number", "boolean", "color", "url", "enum", "asset"]
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "default": {
+          "$ref": "#/$defs/jsonValue"
+        },
+        "maxLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": ["string", "number", "boolean", "null"]
+          }
+        },
+        "description": {
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "enum"
+              }
+            },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["options"]
+          }
+        }
+      ]
+    },
+    "assets": {
+      "type": "object",
+      "propertyNames": {
+        "$ref": "#/$defs/identifier"
+      },
+      "maxProperties": 64,
+      "additionalProperties": {
+        "$ref": "#/$defs/asset"
+      }
+    },
+    "asset": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/videoAsset"
+        },
+        {
+          "$ref": "#/$defs/imageAsset"
+        },
+        {
+          "$ref": "#/$defs/audioAsset"
+        },
+        {
+          "$ref": "#/$defs/fontAsset"
+        }
+      ]
+    },
+    "assetBase": {
+      "type": "object",
+      "required": ["type", "src"],
+      "properties": {
+        "type": {
+          "enum": ["video", "image", "audio", "font"]
+        },
+        "src": {
+          "type": "string",
+          "minLength": 1
+        },
+        "checksum": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+:.+|^[a-z0-9-]+-.+$"
+        }
+      }
+    },
+    "timedAssetFields": {
+      "type": "object",
+      "properties": {
+        "trimStartFrames": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "trimEndFrames": {
+          "type": ["integer", "null"],
+          "minimum": 0
+        },
+        "loop": {
+          "type": "boolean"
+        }
+      }
+    },
+    "videoAsset": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/assetBase"
+        },
+        {
+          "$ref": "#/$defs/timedAssetFields"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "video"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "imageAsset": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/assetBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "image"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "audioAsset": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/assetBase"
+        },
+        {
+          "$ref": "#/$defs/timedAssetFields"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "audio"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "fontAsset": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/assetBase"
+        },
+        {
+          "type": "object",
+          "required": ["family"],
+          "properties": {
+            "type": {
+              "const": "font"
+            },
+            "family": {
+              "type": "string",
+              "minLength": 1
+            },
+            "weight": {
+              "type": ["integer", "string"],
+              "minimum": 1
+            },
+            "style": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "layer": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/videoLayer"
+        },
+        {
+          "$ref": "#/$defs/imageLayer"
+        },
+        {
+          "$ref": "#/$defs/textLayer"
+        },
+        {
+          "$ref": "#/$defs/shapeLayer"
+        },
+        {
+          "$ref": "#/$defs/captionLayer"
+        }
+      ]
+    },
+    "layerBase": {
+      "type": "object",
+      "required": ["id", "type", "startFrame", "durationFrames"],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "type": {
+          "enum": ["video", "image", "text", "shape", "caption"]
+        },
+        "startFrame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "position": {
+          "$ref": "#/$defs/position"
+        },
+        "anchor": {
+          "$ref": "#/$defs/anchor"
+        },
+        "size": {
+          "$ref": "#/$defs/size"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "z": {
+          "type": ["integer", "null"]
+        },
+        "track": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keyframes": {
+          "$ref": "#/$defs/keyframes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          }
+        },
+        "transitionIn": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/transition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transitionOut": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/transition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "videoLayer": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layerBase"
+        },
+        {
+          "type": "object",
+          "required": ["asset"],
+          "properties": {
+            "type": {
+              "const": "video"
+            },
+            "asset": {
+              "$ref": "#/$defs/identifier"
+            },
+            "fit": {
+              "$ref": "#/$defs/fit"
+            },
+            "crop": {
+              "$ref": "#/$defs/videoCrop"
+            },
+            "muted": {
+              "type": "boolean"
+            },
+            "volume": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "playbackRate": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "imageLayer": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layerBase"
+        },
+        {
+          "type": "object",
+          "required": ["asset"],
+          "properties": {
+            "type": {
+              "const": "image"
+            },
+            "asset": {
+              "$ref": "#/$defs/identifier"
+            },
+            "fit": {
+              "$ref": "#/$defs/fit"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "textLayer": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layerBase"
+        },
+        {
+          "type": "object",
+          "required": ["text"],
+          "properties": {
+            "type": {
+              "const": "text"
+            },
+            "text": {
+              "type": "string"
+            },
+            "style": {
+              "$ref": "#/$defs/textStyle"
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "shapeLayer": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layerBase"
+        },
+        {
+          "type": "object",
+          "required": ["shape"],
+          "properties": {
+            "type": {
+              "const": "shape"
+            },
+            "shape": {
+              "const": "rect"
+            },
+            "fill": {
+              "$ref": "#/$defs/color"
+            },
+            "stroke": {
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/stroke"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "radius": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "captionLayer": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/layerBase"
+        },
+        {
+          "type": "object",
+          "required": ["source"],
+          "properties": {
+            "type": {
+              "const": "caption"
+            },
+            "source": {
+              "$ref": "#/$defs/captionSource"
+            },
+            "style": {
+              "$ref": "#/$defs/captionStyle"
+            },
+            "safeArea": {
+              "oneOf": [
+                {
+                  "enum": ["bottom", "center", "top"]
+                },
+                {
+                  "$ref": "#/$defs/position"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "unevaluatedProperties": false
+    },
+    "textStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fontFamily": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fontSize": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fontWeight": {
+          "type": ["integer", "string"],
+          "minimum": 1
+        },
+        "fontStyle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "align": {
+          "enum": ["left", "center", "right"]
+        },
+        "lineHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "letterSpacing": {
+          "type": "number"
+        },
+        "maxLines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wrap": {
+          "type": "boolean"
+        },
+        "background": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "padding": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/stroke"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shadow": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/shadow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "captionStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fontFamily": {
+          "type": "string",
+          "minLength": 1
+        },
+        "fontSize": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fontWeight": {
+          "type": ["integer", "string"],
+          "minimum": 1
+        },
+        "fontStyle": {
+          "type": "string",
+          "minLength": 1
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "align": {
+          "enum": ["left", "center", "right"]
+        },
+        "lineHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "letterSpacing": {
+          "type": "number"
+        },
+        "maxLines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "wrap": {
+          "type": "boolean"
+        },
+        "background": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/color"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "padding": {
+          "type": "number",
+          "minimum": 0
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/stroke"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "shadow": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/shadow"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maxCharsPerLine": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "highlight": {
+          "$ref": "#/$defs/captionHighlight"
+        }
+      }
+    },
+    "captionHighlight": {
+      "type": "object",
+      "required": ["mode"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "enum": ["none", "word", "line"]
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "captionSource": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "cues"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "inline"
+            },
+            "cues": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/captionCue"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "asset"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": ["vtt", "srt", "asset"]
+            },
+            "asset": {
+              "$ref": "#/$defs/identifier"
+            }
+          }
+        }
+      ]
+    },
+    "captionCue": {
+      "type": "object",
+      "required": ["startFrame", "endFrame", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "startFrame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endFrame": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "type": "string"
+        },
+        "words": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/captionWord"
+          }
+        }
+      }
+    },
+    "captionWord": {
+      "type": "object",
+      "required": ["startFrame", "endFrame", "text"],
+      "additionalProperties": false,
+      "properties": {
+        "startFrame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "endFrame": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "audioTrack": {
+      "type": "object",
+      "required": ["id", "asset", "role", "startFrame"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "asset": {
+          "$ref": "#/$defs/identifier"
+        },
+        "role": {
+          "enum": ["music", "voiceover", "sfx", "source"]
+        },
+        "startFrame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "offsetFrames": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "volume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "fadeInFrames": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fadeOutFrames": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "duck": {
+          "$ref": "#/$defs/audioDuck"
+        }
+      }
+    },
+    "audioDuck": {
+      "type": "object",
+      "required": ["against", "amountDb"],
+      "additionalProperties": false,
+      "properties": {
+        "against": {
+          "enum": ["music", "voiceover", "sfx", "source"]
+        },
+        "amountDb": {
+          "type": "number",
+          "maximum": 0
+        },
+        "attackFrames": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseFrames": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "exportPreset": {
+      "type": "object",
+      "required": ["name", "format", "width", "height"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "format": {
+          "enum": ["mp4", "webm", "mov", "gif", "png-sequence"]
+        },
+        "codec": {
+          "enum": ["h264", "hevc", "vp9", "prores"]
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7680
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 7680
+        },
+        "fps": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 120
+        },
+        "bitrate": {
+          "type": "string",
+          "pattern": "^[0-9]+(k|K|m|M)$"
+        },
+        "crf": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 63
+        },
+        "audioCodec": {
+          "enum": ["aac", "opus", "mp3", "pcm"]
+        },
+        "audioBitrate": {
+          "type": "string",
+          "pattern": "^[0-9]+(k|K)$"
+        },
+        "loudnessLufs": {
+          "type": "number",
+          "minimum": -70,
+          "maximum": 0
+        },
+        "background": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/colorOrTransparent"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "layerOverrides": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/identifier"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/layerOverride"
+          }
+        }
+      }
+    },
+    "layerOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "startFrame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "position": {
+          "$ref": "#/$defs/position"
+        },
+        "anchor": {
+          "$ref": "#/$defs/anchor"
+        },
+        "size": {
+          "$ref": "#/$defs/size"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "scale": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "z": {
+          "type": ["integer", "null"]
+        },
+        "track": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keyframes": {
+          "$ref": "#/$defs/keyframes"
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          }
+        },
+        "transitionIn": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/transition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "transitionOut": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/transition"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fit": {
+          "$ref": "#/$defs/fit"
+        },
+        "muted": {
+          "type": "boolean"
+        },
+        "volume": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "playbackRate": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "crop": {
+          "$ref": "#/$defs/videoCrop"
+        },
+        "text": {
+          "type": "string"
+        },
+        "style": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/textStyle"
+            },
+            {
+              "$ref": "#/$defs/captionStyle"
+            }
+          ]
+        },
+        "shape": {
+          "const": "rect"
+        },
+        "fill": {
+          "$ref": "#/$defs/color"
+        },
+        "stroke": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/stroke"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "radius": {
+          "type": "number",
+          "minimum": 0
+        },
+        "safeArea": {
+          "oneOf": [
+            {
+              "enum": ["bottom", "center", "top"]
+            },
+            {
+              "$ref": "#/$defs/position"
+            }
+          ]
+        }
+      }
+    },
+    "keyframes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "opacity": {
+          "$ref": "#/$defs/keyframeArray"
+        },
+        "x": {
+          "$ref": "#/$defs/keyframeArray"
+        },
+        "y": {
+          "$ref": "#/$defs/keyframeArray"
+        },
+        "scale": {
+          "$ref": "#/$defs/keyframeArray"
+        },
+        "rotation": {
+          "$ref": "#/$defs/keyframeArray"
+        }
+      }
+    },
+    "keyframeArray": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/keyframe"
+      }
+    },
+    "keyframe": {
+      "type": "object",
+      "required": ["frame", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "type": "number"
+        },
+        "easing": {
+          "$ref": "#/$defs/easing"
+        }
+      }
+    },
+    "effect": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type", "radius"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "blur"
+            },
+            "radius": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "value"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "enum": ["brightness", "contrast", "saturate"]
+            },
+            "value": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "color"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "tint"
+            },
+            "color": {
+              "$ref": "#/$defs/color"
+            }
+          }
+        }
+      ]
+    },
+    "transition": {
+      "type": "object",
+      "required": ["type", "durationFrames"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": ["fade", "slide", "wipe", "crossfade"]
+        },
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "direction": {
+          "enum": ["up", "down", "left", "right"]
+        },
+        "easing": {
+          "$ref": "#/$defs/easing"
+        }
+      }
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "x": {
+          "$ref": "#/$defs/dimension"
+        },
+        "y": {
+          "$ref": "#/$defs/dimension"
+        }
+      }
+    },
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "$ref": "#/$defs/nonNegativeDimension"
+        },
+        "height": {
+          "$ref": "#/$defs/nonNegativeDimension"
+        }
+      }
+    },
+    "anchor": {
+      "oneOf": [
+        {
+          "enum": [
+            "top-left",
+            "top",
+            "top-right",
+            "left",
+            "center",
+            "right",
+            "bottom-left",
+            "bottom",
+            "bottom-right"
+          ]
+        },
+        {
+          "type": "object",
+          "required": ["x", "y"],
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        }
+      ]
+    },
+    "dimension": {
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "$ref": "#/$defs/relativeUnit"
+        }
+      ]
+    },
+    "nonNegativeDimension": {
+      "oneOf": [
+        {
+          "type": "number",
+          "minimum": 0
+        },
+        {
+          "$ref": "#/$defs/relativeUnit"
+        }
+      ]
+    },
+    "relativeUnit": {
+      "type": "string",
+      "pattern": "^-?[0-9]+(?:\\.[0-9]+)?%(?:w|h)?$"
+    },
+    "fit": {
+      "enum": ["cover", "contain", "fill", "none"]
+    },
+    "videoCrop": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["mode"],
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "center"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["mode"],
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "const": "subject"
+            },
+            "x": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "keyframes": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/subjectCropKeyframe"
+              }
+            },
+            "smoothingFrames": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "anyOf": [
+            {
+              "required": ["x"]
+            },
+            {
+              "required": ["y"]
+            },
+            {
+              "required": ["keyframes"]
+            }
+          ]
+        }
+      ]
+    },
+    "subjectCropKeyframe": {
+      "type": "object",
+      "required": ["frame", "x", "y"],
+      "additionalProperties": false,
+      "properties": {
+        "frame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "x": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "easing": {
+          "$ref": "#/$defs/easing"
+        }
+      }
+    },
+    "stroke": {
+      "type": "object",
+      "required": ["color", "width"],
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "shadow": {
+      "type": "object",
+      "required": ["color", "x", "y", "blur"],
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "blur": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "colorOrTransparent": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/color"
+        },
+        {
+          "const": "transparent"
+        }
+      ]
+    },
+    "color": {
+      "type": "string",
+      "minLength": 1
+    },
+    "easing": {
+      "oneOf": [
+        {
+          "enum": [
+            "linear",
+            "inQuad",
+            "outQuad",
+            "inOutQuad",
+            "inCubic",
+            "outCubic",
+            "inOutCubic",
+            "inBack",
+            "outBack",
+            "inOutBack"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^cubic-bezier\\(-?[0-9]+(?:\\.[0-9]+)?,-?[0-9]+(?:\\.[0-9]+)?,-?[0-9]+(?:\\.[0-9]+)?,-?[0-9]+(?:\\.[0-9]+)?\\)$"
+        }
+      ]
+    },
+    "identifier": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_-]*$",
+      "minLength": 1,
+      "maxLength": 128
+    }
+  }
+}

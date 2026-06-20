@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio Troubleshooting</title>
+    <meta
+      name="description"
+      content="Troubleshooting Kavio validation, preview, rendering, and package manager issues."
+    />
+    <meta property="og:title" content="Kavio Troubleshooting" />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="../index.html" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="../project.html">Project</a>
+        <a href="../docs.html" aria-current="page">Docs</a>
+        <a href="../examples.html">Examples</a>
+        <a href="../packages.html">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Docs</p>
+        <h1>Troubleshooting Kavio.</h1>
+        <p>
+          Most issues fall into one of four groups: validation, build setup,
+          browser preview, or the current render-command limitation.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Validation Fails</h2>
+        <p>
+          Check the composition version, required props, asset references, layer
+          ids, timing fields, and export presets. Validate the smallest fixture
+          first, then compare the failing composition.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Preview Does Not Start</h2>
+        <p>
+          Build packages first, then run preview from the repository root. If the
+          printed port is already in use, restart the command and use the new URL.
+        </p>
+        <pre><code>corepack pnpm run build
+node packages/cli/dist/index.js preview examples/basic-json/composition.json</code></pre>
+      </section>
+
+      <section class="content-section">
+        <h2>Package Manager Issues</h2>
+        <p>
+          Kavio intentionally uses pnpm with a minimum release age policy. Do not
+          bypass the package-age gate or install fresh dependencies with a client
+          that ignores the repository security posture.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Render Command Missing</h2>
+        <p>
+          This usually means the optional Playwright Chromium browser or FFmpeg
+          binary is not available. Install render binaries, or use preview for
+          visual inspection until the local render environment is ready.
+        </p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="../docs.html">Docs</a>
+      <a href="getting-started.html">Getting Started</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+  </body>
+</html>

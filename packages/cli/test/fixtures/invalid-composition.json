@@ -1,0 +1,46 @@
+{
+  "version": "0.1",
+  "composition": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationFrames": 60
+  },
+  "props": {
+    "headline": {
+      "type": "number",
+      "default": "not a number"
+    }
+  },
+  "assets": {
+    "hero": {
+      "type": "image",
+      "src": "https://example.com/hero.png"
+    }
+  },
+  "layers": [
+    {
+      "id": "hero-video",
+      "type": "video",
+      "asset": "hero",
+      "startFrame": 0,
+      "durationFrames": 75
+    },
+    {
+      "id": "headline",
+      "type": "text",
+      "text": "{{missingHeadline}}",
+      "startFrame": 0,
+      "durationFrames": 30
+    }
+  ],
+  "exports": [
+    {
+      "name": "bad",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1920
+    }
+  ]
+}

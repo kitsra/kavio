@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio Examples</title>
+    <meta
+      name="description"
+      content="Examples for Kavio including raw JSON composition, TypeScript builder output, MVP batch demo, and browser-renderer visual fixtures."
+    />
+    <meta property="og:title" content="Kavio Examples" />
+    <meta
+      property="og:description"
+      content="Explore raw JSON, TypeScript builder, MVP batch, and browser-renderer fixtures for Kavio."
+    />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Kavio Examples",
+        "about": "Example Kavio compositions and fixtures"
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="index.html" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="project.html">Project</a>
+        <a href="docs.html">Docs</a>
+        <a href="examples.html" aria-current="page">Examples</a>
+        <a href="packages.html">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Examples</p>
+        <h1>Reference fixtures for authoring, preview, and batch expansion.</h1>
+        <p>
+          The examples are intentionally small and deterministic, so they can be
+          validated locally and compared in CI. This page explains the fixtures;
+          runnable source lives in the GitHub repository.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <div class="example-detail" id="basic-json">
+          <h2>basic-json</h2>
+          <p>
+            A small raw Kavio JSON composition used for CLI validation, inspection,
+            browser preview, and comparison against the builder output.
+          </p>
+          <pre><code>corepack pnpm run build
+node packages/cli/dist/index.js validate examples/basic-json/composition.json
+node packages/cli/dist/index.js inspect examples/basic-json/composition.json
+node packages/cli/dist/index.js preview examples/basic-json/composition.json</code></pre>
+          <p>
+            It demonstrates a 1080 by 1920, 30 FPS composition with a video
+            layer, headline text layer, props for headline and asset URLs, and a
+            reels MP4 export preset.
+          </p>
+        </div>
+
+        <div class="example-detail" id="basic-builder">
+          <h2>basic-builder</h2>
+          <p>
+            A TypeScript authoring example using <code>@kavio/builder</code>. It emits
+            JSON equivalent to the raw <code>basic-json</code> fixture.
+          </p>
+          <pre><code>corepack pnpm --filter @kavio/example-basic-builder run build
+corepack pnpm --filter @kavio/example-basic-builder run emit</code></pre>
+          <p>
+            The root verification suite compares this output with the raw JSON
+            fixture, which keeps builder behavior honest.
+          </p>
+        </div>
+
+        <div class="example-detail" id="mvp-demo">
+          <h2>mvp-demo</h2>
+          <p>
+            A richer template expanded across five prop rows and three export presets,
+            producing 15 jobs through the shared render pipeline.
+          </p>
+          <pre><code>corepack pnpm --filter @kavio/example-mvp-demo run build
+corepack pnpm --filter @kavio/example-mvp-demo run validate
+corepack pnpm --filter @kavio/example-mvp-demo run render</code></pre>
+          <p>
+            The sample covers clips, logo, headline, CTA, captions, music, brand
+            colors, and export-specific layer overrides.
+          </p>
+        </div>
+
+        <div class="example-detail" id="visual-fixtures">
+          <h2>visual-fixtures</h2>
+          <p>
+            Fixed-frame composition, frame metadata, and a DOM snapshot for future
+            browser-renderer regression testing and golden-frame workflows.
+          </p>
+          <p>
+            These fixtures are meant for screenshot and DOM stability tests as the
+            browser renderer matures.
+          </p>
+        </div>
+
+        <div class="example-detail">
+          <h2>Source</h2>
+          <p>
+            The shipped website contains the example explanations. The source
+            files and runnable fixtures live in the GitHub repository.
+          </p>
+          <a href="https://github.com/Kitsra/Kavio">Open GitHub repository</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="index.html">Home</a>
+      <a href="docs.html">Docs</a>
+      <a href="packages.html">Packages</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+  </body>
+</html>

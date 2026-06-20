@@ -1,0 +1,20 @@
+{
+  "name": "@kavio/example-kavio-promo",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "collect-copy": "tsc -p tsconfig.json && node dist/collect-copy.js",
+    "capture-site": "tsc -p tsconfig.json && node dist/capture-site-cli.js",
+    "emit": "tsc -p tsconfig.json && node dist/emit.js",
+    "render": "tsc -p tsconfig.json && node dist/render.js",
+    "verify": "tsc -p tsconfig.json && node dist/verify-cli.js"
+  },
+  "dependencies": {
+    "@kavio/builder": "workspace:*",
+    "@kavio/render": "workspace:*",
+    "@kavio/schema": "workspace:*"
+  }
+}

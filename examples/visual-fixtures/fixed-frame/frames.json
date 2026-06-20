@@ -1,0 +1,6 @@
+{
+  "name": "browser-renderer-fixed-frame",
+  "description": "Stable browser-renderer frames covering shape, image, text, caption, keyframe, and safe-area output.",
+  "composition": "composition.json",
+  "frames": [0, 12, 24, 36, 47]
+}

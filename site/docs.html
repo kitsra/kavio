@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio Documentation Map</title>
+    <meta
+      name="description"
+      content="A human and crawler friendly map of Kavio documentation for getting started, authoring, preview, rendering, APIs, and project notes."
+    />
+    <meta property="og:title" content="Kavio Documentation Map" />
+    <meta
+      property="og:description"
+      content="Browse the Kavio docs by learning path: getting started, authoring, rendering, API reference, examples, and project notes."
+    />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Kavio Documentation Map",
+        "description": "Grouped links to Kavio documentation.",
+        "hasPart": [
+          { "@type": "TechArticle", "name": "Getting started", "url": "docs/getting-started.html" },
+          { "@type": "TechArticle", "name": "Concepts", "url": "docs/concepts.html" },
+          { "@type": "TechArticle", "name": "CLI reference", "url": "docs/cli.html" },
+          { "@type": "TechArticle", "name": "Authoring", "url": "docs/authoring.html" },
+          { "@type": "TechArticle", "name": "MCP server", "url": "docs/mcp.html" }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="index.html" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="project.html">Project</a>
+        <a href="docs.html" aria-current="page">Docs</a>
+        <a href="examples.html">Examples</a>
+        <a href="packages.html">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Documentation</p>
+        <h1>Kavio docs, grouped for people and machines.</h1>
+        <p>
+          Start with setup and concepts, move into authoring and preview, then use
+          reference docs for package APIs, schema details, and render architecture.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Start Here</h2>
+        <div class="resource-grid">
+          <a href="docs/getting-started.html"><strong>Getting started</strong><span>Install, build, validate, inspect, and preview.</span></a>
+          <a href="docs/concepts.html"><strong>Concepts</strong><span>Composition, frames, props, layers, exports, and batch jobs.</span></a>
+          <a href="docs/cli.html"><strong>CLI reference</strong><span>Command behavior, exit codes, JSON output, and render status.</span></a>
+          <a href="examples.html"><strong>Examples</strong><span>Raw JSON, builder, MVP demo, and visual fixtures.</span></a>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>Authoring</h2>
+        <div class="resource-grid">
+          <a href="docs/authoring.html"><strong>Template authoring</strong><span>Props, assets, naming, layout, animation, and builder SDK usage.</span></a>
+          <a href="docs/api.html"><strong>API overview</strong><span>Package contracts and import style.</span></a>
+          <a href="packages.html"><strong>Packages</strong><span>Workspace ownership for schema, core, builder, renderer, worker, ffmpeg, and CLI.</span></a>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>Preview And Rendering</h2>
+        <div class="resource-grid">
+          <a href="docs/preview.html"><strong>Browser preview</strong><span>Local preview server behavior and export-aspect checks.</span></a>
+          <a href="docs/rendering.html"><strong>Rendering status</strong><span>Implemented render path, current limits, and remaining hardening work.</span></a>
+          <a href="examples.html#mvp-demo"><strong>MVP demo fixture</strong><span>Multi-row and multi-aspect demo fixture notes.</span></a>
+        </div>
+      </section>
+
+      <section class="content-section">
+        <h2>Agent And Reference</h2>
+        <div class="resource-grid">
+          <a href="docs/mcp.html"><strong>MCP server</strong><span>Agent-facing tools, resources, prompts, adapters, errors, and safety model.</span></a>
+          <a href="docs/troubleshooting.html"><strong>Troubleshooting</strong><span>Validation, preview, render, and package-manager issues.</span></a>
+          <a href="llms.txt"><strong>LLM summary</strong><span>Compact project context for AI tools and search indexing.</span></a>
+          <a href="https://github.com/Kitsra/Kavio"><strong>GitHub repository</strong><span>Source code, issues, and contribution workflow.</span></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="index.html">Home</a>
+      <a href="project.html">Project</a>
+      <a href="examples.html">Examples</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+  </body>
+</html>

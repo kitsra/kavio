@@ -1,0 +1,68 @@
+# Kavio Website
+
+Kavio is a pre-release, JSON-first programmable video engine for automation,
+AI-generated templates, browser preview, and future visual editing.
+
+This website is self-contained. It summarizes the project, documentation,
+examples, and package boundaries without relying on local repository markdown
+files. The source code and runnable fixtures live at:
+
+https://github.com/Kitsra/Kavio
+
+## Primary Concepts
+
+- A Kavio composition is portable video data.
+- A composition includes canvas settings, props, assets, layers, audio, and exports.
+- Timelines are frame-based for deterministic validation, preview, and rendering.
+- Props turn compositions into templates using placeholders such as `{{headline}}`.
+- Exports describe target formats such as reels, square, and landscape.
+- Batch jobs combine one template, one prop row, and one export preset.
+
+## Current Status
+
+Implemented: schema, validator, timeline core, TypeScript builder, browser
+preview runtime, render-worker contracts, FFmpeg planning helpers, render
+execution, CLI commands, MCP server, provider adapters, and MVP demo fixtures.
+
+`kavio render` supports opaque `mp4`, `webm`, and `mov` outputs. Schema-valid
+`gif`, `png-sequence`, and transparent final outputs are reserved for later
+render paths.
+
+## Website Pages
+
+- Home: `index.html`
+- Project overview: `project.html`
+- Documentation map: `docs.html`
+- Examples guide: `examples.html`
+- Brand assets: `brand.html`
+- Package boundaries: `packages.html`
+- Open Graph card: `assets/brand/kavio-og-card.png`
+- Square social card: `assets/brand/kavio-og-square.png`
+- Getting started: `docs/getting-started.html`
+- Concepts: `docs/concepts.html`
+- Authoring: `docs/authoring.html`
+- CLI reference: `docs/cli.html`
+- Browser preview: `docs/preview.html`
+- Rendering status: `docs/rendering.html`
+- API overview: `docs/api.html`
+- MCP server: `docs/mcp.html`
+- Troubleshooting: `docs/troubleshooting.html`
+
+## Packages
+
+- `@kavio/schema`: JSON Schema, shared types, validation, and migration scaffold.
+- `@kavio/core`: timeline evaluation, frame math, easing, prop resolution, layout, captions, and limits.
+- `@kavio/builder`: TypeScript authoring SDK with social export presets that outputs canonical Kavio JSON.
+- `@kavio/browser-renderer`: browser preview and DOM rendering runtime for text, video, image, shape, and captions.
+- `@kavio/render-worker`: browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.
+- `@kavio/ffmpeg`: inspectable FFmpeg plan construction.
+- `@kavio/cli`: local commands for validation, inspection, migration, preview, presets, and rendering.
+- `@kavio/render`: render execution layer for browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.
+- `@kavio/mcp`: MCP server and provider tool adapters for agent-facing Kavio workflows.
+
+## Examples Covered
+
+- `basic-json`: small raw composition for validation, inspection, and preview.
+- `basic-builder`: TypeScript builder version of the basic JSON fixture.
+- `mvp-demo`: batch-oriented fixture with five prop rows and three export presets.
+- `visual-fixtures`: browser-renderer regression material.

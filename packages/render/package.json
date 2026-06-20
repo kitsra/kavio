@@ -1,0 +1,42 @@
+{
+  "name": "@kavio/render",
+  "version": "0.0.0",
+  "description": "Render execution layer for Kavio: browser frame capture and FFmpeg encoding.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@kavio/browser-renderer": "workspace:*",
+    "@kavio/core": "workspace:*",
+    "@kavio/ffmpeg": "workspace:*",
+    "@kavio/render-worker": "workspace:*",
+    "@kavio/schema": "workspace:*"
+  },
+  "optionalDependencies": {
+    "ffmpeg-static": "5.3.0",
+    "playwright": "1.50.1"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.tsbuildinfo",
+    "!dist/self-check.*"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "install:browsers": "playwright install chromium",
+    "install:ffmpeg": "corepack pnpm rebuild ffmpeg-static",
+    "prepack": "node ../../scripts/verify-render-optional-deps.mjs",
+    "test": "tsc -p tsconfig.json && node dist/self-check.js",
+    "test:e2e": "tsc -p tsconfig.json && node test/e2e.mjs"
+  }
+}

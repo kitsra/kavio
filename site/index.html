@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio Website</title>
+    <meta
+      name="description"
+      content="Kavio is a JSON-first programmable video engine for automation, AI templates, and future visual editing."
+    />
+    <meta property="og:title" content="Kavio" />
+    <meta
+      property="og:description"
+      content="A JSON-first programmable video engine for automation, AI templates, browser preview, and future visual editing."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://kitsra.github.io/Kavio/site/" />
+    <meta property="og:image" content="https://kitsra.github.io/Kavio/site/assets/brand/kavio-og-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Kavio, JSON-first programmable video." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Kavio" />
+    <meta
+      name="twitter:description"
+      content="A JSON-first programmable video engine for automation, AI templates, browser preview, and future visual editing."
+    />
+    <meta name="twitter:image" content="https://kitsra.github.io/Kavio/site/assets/brand/kavio-og-card.png" />
+    <link rel="icon" href="assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://github.com/Kitsra#organization",
+            "name": "Kitsra",
+            "url": "https://github.com/Kitsra"
+          },
+          {
+            "@type": "Brand",
+            "@id": "https://kitsra.github.io/Kavio/site/#brand",
+            "name": "Kavio",
+            "logo": "https://kitsra.github.io/Kavio/site/assets/brand/kavio-frame-stack-icon.png"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://kitsra.github.io/Kavio/site/#website",
+            "name": "Kavio",
+            "url": "https://kitsra.github.io/Kavio/site/",
+            "description": "Documentation and examples for Kavio, a JSON-first programmable video engine.",
+            "publisher": { "@id": "https://github.com/Kitsra#organization" },
+            "image": { "@id": "https://kitsra.github.io/Kavio/site/assets/brand/kavio-og-card.png#image" },
+            "inLanguage": "en"
+          },
+          {
+            "@type": "SoftwareSourceCode",
+            "@id": "https://github.com/Kitsra/Kavio#source",
+            "name": "Kavio",
+            "codeRepository": "https://github.com/Kitsra/Kavio",
+            "programmingLanguage": "TypeScript",
+            "license": "https://www.apache.org/licenses/LICENSE-2.0",
+            "description": "JSON-first programmable video engine for automation, AI templates, and future visual editing.",
+            "isAccessibleForFree": true,
+            "applicationCategory": "DeveloperApplication",
+            "publisher": { "@id": "https://github.com/Kitsra#organization" },
+            "brand": { "@id": "https://kitsra.github.io/Kavio/site/#brand" }
+          },
+          {
+            "@type": "WebPage",
+            "@id": "https://kitsra.github.io/Kavio/site/#home",
+            "url": "https://kitsra.github.io/Kavio/site/",
+            "name": "Kavio",
+            "isPartOf": { "@id": "https://kitsra.github.io/Kavio/site/#website" },
+            "about": { "@id": "https://github.com/Kitsra/Kavio#source" },
+            "primaryImageOfPage": { "@id": "https://kitsra.github.io/Kavio/site/assets/brand/kavio-og-card.png#image" }
+          },
+          {
+            "@type": "ImageObject",
+            "@id": "https://kitsra.github.io/Kavio/site/assets/brand/kavio-og-card.png#image",
+            "url": "https://kitsra.github.io/Kavio/site/assets/brand/kavio-og-card.png",
+            "width": 1200,
+            "height": 630,
+            "caption": "Kavio Open Graph card"
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <header class="site-header" aria-label="Primary">
+      <a class="brand" href="#top" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="project.html">Project</a>
+        <a href="docs.html">Docs</a>
+        <a href="examples.html">Examples</a>
+        <a href="packages.html">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <canvas id="hero-scene" aria-hidden="true"></canvas>
+        <div class="hero-shade" aria-hidden="true"></div>
+        <div class="hero-content">
+          <p class="eyebrow">JSON-first programmable video</p>
+          <h1 id="hero-title">Kavio</h1>
+          <p class="hero-copy">
+            Portable video templates for automation, AI generation, browser preview,
+            and future visual editing.
+          </p>
+          <div class="hero-actions" aria-label="Key links">
+            <a class="button primary" href="docs/getting-started.html">Get started</a>
+            <a class="button secondary" href="docs.html">Read the docs</a>
+            <a class="button secondary" href="https://github.com/Kitsra/Kavio">GitHub repo</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="project" class="section project-section" aria-labelledby="project-title">
+        <div class="section-heading">
+          <p class="eyebrow">Project</p>
+          <h2 id="project-title">One composition format from JSON to preview.</h2>
+        </div>
+        <div class="project-grid">
+          <article class="feature">
+            <span class="feature-index">01</span>
+            <h3>Portable templates</h3>
+            <p>
+              Raw JSON, TypeScript builders, batch jobs, preview, and future editor
+              surfaces compile to the same versioned Kavio composition format.
+            </p>
+          </article>
+          <article class="feature">
+            <span class="feature-index">02</span>
+            <h3>Frame-based timeline</h3>
+            <p>
+              Deterministic timing keeps validation, preview, exports, and automated
+              render jobs aligned around stable frame boundaries.
+            </p>
+          </article>
+          <article class="feature">
+            <span class="feature-index">03</span>
+            <h3>Pre-release engine</h3>
+            <p>
+              Schema, validation, core timeline logic, builder APIs, browser preview,
+              render-worker contracts, FFmpeg planning, and CLI tools are in place.
+            </p>
+          </article>
+        </div>
+        <p class="section-link"><a href="project.html">Read the project overview</a></p>
+      </section>
+
+      <section class="section split-section" aria-labelledby="flow-title">
+        <div class="flow-copy">
+          <p class="eyebrow">Workflow</p>
+          <h2 id="flow-title">Author once, expand across formats.</h2>
+          <p>
+            A Kavio template declares props, assets, layers, audio, and export
+            presets. Batch rendering combines one template with prop rows and export
+            presets to create stable output jobs.
+          </p>
+        </div>
+        <div class="composition-panel" aria-label="Composition overview">
+          <div class="preview-frame">
+            <div class="preview-video"></div>
+            <div class="preview-title">New collection is live</div>
+            <div class="preview-safe-zone"></div>
+          </div>
+          <div class="timeline">
+            <div class="timeline-row">
+              <span>video</span>
+              <b style="--start: 0%; --width: 100%"></b>
+            </div>
+            <div class="timeline-row">
+              <span>headline</span>
+              <b style="--start: 8%; --width: 38%"></b>
+            </div>
+            <div class="timeline-row">
+              <span>exports</span>
+              <b style="--start: 0%; --width: 28%"></b>
+              <b style="--start: 31%; --width: 28%"></b>
+              <b style="--start: 62%; --width: 28%"></b>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="docs" class="section docs-section" aria-labelledby="docs-title">
+        <div class="section-heading">
+          <p class="eyebrow">Docs</p>
+          <h2 id="docs-title">Start with the path a new contributor follows.</h2>
+        </div>
+        <div class="link-grid">
+          <a href="docs/getting-started.html">
+            <strong>Getting started</strong>
+            <span>Install, build, validate, inspect, and preview.</span>
+          </a>
+          <a href="docs/concepts.html">
+            <strong>Concepts</strong>
+            <span>Composition, frames, props, assets, exports, and batch jobs.</span>
+          </a>
+          <a href="docs/authoring.html">
+            <strong>Authoring</strong>
+            <span>Write reusable templates with JSON or the builder SDK.</span>
+          </a>
+          <a href="docs/cli.html">
+            <strong>CLI reference</strong>
+            <span>Command behavior, JSON output, and render status.</span>
+          </a>
+          <a href="docs/preview.html">
+            <strong>Browser preview</strong>
+            <span>Scrub frames, play timelines, and inspect export overrides.</span>
+          </a>
+          <a href="docs/rendering.html">
+            <strong>Rendering</strong>
+            <span>Implemented render path, current limits, and remaining hardening work.</span>
+          </a>
+          <a href="docs/mcp.html">
+            <strong>MCP server</strong>
+            <span>Agent-facing tools, render boundary, and safety model.</span>
+          </a>
+        </div>
+        <p class="section-link"><a href="docs.html">Browse all documentation</a></p>
+      </section>
+
+      <section id="examples" class="section examples-section" aria-labelledby="examples-title">
+        <div class="section-heading">
+          <p class="eyebrow">Examples</p>
+          <h2 id="examples-title">Fixtures that show the engine in motion.</h2>
+        </div>
+        <div class="example-list">
+          <article class="example">
+            <div>
+              <h3>basic-json</h3>
+              <p>Small raw composition for CLI validation, inspection, and preview.</p>
+            </div>
+            <a href="examples.html#basic-json">Read guide</a>
+          </article>
+          <article class="example">
+            <div>
+              <h3>basic-builder</h3>
+              <p>TypeScript builder sample that emits the same JSON as the raw fixture.</p>
+            </div>
+            <a href="examples.html#basic-builder">Read guide</a>
+          </article>
+          <article class="example">
+            <div>
+              <h3>mvp-demo</h3>
+              <p>Template expansion across five prop rows and three export presets.</p>
+            </div>
+            <a href="examples.html#mvp-demo">Read guide</a>
+          </article>
+          <article class="example">
+            <div>
+              <h3>visual-fixtures</h3>
+              <p>Fixed-frame browser-renderer regression material and DOM snapshot.</p>
+            </div>
+            <a href="examples.html#visual-fixtures">Read guide</a>
+          </article>
+        </div>
+      </section>
+
+      <section id="packages" class="section packages-section" aria-labelledby="packages-title">
+        <div class="section-heading">
+          <p class="eyebrow">Packages</p>
+          <h2 id="packages-title">Small packages with clear ownership.</h2>
+        </div>
+        <div class="package-grid">
+          <span>@kavio/schema</span>
+          <span>@kavio/core</span>
+          <span>@kavio/builder</span>
+          <span>@kavio/browser-renderer</span>
+          <span>@kavio/render-worker</span>
+          <span>@kavio/ffmpeg</span>
+          <span>@kavio/cli</span>
+        </div>
+        <p class="section-link"><a href="packages.html">View package boundaries</a></p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Kavio is pre-release.</span>
+      <a href="docs.html">Docs</a>
+      <a href="examples.html">Examples</a>
+      <a href="brand.html">Brand assets</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

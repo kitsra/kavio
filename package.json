@@ -1,0 +1,49 @@
+{
+  "name": "kavio",
+  "version": "0.0.0",
+  "private": true,
+  "description": "JSON-first programmable video engine for automation, AI templates, and future visual editing.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": {
+    "kavio": "./bin/kavio.js",
+    "kavio-mcp": "./bin/kavio-mcp.js"
+  },
+  "packageManager": "pnpm@11.0.9",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=10.16.0"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "check": "tsc -b",
+    "install:render-binaries": "corepack pnpm run install:render-ffmpeg && corepack pnpm run install:render-browsers",
+    "install:render-browsers": "corepack pnpm --filter @kavio/render run install:browsers",
+    "install:render-ffmpeg": "corepack pnpm rebuild ffmpeg-static",
+    "pack:dry": "corepack pnpm run build && corepack pnpm run verify:render-optional-deps && corepack pnpm -r --filter './packages/*' pack --dry-run",
+    "release:check": "corepack pnpm test && corepack pnpm run pack:dry",
+    "verify:render-optional-deps": "node scripts/verify-render-optional-deps.mjs",
+    "test": "corepack pnpm --filter @kavio/schema test && corepack pnpm --filter @kavio/core test && corepack pnpm --filter @kavio/browser-renderer test && corepack pnpm --filter @kavio/render-worker test && corepack pnpm --filter @kavio/ffmpeg test && corepack pnpm --filter @kavio/render test && corepack pnpm --filter @kavio/builder test && corepack pnpm --filter @kavio/cli test && corepack pnpm --filter @kavio/mcp test && corepack pnpm --filter @kavio/example-basic-builder run build && corepack pnpm --filter @kavio/example-basic-builder run emit > /tmp/kavio-basic-builder.json && diff -u examples/basic-json/composition.json /tmp/kavio-basic-builder.json && corepack pnpm --filter @kavio/example-mvp-demo run build && corepack pnpm --filter @kavio/example-mvp-demo run validate"
+  },
+  "keywords": [
+    "video",
+    "rendering",
+    "json-schema",
+    "ffmpeg",
+    "automation"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Kitsra/Kavio.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Kitsra/Kavio/issues"
+  },
+  "homepage": "https://github.com/Kitsra/Kavio#readme",
+  "devDependencies": {
+    "typescript": "^6.0.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["ffmpeg-static"]
+  }
+}

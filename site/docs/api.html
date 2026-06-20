@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio API Overview</title>
+    <meta
+      name="description"
+      content="API and package overview for Kavio schema, core, builder, browser-renderer, render-worker, ffmpeg, and CLI packages."
+    />
+    <meta property="og:title" content="Kavio API Overview" />
+    <meta property="og:type" content="article" />
+    <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="../index.html" aria-label="Kavio home">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Kavio</span>
+      </a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="../project.html">Project</a>
+        <a href="../docs.html" aria-current="page">Docs</a>
+        <a href="../examples.html">Examples</a>
+        <a href="../packages.html">Packages</a>
+        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">Docs</p>
+        <h1>Kavio API overview.</h1>
+        <p>
+          Kavio is split into focused packages so each layer has a clear contract:
+          data, timeline logic, authoring, preview, render orchestration, media
+          planning, and CLI.
+        </p>
+      </section>
+
+      <section class="content-section">
+        <h2>Package Contracts</h2>
+        <dl class="definition-list">
+          <div><dt>@kavio/schema</dt><dd>JSON Schema, shared types, validation, and migration scaffold.</dd></div>
+          <div><dt>@kavio/core</dt><dd>Timeline evaluation, frame math, easing, prop resolution, layout, captions, and resource limits.</dd></div>
+          <div><dt>@kavio/builder</dt><dd>TypeScript authoring helpers that output canonical Kavio JSON.</dd></div>
+          <div><dt>@kavio/browser-renderer</dt><dd>Browser preview and DOM rendering runtime.</dd></div>
+          <div><dt>@kavio/render-worker</dt><dd>Browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.</dd></div>
+          <div><dt>@kavio/ffmpeg</dt><dd>Inspectable FFmpeg plan construction.</dd></div>
+          <div><dt>@kavio/cli</dt><dd>Local commands for validation, inspection, migration, and preview.</dd></div>
+          <div><dt>@kavio/render</dt><dd>Render execution layer that owns real browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.</dd></div>
+          <div><dt>@kavio/mcp</dt><dd>MCP server and provider tool adapters for agent-facing Kavio workflows. It calls <code>@kavio/render</code> instead of spawning binaries itself.</dd></div>
+        </dl>
+      </section>
+
+      <section class="content-section">
+        <h2>Import Style</h2>
+        <p>Workspace examples import package helpers directly by package name after the monorepo is built.</p>
+        <pre><code>import { prop, text, video } from "@kavio/builder";</code></pre>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <a href="../packages.html">Packages</a>
+      <a href="../docs.html">Docs</a>
+      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+    </footer>
+  </body>
+</html>
