@@ -43,6 +43,10 @@ For local linked installs, the root package exposes `kavio` and `kavio-mcp`
 bin wrappers after the workspace has been installed and built. Published npm
 usage should prefer `@kavio/cli` and `@kavio/mcp`.
 
+GitHub Packages publishing is available through the `Publish GitHub Packages`
+workflow. Consumers can install from `https://npm.pkg.github.com` by mapping the
+`@kavio` scope; see [docs/packages.md](docs/packages.md#github-packages).
+
 ## Documentation
 
 - [Presentation site](site/index.html)
