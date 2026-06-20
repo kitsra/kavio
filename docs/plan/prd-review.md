@@ -33,8 +33,8 @@ and future native rendering.
   max frames, max layers, max dimensions, max assets, max prop string length.
 - Decide what the CLI command names should be early because examples, docs, and
   tests will orbit around them.
-- Confirm open-core licensing. Apache-2.0 is a good default for the core, but
-  BSL/source-available is a business decision if cloud free-riding is a concern.
+- Confirm commercial licensing. Kavio now uses Elastic License 2.0 for a
+  source-available posture that protects against managed-service free-riding.
 
 ## Recommended Starting Shape
 

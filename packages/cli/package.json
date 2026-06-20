@@ -2,7 +2,7 @@
   "name": "@kavio/cli",
   "version": "0.0.0",
   "description": "Local CLI for Kavio validation, migration, preview, and rendering.",
-  "license": "Apache-2.0",
+  "license": "Elastic-2.0",
   "type": "module",
   "publishConfig": {
     "access": "public"
@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@kavio/builder": "workspace:*",
+    "@kavio/core": "workspace:*",
     "@kavio/render": "workspace:*",
     "@kavio/schema": "workspace:*"
   },

@@ -1,0 +1,225 @@
+{
+  "version": "0.1",
+  "metadata": {
+    "title": "Motion showcase",
+    "tags": ["example", "motion", "transition-series", "text-motion", "masks"]
+  },
+  "composition": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "durationFrames": 150,
+    "background": "#09111f"
+  },
+  "assets": {},
+  "layers": [
+    {
+      "id": "backdrop",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 0,
+      "durationFrames": 150,
+      "position": { "x": 0, "y": 0 },
+      "anchor": "top-left",
+      "size": { "width": "100%w", "height": "100%h" },
+      "fill": "#09111f",
+      "z": 0
+    },
+    {
+      "id": "scene-a-panel",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 0,
+      "durationFrames": 70,
+      "position": { "x": 640, "y": 356 },
+      "anchor": "center",
+      "size": { "width": 620, "height": 330 },
+      "fill": "#2563eb",
+      "radius": 20,
+      "keyframes": {
+        "scale": [
+          { "frame": 0, "value": 0.96, "easing": "outCubic" },
+          { "frame": 69, "value": 1.04 }
+        ]
+      },
+      "z": 1
+    },
+    {
+      "id": "scene-a-title",
+      "type": "text",
+      "text": "SERIES\nPUSH",
+      "startFrame": 6,
+      "durationFrames": 58,
+      "position": { "x": 640, "y": 340 },
+      "anchor": "center",
+      "size": { "width": 520, "height": 180 },
+      "textMotion": {
+        "type": "cascade",
+        "split": "line",
+        "durationFrames": 12,
+        "staggerFrames": 3,
+        "easing": "outCubic",
+        "direction": "up",
+        "amount": 24,
+        "preserveLayout": true
+      },
+      "style": {
+        "fontFamily": "Inter",
+        "fontSize": 78,
+        "fontWeight": 900,
+        "color": "#f8fafc",
+        "align": "center",
+        "lineHeight": 0.92,
+        "letterSpacing": 1
+      },
+      "z": 2
+    },
+    {
+      "id": "scene-b-panel",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 58,
+      "durationFrames": 54,
+      "position": { "x": 640, "y": 356 },
+      "anchor": "center",
+      "size": { "width": 620, "height": 330 },
+      "fill": "#14b8a6",
+      "radius": 20,
+      "mask": {
+        "source": {
+          "kind": "procedural",
+          "type": "linearGradient",
+          "seed": 9,
+          "direction": "right",
+          "softness": 0.18,
+          "resolution": { "width": 1280, "height": 720 }
+        }
+      },
+      "z": 1
+    },
+    {
+      "id": "scene-b-title",
+      "type": "text",
+      "text": "MASKED\nDRIFT",
+      "startFrame": 66,
+      "durationFrames": 46,
+      "position": { "x": 640, "y": 340 },
+      "anchor": "center",
+      "size": { "width": 560, "height": 180 },
+      "textMotion": {
+        "type": "trackingIn",
+        "split": "char",
+        "durationFrames": 14,
+        "staggerFrames": 1,
+        "easing": "outCubic",
+        "amount": 9,
+        "preserveLayout": true
+      },
+      "style": {
+        "fontFamily": "Inter",
+        "fontSize": 72,
+        "fontWeight": 900,
+        "color": "#052e2b",
+        "align": "center",
+        "lineHeight": 0.95
+      },
+      "z": 2
+    },
+    {
+      "id": "glitch-card",
+      "type": "text",
+      "text": "GLITCH CUT",
+      "startFrame": 108,
+      "durationFrames": 34,
+      "position": { "x": 640, "y": 310 },
+      "anchor": "center",
+      "size": { "width": 720, "height": 110 },
+      "transitionIn": {
+        "type": "skewSlide",
+        "direction": "left",
+        "durationFrames": 8,
+        "intensity": 12,
+        "easing": "outExpo"
+      },
+      "keyframes": {
+        "x": [
+          { "frame": 0, "value": -14, "timing": { "type": "steps", "steps": 2, "direction": "end" } },
+          { "frame": 1, "value": 0.3, "timing": { "type": "steps", "steps": 2, "direction": "end" } },
+          { "frame": 3, "value": 640, "easing": "outExpo" }
+        ],
+        "opacity": [
+          { "frame": 0, "value": 0.72, "timing": { "type": "steps", "steps": 2, "direction": "end" } },
+          { "frame": 3, "value": 1 }
+        ]
+      },
+      "style": {
+        "fontFamily": "Inter",
+        "fontSize": 74,
+        "fontWeight": 900,
+        "color": "#f8fafc",
+        "align": "center",
+        "background": "#111827cc",
+        "padding": 12
+      },
+      "z": 3
+    },
+    {
+      "id": "light-leak-band",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 112,
+      "durationFrames": 38,
+      "position": { "x": 0, "y": 500 },
+      "anchor": "top-left",
+      "size": { "width": 1280, "height": 130 },
+      "fill": "#fff1b8",
+      "opacity": 0.32,
+      "transitionIn": {
+        "type": "colorDissolve",
+        "color": "#fff1b8",
+        "durationFrames": 14,
+        "amount": 0.72,
+        "easing": "outQuad"
+      },
+      "keyframes": {
+        "x": [
+          { "frame": 0, "value": -10, "easing": "outQuad" },
+          { "frame": 37, "value": 10 }
+        ],
+        "opacity": [
+          { "frame": 0, "value": 0.1, "easing": "outQuad" },
+          { "frame": 13, "value": 0.32 },
+          { "frame": 37, "value": 0 }
+        ]
+      },
+      "z": 4
+    }
+  ],
+  "tracks": [
+    {
+      "id": "main",
+      "clips": [
+        { "id": "a", "layerId": "scene-a-panel", "startFrame": 0, "durationFrames": 70 },
+        {
+          "id": "b",
+          "layerId": "scene-b-panel",
+          "startFrame": 58,
+          "durationFrames": 54,
+          "transitionFromPrevious": {
+            "presentation": { "type": "push", "direction": "left" },
+            "timing": { "type": "tween", "durationFrames": 12, "easing": "outCubic" }
+          }
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "name": "motion-showcase",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1280,
+      "height": 720
+    }
+  ]
+}

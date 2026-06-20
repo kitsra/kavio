@@ -10,4 +10,5 @@ coverage/
 tmp/
 renders/
 *.log
+docs/plan/*
 *.tsbuildinfo

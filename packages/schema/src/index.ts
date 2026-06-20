@@ -127,6 +127,33 @@ export type KavioAssets = Record<string, KavioAssetDefinition>;
 export type KavioLayerType = "video" | "image" | "text" | "shape" | "caption";
 export type KavioFit = "cover" | "contain" | "fill" | "none";
 export type KavioTextAlign = "left" | "center" | "right";
+export type KavioTextSplitMode = "none" | "word" | "char" | "line";
+export type KavioTextMotionType = "typeOn" | "cascade" | "scramble" | "highlightSweep" | "trackingIn";
+export type KavioTextMotionOrigin = "start" | "center" | "end";
+export type KavioMaskShape = "rect" | "circle" | "diamond";
+export type KavioMaskDirection = "up" | "down" | "left" | "right";
+export type KavioProceduralMaskType = "linearGradient" | "radialGradient" | "scanlines";
+export type KavioMaskSource =
+  | { kind: "shape"; shape: KavioMaskShape }
+  | { kind: "asset"; asset: string; mode?: "alpha"; resolution?: KavioMaskResolution }
+  | {
+      kind: "procedural";
+      type: KavioProceduralMaskType;
+      seed: number;
+      direction?: KavioMaskDirection;
+      softness?: number;
+      frequency?: number;
+      resolution?: KavioMaskResolution;
+    };
+export interface KavioMaskResolution {
+  width: number;
+  height: number;
+}
+export interface KavioLayerMask {
+  source: KavioMaskSource;
+  opacity?: number;
+  invert?: boolean;
+}
 export type KavioEasingName =
   | "linear"
   | "inQuad"
@@ -135,10 +162,71 @@ export type KavioEasingName =
   | "inCubic"
   | "outCubic"
   | "inOutCubic"
+  | "inCirc"
+  | "outCirc"
+  | "inOutCirc"
+  | "inExpo"
+  | "outExpo"
+  | "inOutExpo"
+  | "anticipate"
+  | "back"
   | "inBack"
   | "outBack"
-  | "inOutBack";
+  | "inOutBack"
+  | "inElastic"
+  | "outElastic"
+  | "inOutElastic"
+  | "inBounce"
+  | "outBounce"
+  | "inOutBounce";
 export type KavioEasing = KavioEasingName | `cubic-bezier(${number},${number},${number},${number})`;
+export type KavioTimingType = "tween" | "spring" | "steps" | "sequence" | "stagger";
+
+export interface KavioTweenTiming {
+  type: "tween";
+  durationFrames?: KavioFrame;
+  easing?: KavioEasing;
+}
+
+export interface KavioSpringTiming {
+  type: "spring";
+  durationFrames?: KavioFrame;
+  stiffness?: number;
+  damping?: number;
+  mass?: number;
+  restSpeed?: number;
+  bounce?: number;
+}
+
+export interface KavioStepsTiming {
+  type: "steps";
+  durationFrames?: KavioFrame;
+  steps: number;
+  direction?: "start" | "end";
+}
+
+export interface KavioSequenceSegment {
+  durationFrames: KavioFrame;
+  timing?: KavioTiming;
+  from?: number;
+  to?: number;
+}
+
+export interface KavioSequenceTiming {
+  type: "sequence";
+  segments: KavioSequenceSegment[];
+}
+
+export interface KavioStaggerTiming {
+  type: "stagger";
+  timing: KavioTiming;
+  childCount: number;
+  eachFrames: KavioFrame;
+  childIndex?: number;
+  from?: "start" | "center" | "end";
+}
+
+export type KavioTiming = KavioTweenTiming | KavioSpringTiming | KavioStepsTiming | KavioSequenceTiming | KavioStaggerTiming;
 export type KavioAnimatableProperty = "opacity" | "x" | "y" | "scale" | "rotation";
 export type KavioAnimationPreset =
   | "fadeIn"
@@ -154,6 +242,7 @@ export interface KavioKeyframe {
   frame: KavioFrame;
   value: number;
   easing?: KavioEasing;
+  timing?: KavioTiming;
 }
 
 export type KavioKeyframes = Partial<Record<KavioAnimatableProperty, KavioKeyframe[]>>;
@@ -165,14 +254,90 @@ export type KavioEffect =
   | { type: "saturate"; value: number }
   | { type: "tint"; color: KavioColor };
 
-export type KavioTransitionType = "fade" | "slide" | "wipe" | "crossfade";
+export type KavioTransitionType =
+  | "fade"
+  | "slide"
+  | "wipe"
+  | "crossfade"
+  | "zoom"
+  | "push"
+  | "spin"
+  | "rotate"
+  | "flip"
+  | "blurDissolve"
+  | "colorDissolve"
+  | "dip"
+  | "iris"
+  | "stretch"
+  | "squeeze"
+  | "clockWipe"
+  | "barWipe"
+  | "gridWipe"
+  | "tileReveal"
+  | "radialBlur"
+  | "zoomBlur"
+  | "bookFlip"
+  | "pageCurlLite"
+  | "skewSlide"
+  | "expandMask"
+  | "letterboxReveal"
+  | "filmFlash"
+  | "cameraWhip";
 export type KavioTransitionDirection = "up" | "down" | "left" | "right";
+export type KavioTransitionAxis = "x" | "y";
+export type KavioTransitionShape = "circle" | "diamond";
 
 export interface KavioTransition {
   type: KavioTransitionType;
-  durationFrames: KavioFrame;
+  durationFrames?: KavioFrame;
   direction?: KavioTransitionDirection;
+  axis?: KavioTransitionAxis;
+  shape?: KavioTransitionShape;
+  color?: KavioColor;
+  amount?: number;
+  intensity?: number;
+  rows?: number;
+  columns?: number;
   easing?: KavioEasing;
+  timing?: KavioTiming;
+}
+
+export interface KavioTransitionPresentation {
+  type: KavioTransitionType;
+  direction?: KavioTransitionDirection;
+  axis?: KavioTransitionAxis;
+  shape?: KavioTransitionShape;
+  color?: KavioColor;
+  amount?: number;
+  intensity?: number;
+  rows?: number;
+  columns?: number;
+}
+
+export interface KavioTransitionTweenTiming {
+  type: "tween";
+  durationFrames: KavioFrame;
+  easing?: KavioEasing;
+}
+
+export type KavioTransitionTiming = KavioTransitionTweenTiming;
+
+export interface KavioTransitionSeriesDefinition {
+  presentation: KavioTransitionPresentation;
+  timing: KavioTransitionTiming;
+}
+
+export interface KavioTrackClip {
+  id: string;
+  layerId: string;
+  startFrame: KavioFrame;
+  durationFrames: KavioFrame;
+  transitionFromPrevious?: KavioTransitionSeriesDefinition;
+}
+
+export interface KavioTrack {
+  id: string;
+  clips: KavioTrackClip[];
 }
 
 export interface KavioSubjectCropKeyframe {
@@ -208,6 +373,7 @@ export interface KavioLayerBase {
   track?: string;
   keyframes?: KavioKeyframes;
   effects?: KavioEffect[];
+  mask?: KavioLayerMask | null;
   transitionIn?: KavioTransition | null;
   transitionOut?: KavioTransition | null;
 }
@@ -257,10 +423,32 @@ export interface KavioTextStyle {
   shadow?: KavioTextShadow | null;
 }
 
+export interface KavioTextRestingBox {
+  width?: number;
+  height?: number;
+}
+
+export interface KavioTextMotion {
+  type: KavioTextMotionType;
+  split?: KavioTextSplitMode;
+  durationFrames?: KavioFrame;
+  easing?: KavioEasing;
+  staggerFrames?: KavioFrame;
+  origin?: KavioTextMotionOrigin;
+  seed?: number;
+  preserveLayout?: boolean;
+  restingBox?: KavioTextRestingBox;
+  direction?: "up" | "down" | "left" | "right";
+  amount?: number;
+  intensity?: number;
+  color?: KavioColor;
+}
+
 export interface KavioTextLayer extends KavioLayerBase {
   type: "text";
   text: string;
   style?: KavioTextStyle;
+  textMotion?: KavioTextMotion;
 }
 
 export interface KavioShapeStroke {
@@ -383,6 +571,7 @@ export interface KavioDocument {
   props?: KavioPropsDefinition;
   assets: KavioAssets;
   layers: KavioLayer[];
+  tracks?: KavioTrack[];
   audio?: KavioAudioTrack[];
   exports: KavioExportPreset[];
 }
@@ -448,6 +637,11 @@ interface LayerInfo {
   type?: LayerType;
 }
 
+interface TrackClipInfo {
+  startFrame: number | undefined;
+  durationFrames: number | undefined;
+}
+
 interface CompositionInfo {
   durationFrames?: number;
   fps?: number;
@@ -459,6 +653,53 @@ const PROP_TYPES = new Set<PropType>(["string", "number", "boolean", "color", "u
 const EXPORT_FORMATS = new Set<ExportFormat>(["mp4", "webm", "mov", "gif", "png-sequence"]);
 const FIT_VALUES = new Set(["cover", "contain", "fill", "none"]);
 const TEXT_ALIGN_VALUES = new Set(["left", "center", "right"]);
+const TEXT_MOTION_TYPES = new Set<KavioTextMotionType>([
+  "typeOn",
+  "cascade",
+  "scramble",
+  "highlightSweep",
+  "trackingIn"
+]);
+const TEXT_SPLIT_MODES = new Set<KavioTextSplitMode>(["none", "word", "char", "line"]);
+const TEXT_MOTION_ORIGINS = new Set<KavioTextMotionOrigin>(["start", "center", "end"]);
+const MASK_SOURCE_KINDS = new Set(["shape", "asset", "procedural"]);
+const MASK_SHAPES = new Set(["rect", "circle", "diamond"]);
+const MASK_ASSET_MODES = new Set(["alpha"]);
+const PROCEDURAL_MASK_TYPES = new Set(["linearGradient", "radialGradient", "scanlines"]);
+const MASK_DIRECTIONS = new Set(["up", "down", "left", "right"]);
+const TRANSITION_TYPES = new Set<KavioTransitionType>([
+  "fade",
+  "slide",
+  "wipe",
+  "crossfade",
+  "zoom",
+  "push",
+  "spin",
+  "rotate",
+  "flip",
+  "blurDissolve",
+  "colorDissolve",
+  "dip",
+  "iris",
+  "stretch",
+  "squeeze",
+  "clockWipe",
+  "barWipe",
+  "gridWipe",
+  "tileReveal",
+  "radialBlur",
+  "zoomBlur",
+  "bookFlip",
+  "pageCurlLite",
+  "skewSlide",
+  "expandMask",
+  "letterboxReveal",
+  "filmFlash",
+  "cameraWhip"
+]);
+const TRANSITION_DIRECTIONS = new Set(["up", "down", "left", "right"]);
+const TRANSITION_AXES = new Set(["x", "y"]);
+const TRANSITION_SHAPES = new Set(["circle", "diamond"]);
 const ANCHOR_VALUES = new Set([
   "top-left",
   "top",
@@ -479,10 +720,25 @@ const EASING_VALUES = new Set([
   "inCubic",
   "outCubic",
   "inOutCubic",
+  "inCirc",
+  "outCirc",
+  "inOutCirc",
+  "inExpo",
+  "outExpo",
+  "inOutExpo",
+  "anticipate",
+  "back",
   "inBack",
   "outBack",
-  "inOutBack"
+  "inOutBack",
+  "inElastic",
+  "outElastic",
+  "inOutElastic",
+  "inBounce",
+  "outBounce",
+  "inOutBounce"
 ]);
+const TIMING_TYPES = new Set<KavioTimingType>(["tween", "spring", "steps", "sequence", "stagger"]);
 const AUDIO_ROLES = new Set(["music", "voiceover", "sfx", "source"]);
 const CAPTION_SOURCE_KINDS = new Set(["inline", "vtt", "srt", "asset"]);
 const WEB_SAFE_FONT_FAMILIES = new Set([
@@ -519,6 +775,7 @@ export function validateComposition(input: unknown): ValidationResult {
   const assets = validateAssets(input.assets, errors);
   const layers = validateLayers(input.layers, assets, composition, errors);
 
+  validateTracks(input.tracks, layers, composition, errors);
   validateAudio(input.audio, assets, composition, errors);
   validateExports(input.exports, layers, composition, errors);
   validateInterpolations(input, props, errors);
@@ -554,6 +811,10 @@ function validateTopLevelShape(input: Record<string, unknown>, errors: KavioErro
 
   if (!Array.isArray(input.layers)) {
     errors.push(validationError("SCHEMA_LAYERS_REQUIRED", "layers", "layers must be an array."));
+  }
+
+  if (input.tracks !== undefined && !Array.isArray(input.tracks)) {
+    errors.push(validationError("SCHEMA_INVALID_FIELD", "tracks", "tracks must be an array."));
   }
 
   if (input.audio !== undefined && !Array.isArray(input.audio)) {
@@ -848,6 +1109,7 @@ function validateLayerByType(
     case "text":
       requireString(layer, "text", propertyPath(path, "text"), errors);
       validateTextStyle(layer.style, propertyPath(path, "style"), assets, errors);
+      validateTextMotion(layer.textMotion, propertyPath(path, "textMotion"), errors);
       break;
     case "shape":
       optionalEnum(layer, "shape", propertyPath(path, "shape"), new Set(["rect"]), errors);
@@ -877,6 +1139,7 @@ function validateCommonLayerFields(
   optionalInteger(layer, "z", propertyPath(path, "z"), undefined, undefined, errors, true);
   optionalString(layer, "track", propertyPath(path, "track"), errors);
   validateKeyframes(layer.keyframes, propertyPath(path, "keyframes"), layer.durationFrames, errors);
+  validateLayerMask(layer.mask, propertyPath(path, "mask"), assets, errors);
 
   if (Array.isArray(layer.effects)) {
     layer.effects.forEach((effect, index) => {
@@ -893,6 +1156,110 @@ function validateCommonLayerFields(
 
   validateTransition(layer.transitionIn, propertyPath(path, "transitionIn"), errors);
   validateTransition(layer.transitionOut, propertyPath(path, "transitionOut"), errors);
+}
+
+function validateLayerMask(
+  value: unknown,
+  path: string,
+  assets: ReadonlyMap<string, AssetInfo>,
+  errors: KavioError[]
+): void {
+  if (value === undefined || value === null) {
+    return;
+  }
+
+  if (!isRecord(value)) {
+    errors.push(validationError("SCHEMA_INVALID_FIELD", path, "mask must be an object or null."));
+    return;
+  }
+
+  optionalNumber(value, "opacity", propertyPath(path, "opacity"), 0, 1, errors);
+  optionalBoolean(value, "invert", propertyPath(path, "invert"), errors);
+
+  if (!isRecord(value.source)) {
+    errors.push(validationError("SCHEMA_REQUIRED_FIELD", propertyPath(path, "source"), "mask source is required."));
+    return;
+  }
+
+  validateMaskSource(value.source, propertyPath(path, "source"), assets, errors);
+  if (value.invert === true && value.source.kind === "asset") {
+    errors.push(
+      validationError(
+        "SCHEMA_UNSUPPORTED_MASK_SOURCE",
+        propertyPath(path, "invert"),
+        "inverted asset masks are not supported by the stable browser renderer.",
+        "Use a pre-inverted image asset or omit invert."
+      )
+    );
+  }
+}
+
+function validateMaskSource(
+  source: Record<string, unknown>,
+  path: string,
+  assets: ReadonlyMap<string, AssetInfo>,
+  errors: KavioError[]
+): void {
+  const kind = requireString(source, "kind", propertyPath(path, "kind"), errors);
+  if (kind !== undefined && !MASK_SOURCE_KINDS.has(kind)) {
+    errors.push(
+      validationError(
+        "SCHEMA_UNSUPPORTED_MASK_SOURCE",
+        propertyPath(path, "kind"),
+        `mask source kind "${kind}" is not supported.`,
+        "Use shape, asset, or procedural for the current mask model."
+      )
+    );
+    return;
+  }
+
+  validateMaskResolution(source.resolution, propertyPath(path, "resolution"), errors);
+
+  if (kind === "shape") {
+    optionalEnum(source, "shape", propertyPath(path, "shape"), MASK_SHAPES, errors);
+    if (source.shape === undefined) {
+      errors.push(validationError("SCHEMA_REQUIRED_FIELD", propertyPath(path, "shape"), "shape masks require shape."));
+    }
+    return;
+  }
+
+  if (kind === "asset") {
+    validateAssetReference(source.asset, propertyPath(path, "asset"), "image", assets, errors);
+    optionalEnum(source, "mode", propertyPath(path, "mode"), MASK_ASSET_MODES, errors);
+    return;
+  }
+
+  if (kind === "procedural") {
+    const type = requireString(source, "type", propertyPath(path, "type"), errors);
+    if (type !== undefined && !PROCEDURAL_MASK_TYPES.has(type)) {
+      errors.push(
+        validationError(
+          "SCHEMA_UNSUPPORTED_MASK_SOURCE",
+          propertyPath(path, "type"),
+          `procedural mask type "${type}" is not supported.`,
+          "Use linearGradient, radialGradient, or scanlines until heavier fields are implemented."
+        )
+      );
+    }
+    requireInteger(source, "seed", propertyPath(path, "seed"), 0, undefined, errors);
+    optionalEnum(source, "direction", propertyPath(path, "direction"), MASK_DIRECTIONS, errors);
+    optionalNumber(source, "softness", propertyPath(path, "softness"), 0, 1, errors);
+    optionalNumber(source, "frequency", propertyPath(path, "frequency"), 1, 256, errors);
+  }
+}
+
+function validateMaskResolution(value: unknown, path: string, errors: KavioError[]): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!isRecord(value)) {
+    errors.push(validationError("SCHEMA_INVALID_FIELD", path, "mask resolution must be an object."));
+    return;
+  }
+
+  requireInteger(value, "width", propertyPath(path, "width"), 1, 4096, errors);
+  requireInteger(value, "height", propertyPath(path, "height"), 1, 4096, errors);
 }
 
 function validateTextStyle(
@@ -946,6 +1313,56 @@ function validateTextStyle(
   if (typeof fontFamily === "string") {
     validateRegisteredFont(fontFamily, propertyPath(path, "fontFamily"), assets, errors);
   }
+}
+
+function validateTextMotion(value: unknown, path: string, errors: KavioError[]): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!isRecord(value)) {
+    errors.push(validationError("SCHEMA_INVALID_FIELD", path, "textMotion must be an object."));
+    return;
+  }
+
+  const type = requireString(value, "type", propertyPath(path, "type"), errors);
+  if (type !== undefined && !TEXT_MOTION_TYPES.has(type as KavioTextMotionType)) {
+    errors.push(
+      validationError(
+        "SCHEMA_INVALID_FIELD",
+        propertyPath(path, "type"),
+        `textMotion type "${type}" is not supported.`,
+        "Use typeOn, cascade, scramble, highlightSweep, or trackingIn."
+      )
+    );
+  }
+
+  optionalEnum(value, "split", propertyPath(path, "split"), TEXT_SPLIT_MODES, errors);
+  optionalInteger(value, "durationFrames", propertyPath(path, "durationFrames"), 1, undefined, errors);
+  validateEasing(value.easing, propertyPath(path, "easing"), errors);
+  optionalInteger(value, "staggerFrames", propertyPath(path, "staggerFrames"), 0, undefined, errors);
+  optionalEnum(value, "origin", propertyPath(path, "origin"), TEXT_MOTION_ORIGINS, errors);
+  optionalInteger(value, "seed", propertyPath(path, "seed"), undefined, undefined, errors);
+  optionalBoolean(value, "preserveLayout", propertyPath(path, "preserveLayout"), errors);
+  optionalEnum(value, "direction", propertyPath(path, "direction"), TRANSITION_DIRECTIONS, errors);
+  optionalNumber(value, "amount", propertyPath(path, "amount"), 0, undefined, errors);
+  optionalNumber(value, "intensity", propertyPath(path, "intensity"), 0, undefined, errors);
+  optionalString(value, "color", propertyPath(path, "color"), errors);
+  validateTextRestingBox(value.restingBox, propertyPath(path, "restingBox"), errors);
+}
+
+function validateTextRestingBox(value: unknown, path: string, errors: KavioError[]): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!isRecord(value)) {
+    errors.push(validationError("SCHEMA_INVALID_FIELD", path, "restingBox must be an object."));
+    return;
+  }
+
+  optionalNumber(value, "width", propertyPath(path, "width"), 0, undefined, errors);
+  optionalNumber(value, "height", propertyPath(path, "height"), 0, undefined, errors);
 }
 
 function validateStroke(value: unknown, path: string, errors: KavioError[]): void {
@@ -1048,6 +1465,235 @@ function validateCaptionWords(words: unknown[], path: string, errors: KavioError
       );
     }
   });
+}
+
+function validateTracks(
+  value: unknown,
+  layers: ReadonlyMap<string, LayerInfo>,
+  composition: CompositionInfo,
+  errors: KavioError[]
+): void {
+  if (value === undefined || !Array.isArray(value)) {
+    return;
+  }
+
+  const seenTrackIds = new Map<string, string>();
+
+  value.forEach((track, index) => {
+    const path = indexPath("tracks", index);
+    if (!isRecord(track)) {
+      errors.push(validationError("SCHEMA_INVALID_FIELD", path, "track must be an object."));
+      return;
+    }
+
+    const id = requireString(track, "id", propertyPath(path, "id"), errors);
+    if (id !== undefined) {
+      const firstPath = seenTrackIds.get(id);
+      if (firstPath !== undefined) {
+        errors.push(
+          validationError(
+            "SCHEMA_DUPLICATE_TRACK_ID",
+            propertyPath(path, "id"),
+            `duplicate track id "${id}".`,
+            `Track ids must be unique. First seen at ${firstPath}.`
+          )
+        );
+      } else {
+        seenTrackIds.set(id, propertyPath(path, "id"));
+      }
+    }
+
+    if (!Array.isArray(track.clips)) {
+      errors.push(validationError("SCHEMA_REQUIRED_FIELD", propertyPath(path, "clips"), "track clips must be an array."));
+      return;
+    }
+
+    validateTrackClips(track.clips, propertyPath(path, "clips"), layers, composition, errors);
+  });
+}
+
+function validateTrackClips(
+  clips: unknown[],
+  path: string,
+  layers: ReadonlyMap<string, LayerInfo>,
+  composition: CompositionInfo,
+  errors: KavioError[]
+): void {
+  const seenClipIds = new Map<string, string>();
+  const windows: Array<{ path: string; startFrame: number; endFrame: number }> = [];
+  let previousClip: TrackClipInfo | undefined;
+
+  clips.forEach((clip, index) => {
+    const clipPath = indexPath(path, index);
+    if (!isRecord(clip)) {
+      errors.push(validationError("SCHEMA_INVALID_FIELD", clipPath, "track clip must be an object."));
+      return;
+    }
+
+    const id = requireString(clip, "id", propertyPath(clipPath, "id"), errors);
+    const layerId = requireString(clip, "layerId", propertyPath(clipPath, "layerId"), errors);
+    const startFrame = requireInteger(clip, "startFrame", propertyPath(clipPath, "startFrame"), 0, undefined, errors);
+    const durationFrames = requireInteger(clip, "durationFrames", propertyPath(clipPath, "durationFrames"), 1, undefined, errors);
+
+    if (id !== undefined) {
+      const firstPath = seenClipIds.get(id);
+      if (firstPath !== undefined) {
+        errors.push(
+          validationError(
+            "SCHEMA_DUPLICATE_TRACK_CLIP_ID",
+            propertyPath(clipPath, "id"),
+            `duplicate track clip id "${id}".`,
+            `Clip ids must be unique within a track. First seen at ${firstPath}.`
+          )
+        );
+      } else {
+        seenClipIds.set(id, propertyPath(clipPath, "id"));
+      }
+    }
+
+    if (layerId !== undefined && !layers.has(layerId)) {
+      errors.push(
+        validationError(
+          "SCHEMA_UNKNOWN_LAYER_REFERENCE",
+          propertyPath(clipPath, "layerId"),
+          `track clip references unknown layer "${layerId}".`
+        )
+      );
+    }
+
+    validateFrameRange(clipPath, startFrame, durationFrames, composition.durationFrames, errors);
+    validateTransitionSeriesDefinition(clip.transitionFromPrevious, propertyPath(clipPath, "transitionFromPrevious"), errors);
+
+    const clipInfo: TrackClipInfo = {
+      startFrame,
+      durationFrames
+    };
+
+    if (clip.transitionFromPrevious !== undefined) {
+      if (index === 0 || previousClip === undefined) {
+        errors.push(
+          validationError(
+            "TRANSITION_SERIES_PREVIOUS_REQUIRED",
+            propertyPath(clipPath, "transitionFromPrevious"),
+            "transitionFromPrevious requires a previous clip on the same track."
+          )
+        );
+      } else {
+        const duration = transitionSeriesDuration(clip.transitionFromPrevious);
+        if (
+          duration !== undefined &&
+          previousClip.startFrame !== undefined &&
+          previousClip.durationFrames !== undefined &&
+          startFrame !== undefined &&
+          durationFrames !== undefined
+        ) {
+          const start = startFrame;
+          const end = start + duration;
+          const previousEnd = previousClip.startFrame + previousClip.durationFrames;
+          const nextEnd = startFrame + durationFrames;
+
+          if (end > previousEnd || end > nextEnd) {
+            errors.push(
+              validationError(
+                "TRANSITION_SERIES_OVERLAP_INVALID",
+                propertyPath(clipPath, "transitionFromPrevious"),
+                "transitionFromPrevious timing must fit inside the overlap between the previous clip and this clip.",
+                "Set this clip to start before the previous clip ends, or shorten timing.durationFrames."
+              )
+            );
+          }
+
+          windows.push({ path: propertyPath(clipPath, "transitionFromPrevious"), startFrame: start, endFrame: end });
+        }
+      }
+    }
+
+    previousClip = clipInfo;
+  });
+
+  validateTrackTransitionConflicts(windows, errors);
+}
+
+function validateTrackTransitionConflicts(
+  windows: Array<{ path: string; startFrame: number; endFrame: number }>,
+  errors: KavioError[]
+): void {
+  const sorted = [...windows].sort((left, right) => left.startFrame - right.startFrame || left.endFrame - right.endFrame);
+  let previous: { path: string; endFrame: number } | undefined;
+
+  for (const window of sorted) {
+    if (previous !== undefined && window.startFrame < previous.endFrame) {
+      errors.push(
+        validationError(
+          "TRANSITION_SERIES_CONFLICT",
+          window.path,
+          "transitionFromPrevious overlaps another transition window on the same track.",
+          `Adjust timing so this transition starts at or after frame ${previous.endFrame}.`
+        )
+      );
+    }
+
+    if (previous === undefined || window.endFrame > previous.endFrame) {
+      previous = { path: window.path, endFrame: window.endFrame };
+    }
+  }
+}
+
+function validateTransitionSeriesDefinition(value: unknown, path: string, errors: KavioError[]): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!isRecord(value)) {
+    errors.push(validationError("SCHEMA_INVALID_FIELD", path, "transitionFromPrevious must be an object."));
+    return;
+  }
+
+  validateTransitionPresentation(value.presentation, propertyPath(path, "presentation"), errors);
+  validateTransitionTiming(value.timing, propertyPath(path, "timing"), errors);
+}
+
+function validateTransitionPresentation(value: unknown, path: string, errors: KavioError[]): void {
+  if (!isRecord(value)) {
+    errors.push(validationError("SCHEMA_REQUIRED_FIELD", path, "transition presentation is required."));
+    return;
+  }
+
+  const type = requireString(value, "type", propertyPath(path, "type"), errors);
+  if (type !== undefined && !TRANSITION_TYPES.has(type as KavioTransitionType)) {
+    errors.push(validationError("SCHEMA_INVALID_FIELD", propertyPath(path, "type"), "type has an unsupported value."));
+  }
+  optionalEnum(value, "direction", propertyPath(path, "direction"), TRANSITION_DIRECTIONS, errors);
+  optionalEnum(value, "axis", propertyPath(path, "axis"), TRANSITION_AXES, errors);
+  optionalEnum(value, "shape", propertyPath(path, "shape"), TRANSITION_SHAPES, errors);
+  optionalString(value, "color", propertyPath(path, "color"), errors);
+  optionalNumber(value, "amount", propertyPath(path, "amount"), 0, undefined, errors);
+  optionalNumber(value, "intensity", propertyPath(path, "intensity"), 0, undefined, errors);
+  optionalInteger(value, "rows", propertyPath(path, "rows"), 1, 32, errors);
+  optionalInteger(value, "columns", propertyPath(path, "columns"), 1, 32, errors);
+}
+
+function validateTransitionTiming(value: unknown, path: string, errors: KavioError[]): void {
+  if (!isRecord(value)) {
+    errors.push(validationError("SCHEMA_REQUIRED_FIELD", path, "transition timing is required."));
+    return;
+  }
+
+  const type = requireString(value, "type", propertyPath(path, "type"), errors);
+  if (type !== undefined && type !== "tween") {
+    errors.push(validationError("SCHEMA_INVALID_FIELD", propertyPath(path, "type"), "transition timing type has an unsupported value."));
+  }
+  requireInteger(value, "durationFrames", propertyPath(path, "durationFrames"), 1, undefined, errors);
+  validateEasing(value.easing, propertyPath(path, "easing"), errors);
+}
+
+function transitionSeriesDuration(value: unknown): number | undefined {
+  if (!isRecord(value) || !isRecord(value.timing)) {
+    return undefined;
+  }
+
+  const durationFrames = value.timing.durationFrames;
+  return isInteger(durationFrames) && durationFrames >= 1 ? durationFrames : undefined;
 }
 
 function validateAudio(
@@ -1382,6 +2028,7 @@ function validateKeyframes(
       const frame = requireInteger(keyframe, "frame", propertyPath(keyframePath, "frame"), 0, duration, errors);
       validateKeyframeValue(keyframe.value, property, propertyPath(keyframePath, "value"), errors);
       validateEasing(keyframe.easing, propertyPath(keyframePath, "easing"), errors);
+      validateTiming(keyframe.timing, propertyPath(keyframePath, "timing"), errors);
 
       if (frame !== undefined && previousFrame !== undefined && frame <= previousFrame) {
         errors.push(
@@ -1435,9 +2082,130 @@ function validateEasing(value: unknown, path: string, errors: KavioError[]): voi
       "SCHEMA_INVALID_EASING",
       path,
       `easing "${value}" is not supported.`,
-      "Use a named MVP easing or cubic-bezier(x1,y1,x2,y2)."
+      "Use a named deterministic easing or cubic-bezier(x1,y1,x2,y2)."
     )
   );
+}
+
+function validateTiming(value: unknown, path: string, errors: KavioError[], depth = 0): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!isRecord(value)) {
+    errors.push(validationError("SCHEMA_INVALID_TIMING", path, "timing must be an object."));
+    return;
+  }
+
+  if (depth > 6) {
+    errors.push(validationError("SCHEMA_INVALID_TIMING", path, "timing objects must not be nested more than six levels deep."));
+    return;
+  }
+
+  const type = requireString(value, "type", propertyPath(path, "type"), errors);
+  if (type === undefined) {
+    return;
+  }
+
+  if (!TIMING_TYPES.has(type as KavioTimingType)) {
+    errors.push(validationError("SCHEMA_INVALID_TIMING", propertyPath(path, "type"), `timing type "${type}" is not supported.`));
+    return;
+  }
+
+  switch (type) {
+    case "tween":
+      optionalInteger(value, "durationFrames", propertyPath(path, "durationFrames"), 1, undefined, errors);
+      validateEasing(value.easing, propertyPath(path, "easing"), errors);
+      break;
+    case "spring":
+      optionalInteger(value, "durationFrames", propertyPath(path, "durationFrames"), 1, undefined, errors);
+      optionalNumber(value, "stiffness", propertyPath(path, "stiffness"), 0, undefined, errors);
+      optionalNumber(value, "damping", propertyPath(path, "damping"), 0, undefined, errors);
+      optionalNumber(value, "mass", propertyPath(path, "mass"), 0, undefined, errors);
+      validatePositiveTimingNumber(value.stiffness, propertyPath(path, "stiffness"), errors);
+      validatePositiveTimingNumber(value.damping, propertyPath(path, "damping"), errors);
+      validatePositiveTimingNumber(value.mass, propertyPath(path, "mass"), errors);
+      optionalNumber(value, "restSpeed", propertyPath(path, "restSpeed"), 0, undefined, errors);
+      optionalNumber(value, "bounce", propertyPath(path, "bounce"), 0, 1, errors);
+      break;
+    case "steps":
+      optionalInteger(value, "durationFrames", propertyPath(path, "durationFrames"), 1, undefined, errors);
+      requireInteger(value, "steps", propertyPath(path, "steps"), 1, undefined, errors);
+      optionalEnum(value, "direction", propertyPath(path, "direction"), new Set(["start", "end"]), errors);
+      break;
+    case "sequence":
+      validateSequenceTiming(value.segments, propertyPath(path, "segments"), errors, depth);
+      break;
+    case "stagger":
+      validateTiming(value.timing, propertyPath(path, "timing"), errors, depth + 1);
+      requireInteger(value, "childCount", propertyPath(path, "childCount"), 1, undefined, errors);
+      requireInteger(value, "eachFrames", propertyPath(path, "eachFrames"), 0, undefined, errors);
+      optionalInteger(value, "childIndex", propertyPath(path, "childIndex"), 0, undefined, errors);
+      optionalEnum(value, "from", propertyPath(path, "from"), new Set(["start", "center", "end"]), errors);
+      if (
+        isInteger(value.childCount) &&
+        isInteger(value.childIndex) &&
+        value.childIndex >= value.childCount
+      ) {
+        errors.push(
+          validationError(
+            "SCHEMA_INVALID_TIMING",
+            propertyPath(path, "childIndex"),
+            "stagger childIndex must be lower than childCount."
+          )
+        );
+      }
+      break;
+  }
+}
+
+function validatePositiveTimingNumber(value: unknown, path: string, errors: KavioError[]): void {
+  if (value === 0) {
+    errors.push(validationError("SCHEMA_INVALID_TIMING", path, "timing value must be greater than 0."));
+  }
+}
+
+function validateSequenceTiming(value: unknown, path: string, errors: KavioError[], depth: number): void {
+  if (!Array.isArray(value) || value.length === 0) {
+    errors.push(validationError("SCHEMA_INVALID_TIMING", path, "sequence timing must include at least one segment."));
+    return;
+  }
+
+  value.forEach((segment, index) => {
+    const segmentPath = indexPath(path, index);
+    if (!isRecord(segment)) {
+      errors.push(validationError("SCHEMA_INVALID_TIMING", segmentPath, "sequence segment must be an object."));
+      return;
+    }
+
+    requireInteger(segment, "durationFrames", propertyPath(segmentPath, "durationFrames"), 1, undefined, errors);
+    validateTiming(segment.timing, propertyPath(segmentPath, "timing"), errors, depth + 1);
+    optionalNumber(segment, "from", propertyPath(segmentPath, "from"), undefined, undefined, errors);
+    optionalNumber(segment, "to", propertyPath(segmentPath, "to"), undefined, undefined, errors);
+  });
+}
+
+function timingProvidesDuration(value: unknown): boolean {
+  if (!isRecord(value) || typeof value.type !== "string") {
+    return false;
+  }
+
+  switch (value.type) {
+    case "tween":
+    case "spring":
+    case "steps":
+      return isInteger(value.durationFrames) && value.durationFrames >= 1;
+    case "sequence":
+      return (
+        Array.isArray(value.segments) &&
+        value.segments.length > 0 &&
+        value.segments.every((segment) => isRecord(segment) && isInteger(segment.durationFrames) && segment.durationFrames >= 1)
+      );
+    case "stagger":
+      return timingProvidesDuration(value.timing);
+    default:
+      return false;
+  }
 }
 
 function validateInterpolations(input: unknown, props: ReadonlyMap<string, PropInfo>, errors: KavioError[]): void {
@@ -1712,8 +2480,34 @@ function validateTransition(value: unknown, path: string, errors: KavioError[]):
     return;
   }
 
-  optionalEnum(value, "type", propertyPath(path, "type"), new Set(["fade", "slide", "wipe", "crossfade"]), errors);
-  optionalInteger(value, "durationFrames", propertyPath(path, "durationFrames"), 1, undefined, errors);
+  const type = requireString(value, "type", propertyPath(path, "type"), errors);
+  if (type !== undefined && !TRANSITION_TYPES.has(type as KavioTransitionType)) {
+    errors.push(validationError("SCHEMA_INVALID_FIELD", propertyPath(path, "type"), "type has an unsupported value."));
+  }
+  if (value.timing === undefined) {
+    requireInteger(value, "durationFrames", propertyPath(path, "durationFrames"), 1, undefined, errors);
+  } else {
+    optionalInteger(value, "durationFrames", propertyPath(path, "durationFrames"), 1, undefined, errors);
+    validateTiming(value.timing, propertyPath(path, "timing"), errors);
+    if (value.durationFrames === undefined && !timingProvidesDuration(value.timing)) {
+      errors.push(
+        validationError(
+          "SCHEMA_REQUIRED_FIELD",
+          propertyPath(path, "durationFrames"),
+          "transition durationFrames is required when timing does not declare a duration."
+        )
+      );
+    }
+  }
+  optionalEnum(value, "direction", propertyPath(path, "direction"), TRANSITION_DIRECTIONS, errors);
+  optionalEnum(value, "axis", propertyPath(path, "axis"), TRANSITION_AXES, errors);
+  optionalEnum(value, "shape", propertyPath(path, "shape"), TRANSITION_SHAPES, errors);
+  optionalString(value, "color", propertyPath(path, "color"), errors);
+  optionalNumber(value, "amount", propertyPath(path, "amount"), 0, undefined, errors);
+  optionalNumber(value, "intensity", propertyPath(path, "intensity"), 0, undefined, errors);
+  optionalInteger(value, "rows", propertyPath(path, "rows"), 1, 32, errors);
+  optionalInteger(value, "columns", propertyPath(path, "columns"), 1, 32, errors);
+  validateEasing(value.easing, propertyPath(path, "easing"), errors);
 }
 
 function validateRegisteredFont(

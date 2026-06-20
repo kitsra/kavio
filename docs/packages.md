@@ -78,6 +78,8 @@ Capabilities include:
 - Layer helpers for video, image, text, shape, and captions.
 - `prop(...)` references and metadata.
 - `keyframes(...)` and easing helpers.
+- Native `transition.*`, `camera.*`, `cinematic.*`, and `textMotion.*`
+  authoring helpers.
 - Platform-specific social export presets, feed variants, and custom outputs.
 - Validation hook for generated documents.
 

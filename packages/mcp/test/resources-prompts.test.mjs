@@ -40,6 +40,25 @@ test("enums resource is valid JSON", () => {
   assert.ok(JSON.parse(r.read()).layerType.length >= 1);
 });
 
+test("motion support resource exposes transition support and budgets", () => {
+  const r = resources.find((x) => x.uri === "kavio://motion-support.json");
+  const support = JSON.parse(r.read());
+  assert.equal(support.transitions.fade.browserPreview, "stable");
+  assert.equal(support.transitions.blurDissolve.opaqueVideoRender, "stable");
+  assert.equal(support.transitions.cameraWhip.browserPreview, "stable");
+  assert.equal(support.transitionSeries.coreEvaluation, "stable");
+  assert.equal(support.transitionSeries.browserPreview, "stable");
+  assert.equal(support.transitionSeries.opaqueVideoRender, "stable");
+  assert.equal(support.effects.blur.opaqueVideoRender, "unsupported");
+  assert.deepEqual(support.masks.shape.stable, ["rect", "circle", "diamond"]);
+  assert.equal(support.masks.asset.unsupported.includes("video-luma"), true);
+  assert.equal(support.masks.procedural.stable.includes("scanlines"), true);
+  assert.equal(typeof support.performanceBudgets.maxBlurRadius, "number");
+  assert.equal(typeof support.performanceBudgets.maxMaskedLayers, "number");
+  assert.equal(typeof support.performanceBudgets.maxTextMotionFragments, "number");
+  assert.equal(typeof support.performanceBudgets.maxProceduralMaskPixels, "number");
+});
+
 test("author prompt renders with a brief", () => {
   const p = prompts.find((x) => x.name === "author_kavio_video");
   assert.ok(p.render({ brief: "a 10s vertical promo" }).includes("10s vertical promo"));

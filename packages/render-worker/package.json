@@ -2,7 +2,7 @@
   "name": "@kavio/render-worker",
   "version": "0.0.0",
   "description": "Browser automation and frame capture worker for Kavio.",
-  "license": "Apache-2.0",
+  "license": "Elastic-2.0",
   "type": "module",
   "sideEffects": false,
   "publishConfig": {

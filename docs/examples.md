@@ -71,6 +71,24 @@ corepack pnpm --filter @kavio/example-mvp-demo run render
 outputs. Local rendering requires the optional Playwright Chromium browser and
 FFmpeg binary.
 
+## native-transitions
+
+Path: `examples/native-transitions/composition.json`
+
+Purpose:
+
+- Raw JSON gallery for every current native transition.
+- Keeps `transitionIn` examples inspectable without relying on builder helpers.
+- Serves as a schema-validation fixture for motion parity work.
+
+Commands:
+
+```bash
+corepack pnpm run build
+node packages/cli/dist/index.js validate examples/native-transitions/composition.json
+node packages/cli/dist/index.js preview examples/native-transitions/composition.json
+```
+
 ## visual-fixtures
 
 Path: `examples/visual-fixtures/fixed-frame`

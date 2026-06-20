@@ -7,7 +7,7 @@ This website is self-contained. It summarizes the project, documentation,
 examples, and package boundaries without relying on local repository markdown
 files. The source code and runnable fixtures live at:
 
-https://github.com/Kitsra/Kavio
+https://github.com/kitsra/kavio
 
 ## Primary Concepts
 
@@ -47,6 +47,50 @@ render paths.
 - API overview: `docs/api.html`
 - MCP server: `docs/mcp.html`
 - Troubleshooting: `docs/troubleshooting.html`
+
+## Builder And Template Reference
+
+Static docs include crawler-friendly builder and template indexes:
+
+- `docs/api.html#builder-methods`: `VideoBuilder`, `LayerBuilder`, `TrackBuilder`, `PropReference`, `AssetReference`, `asset`, layer helpers, document helpers, transition series, crop helpers, and namespace aliases.
+- `docs/api.html#motion-methods`: `transition`, `camera`, `cinematic`, `textMotion`, `timing`, and `easing` method inventories.
+- `docs/api.html#export-methods`: `exportPreset` methods and social export aliases.
+- `docs/authoring.html#template-format`: top-level JSON template fields: `version`, `metadata`, `composition`, `props`, `assets`, `layers`, `tracks`, `audio`, and `exports`.
+- `docs/authoring.html#template-fields`: prop, asset, common layer, video, image, text, shape, caption, and export fields.
+- `docs/authoring.html#motion-fields`: keyframes, timing, transitions, text motion, masks, track clips, and audio track fields.
+
+Important builder exports include `video`, `prop`, `validate`, `keyframes`,
+`clip`, `videoLayer`, `image`, `text`, `shape`, `caption`, `track`,
+`trackClip`, `asset.video`, `asset.image`, `asset.audio`, `asset.font`,
+`transition.fade`, `transition.slide`, `transition.wipe`,
+`transition.crossfade`, `transition.zoom`, `transition.push`,
+`transition.spin`, `transition.rotate`, `transition.flip`,
+`transition.blurDissolve`, `transition.colorDissolve`, `transition.dip`,
+`transition.iris`, `transition.stretch`, `transition.squeeze`,
+`transition.clockWipe`, `transition.barWipe`, `transition.gridWipe`,
+`transition.tileReveal`, `transition.radialBlur`, `transition.zoomBlur`,
+`transition.bookFlip`, `transition.pageCurlLite`, `transition.skewSlide`,
+`transition.expandMask`, `transition.letterboxReveal`,
+`transition.filmFlash`, `transition.cameraWhip`, `camera.kenBurns`,
+`camera.pushIn`, `camera.pullBack`, `camera.pan`, `camera.tilt`,
+`camera.parallax`, `camera.orbitLite`, `camera.handheld`,
+`camera.crashZoom`, `camera.dollyZoomLite`, `cinematic.zoomPush`,
+`cinematic.whipPan`, `cinematic.filmFlash`, `cinematic.dreamyBlur`,
+`cinematic.broadcastDip`, `cinematic.irisOpen`, `cinematic.flipCard`,
+`cinematic.glitchCut`, `cinematic.lightLeak`, `cinematic.kenBurns`,
+`cinematic.logoSting`, `cinematic.productReveal`, `cinematic.socialHook`,
+`cinematic.titleSequence`, `cinematic.endCard`, `textMotion.rise`,
+`textMotion.blurIn`, `textMotion.typeOn`, `textMotion.cascade`,
+`textMotion.scramble`, `textMotion.highlightSweep`,
+`textMotion.trackingIn`, `timing.tween`, `timing.spring`,
+`timing.steps`, `timing.sequence`, `timing.stagger`,
+`easing.cubicBezier`, `crop.center`, `crop.subject`,
+`exportPreset.vertical`, `exportPreset.reels`,
+`exportPreset.instagramReels`, `exportPreset.tiktok`,
+`exportPreset.youtubeShorts`, `exportPreset.facebookReels`,
+`exportPreset.square`, `exportPreset.portrait`,
+`exportPreset.landscape`, `exportPreset.social`, and
+`exportPreset.custom`.
 
 ## Packages
 

@@ -55,7 +55,7 @@ export function createCatalog(options: CreateCatalogOptions = {}): Catalog {
     },
     {
       name: "inspect_composition",
-      description: "Summarize a composition: dimensions, fps, duration, and layer/asset/export counts.",
+      description: "Summarize a composition: dimensions, fps, duration, counts, and transition overlap windows.",
       inputSchema: documentInput(),
       handler: inspectComposition
     },

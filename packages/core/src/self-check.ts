@@ -1,6 +1,8 @@
 import {
   applyExportPreset,
+  collectCompositionResourceLimitInputs,
   collectResourceLimitViolations,
+  compileTransitionOverlapWindows,
   createExportView,
   DEFAULT_RESOURCE_LIMITS,
   evaluateActiveLayers,
@@ -9,12 +11,16 @@ import {
   evaluateEasing,
   evaluateKeyframes,
   evaluateLayer,
+  evaluateLayerTransitions,
+  evaluateTiming,
+  evaluateTransitionSeries,
   getLocalFrame,
   isLayerActive,
   parseCubicBezier,
   resolveExportPreset,
   resolveDocumentProps,
-  resolveLayout
+  resolveLayout,
+  timingDurationFrames
 } from "./index.js";
 import type { CaptionTimelineLayer, TimelineLayer } from "./index.js";
 import type { KavioDocument } from "@kavio/schema";
@@ -28,6 +34,12 @@ const layer: TimelineLayer = {
   position: { x: "50%", y: "25%h" },
   anchor: "center",
   size: { width: "20%w", height: 100 },
+  mask: {
+    source: {
+      kind: "shape",
+      shape: "circle"
+    }
+  },
   keyframes: {
     opacity: [
       { frame: 0, value: 0, easing: "outQuad" },
@@ -57,6 +69,167 @@ assertEqual(evaluated.position.y, 125, "explicit h percentages resolve against h
 assertEqual(evaluated.size.width, 200, "width percentages resolve against width");
 assertEqual(evaluated.topLeft.x, 400, "center anchor shifts top-left x by half width");
 assertEqual(evaluated.topLeft.y, 75, "center anchor shifts top-left y by half height");
+assertEqual(evaluated.reveal ?? null, null, "layers without wipe transitions do not expose a reveal inset");
+assertEqual(evaluated.mask?.source.kind, "shape", "layer evaluation carries stable mask sources");
+
+const slideTransitionLayer: TimelineLayer = {
+  id: "slide",
+  type: "text",
+  startFrame: 0,
+  durationFrames: 20,
+  position: { x: 500, y: 250 },
+  transitionIn: { type: "slide", direction: "up", durationFrames: 5 },
+  transitionOut: { type: "fade", durationFrames: 5 }
+};
+const slideAtStart = evaluateLayer(slideTransitionLayer, 0, dimensions);
+const slideAfterEntrance = evaluateLayer(slideTransitionLayer, 4, dimensions);
+const slideAtEnd = evaluateLayer(slideTransitionLayer, 19, dimensions);
+assertClose(slideAtStart.position.y, 290, "slide-up entrances start below the resting position");
+assertClose(slideAfterEntrance.position.y, 250, "slide-up entrances end at the resting position");
+assertClose(slideAtEnd.opacity, 0, "transitionOut fade reaches transparent on the final visible frame");
+
+const wipeTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "wipe", direction: "right", durationFrames: 5 } },
+  0,
+  dimensions
+);
+assertEqual(wipeTransition.reveal?.left, 100, "rightward wipe entrances start clipped from the left");
+
+const zoomTransition = evaluateLayer(
+  {
+    id: "zoom",
+    type: "video",
+    startFrame: 0,
+    durationFrames: 12,
+    transitionIn: { type: "zoom", durationFrames: 6, amount: 0.2 }
+  },
+  0,
+  dimensions
+);
+assertClose(zoomTransition.scale, 1.2, "zoom transitions start scaled before settling");
+
+const flipTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "flip", axis: "y", durationFrames: 5 } },
+  0,
+  dimensions
+);
+assertClose(flipTransition.transform.rotateY, -90, "flip transitions expose a 3D rotation");
+
+const blurTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionOut: { type: "blurDissolve", durationFrames: 5, amount: 20 } },
+  9,
+  dimensions
+);
+assertClose(blurTransition.opacity, 0, "blur dissolve exits fade out");
+assertClose(blurTransition.filter?.blur ?? 0, 20, "blur dissolve exits ramp blur");
+
+const dipTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "dip", color: "#ffffff", durationFrames: 5 } },
+  0,
+  dimensions
+);
+assertEqual(dipTransition.wash?.color, "#ffffff", "dip transitions expose the requested wash color");
+assertClose(dipTransition.wash?.opacity ?? 0, 1, "dip transitions start fully washed");
+
+const irisTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "iris", shape: "diamond", durationFrames: 5 } },
+  0,
+  dimensions
+);
+assertEqual(irisTransition.revealShape?.shape, "diamond", "iris transitions expose their reveal shape");
+assertClose(irisTransition.revealShape?.progress ?? 1, 0, "iris entrances start closed");
+
+const clockTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "clockWipe", direction: "right", durationFrames: 5 } },
+  0,
+  dimensions
+);
+assertEqual(clockTransition.revealPattern?.kind, "clock", "clock wipes expose a clock reveal pattern");
+assertClose(clockTransition.revealPattern?.progress ?? 1, 0, "clock wipe entrances start hidden");
+
+const gridTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "gridWipe", direction: "down", rows: 3, columns: 5, durationFrames: 5 } },
+  0,
+  dimensions
+);
+assertEqual(gridTransition.revealPattern?.rows, 3, "grid wipes preserve requested rows");
+assertEqual(gridTransition.revealPattern?.columns, 5, "grid wipes preserve requested columns");
+
+const zoomBlurTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "zoomBlur", durationFrames: 5, amount: 18, intensity: 0.14 } },
+  0,
+  dimensions
+);
+assertClose(zoomBlurTransition.filter?.blur ?? 0, 18, "zoom blur entrances ramp blur");
+assertClose(zoomBlurTransition.scale, 1.14, "zoom blur entrances add secondary scale");
+
+const pageCurlTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "pageCurlLite", direction: "left", durationFrames: 5, intensity: 10 } },
+  0,
+  dimensions
+);
+assertClose(pageCurlTransition.transform.rotateY, 70, "page curl exposes deterministic 3D rotation");
+assertClose(pageCurlTransition.transform.skewY, -10, "page curl exposes deterministic skew");
+
+const letterboxTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "letterboxReveal", axis: "y", durationFrames: 5 } },
+  0,
+  dimensions
+);
+assertClose(letterboxTransition.reveal?.top ?? 0, 50, "letterbox reveals start clipped from top");
+assertClose(letterboxTransition.reveal?.bottom ?? 0, 50, "letterbox reveals start clipped from bottom");
+
+const cameraWhipTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "cameraWhip", direction: "left", durationFrames: 5, amount: 14, intensity: 10 } },
+  0,
+  dimensions
+);
+assertClose(cameraWhipTransition.filter?.blur ?? 0, 14, "camera whip entrances ramp blur");
+assertClose(cameraWhipTransition.transform.skewY, -10, "camera whip entrances expose directional skew");
+
+const transitionSeriesDocument: KavioDocument = {
+  version: "0.1",
+  composition: { width: 1000, height: 500, fps: 30, durationFrames: 90 },
+  assets: {},
+  layers: [
+    { id: "scene-a", type: "text", text: "A", startFrame: 0, durationFrames: 60, position: { x: 500, y: 250 } },
+    { id: "scene-b", type: "text", text: "B", startFrame: 48, durationFrames: 42, position: { x: 500, y: 250 } }
+  ],
+  tracks: [
+    {
+      id: "main",
+      clips: [
+        { id: "a", layerId: "scene-a", startFrame: 0, durationFrames: 60 },
+        {
+          id: "b",
+          layerId: "scene-b",
+          startFrame: 48,
+          durationFrames: 42,
+          transitionFromPrevious: {
+            presentation: { type: "push", direction: "left" },
+            timing: { type: "tween", durationFrames: 12, easing: "outCubic" }
+          }
+        }
+      ]
+    }
+  ],
+  exports: [{ name: "preview", format: "mp4", codec: "h264", width: 1000, height: 500 }]
+};
+const transitionWindows = compileTransitionOverlapWindows(transitionSeriesDocument.tracks);
+assertEqual(transitionWindows.length, 1, "transition series compiles overlap windows");
+assertEqual(transitionWindows[0]?.startFrame, 48, "transition series windows start with the incoming clip");
+assertEqual(transitionWindows[0]?.endFrame, 60, "transition series windows end after timing duration");
+const seriesAtStart = evaluateTransitionSeries(transitionSeriesDocument, 48, dimensions);
+assertEqual(seriesAtStart.length, 1, "transition series evaluates active overlap windows");
+const activeSeriesWindow = seriesAtStart[0];
+assert(activeSeriesWindow !== undefined, "transition series returns the active window");
+assertEqual(activeSeriesWindow.previous.clipId, "a", "transition series includes the outgoing clip");
+assertEqual(activeSeriesWindow.next.clipId, "b", "transition series includes the incoming clip");
+assert(activeSeriesWindow.previous.layer.visible, "outgoing clip layer is visible during the overlap");
+assert(activeSeriesWindow.next.layer.visible, "incoming clip layer is visible during the overlap");
+assertClose(activeSeriesWindow.previous.layer.position.x, 500, "outgoing push starts at its resting x position");
+assertClose(activeSeriesWindow.next.layer.position.x, 1500, "incoming push starts offscreen before moving in");
+assertEqual(evaluateTransitionSeries(transitionSeriesDocument, 60, dimensions).length, 0, "transition series endFrame is exclusive");
 
 const captionLayer: CaptionTimelineLayer = {
   id: "captions",
@@ -139,8 +312,66 @@ assertEqual(evaluateKeyframes([{ frame: 2, value: 8 }], 0, 1), 8, "before first 
 assertEqual(evaluateKeyframes([{ frame: 2, value: 8 }], 20, 1), 8, "after last keyframe holds last value");
 
 assertClose(evaluateEasing("inOutCubic", 0.5), 0.5, "inOutCubic is centered");
+assertClose(evaluateEasing("inCirc", 1), 1, "inCirc reaches one");
+assertClose(evaluateEasing("outExpo", 0), 0, "outExpo starts at zero");
+assertClose(evaluateEasing("inOutBounce", 0), 0, "inOutBounce starts at zero");
+assert(evaluateEasing("anticipate", 0.25) < 0, "anticipate eases backward before advancing");
 assert(parseCubicBezier("cubic-bezier(0, 0, 1, 1)") !== undefined, "cubic-bezier parser accepts CSS form");
 assertClose(evaluateEasing("cubic-bezier(0, 0, 1, 1)", 0.25), 0.25, "linear cubic-bezier evaluates as linear");
+
+assertClose(evaluateTiming({ type: "tween", durationFrames: 5, easing: "outCirc" }, 4), 1, "tween timing reaches one");
+assertClose(evaluateTiming({ type: "steps", durationFrames: 11, steps: 4 }, 1), 0, "end steps hold the first value");
+assertClose(
+  evaluateTiming({ type: "steps", durationFrames: 11, steps: 4, direction: "start" }, 1),
+  0.25,
+  "start steps jump immediately"
+);
+assertClose(
+  evaluateTiming({
+    type: "sequence",
+    segments: [
+      { durationFrames: 3, from: 0, to: -0.2, timing: { type: "tween", easing: "linear" } },
+      { durationFrames: 3, from: -0.2, to: 1, timing: { type: "tween", easing: "linear" } }
+    ]
+  }, 2),
+  -0.2,
+  "sequence timing can encode anticipation segments"
+);
+assertClose(
+  evaluateTiming({
+    type: "stagger",
+    childCount: 4,
+    childIndex: 2,
+    eachFrames: 3,
+    timing: { type: "tween", durationFrames: 5, easing: "linear" }
+  }, 8),
+  0.5,
+  "stagger offsets child timing by frame"
+);
+assertClose(evaluateTiming({ type: "spring", durationFrames: 8, stiffness: 80, damping: 10, mass: 1 }, 0), 0, "spring starts at zero");
+assertClose(evaluateTiming({ type: "spring", durationFrames: 8, stiffness: 80, damping: 10, mass: 1 }, 7), 1, "spring reaches one");
+assertEqual(
+  timingDurationFrames({ type: "stagger", childCount: 3, eachFrames: 2, timing: { type: "steps", durationFrames: 5, steps: 2 } }),
+  9,
+  "stagger timing duration includes child offsets"
+);
+
+const steppedKeyframeValue = evaluateKeyframes(
+  [
+    { frame: 0, value: 0, timing: { type: "steps", steps: 4 } },
+    { frame: 10, value: 40 }
+  ],
+  1,
+  0
+);
+assertEqual(steppedKeyframeValue, 0, "keyframes can use timing objects instead of easing strings");
+
+const timedTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "fade", timing: { type: "tween", durationFrames: 5, easing: "outExpo" } } },
+  4,
+  dimensions
+);
+assertClose(timedTransition.opacity, 1, "transition timing can supply duration and easing object");
 
 const resolvedProps = resolveDocumentProps<Record<string, unknown> & { props: Record<string, unknown> }>(
   {
@@ -248,14 +479,90 @@ const resourceViolations = collectResourceLimitViolations({
   height: DEFAULT_RESOURCE_LIMITS.maxHeight + 1,
   layerCount: DEFAULT_RESOURCE_LIMITS.maxLayers + 1,
   assetCount: DEFAULT_RESOURCE_LIMITS.maxAssets + 1,
-  propStringLength: DEFAULT_RESOURCE_LIMITS.maxPropStringLength + 1
+  propStringLength: DEFAULT_RESOURCE_LIMITS.maxPropStringLength + 1,
+  blurRadius: DEFAULT_RESOURCE_LIMITS.maxBlurRadius + 1,
+  filteredLayerCount: DEFAULT_RESOURCE_LIMITS.maxFilteredLayers + 1,
+  maskedLayerCount: DEFAULT_RESOURCE_LIMITS.maxMaskedLayers + 1,
+  maskSourceWidth: DEFAULT_RESOURCE_LIMITS.maxMaskSourceWidth + 1,
+  maskSourceHeight: DEFAULT_RESOURCE_LIMITS.maxMaskSourceHeight + 1,
+  textMotionFragments: DEFAULT_RESOURCE_LIMITS.maxTextMotionFragments + 1,
+  proceduralMaskPixels: DEFAULT_RESOURCE_LIMITS.maxProceduralMaskPixels + 1,
+  transitionDurationFrames: DEFAULT_RESOURCE_LIMITS.maxTransitionDurationFrames + 1
 });
-assertEqual(resourceViolations.length, 5, "resource limits produce deterministic violations");
+assertEqual(resourceViolations.length, 13, "resource limits produce deterministic violations");
 assertEqual(resourceViolations[0]?.code, "LIMIT_MAX_FRAMES", "frame resource limit code is stable");
 assertEqual(resourceViolations[1]?.code, "LIMIT_MAX_HEIGHT", "dimension resource limit code is stable");
 assertEqual(resourceViolations[2]?.code, "LIMIT_MAX_LAYERS", "layer resource limit code is stable");
 assertEqual(resourceViolations[3]?.code, "LIMIT_MAX_ASSETS", "asset resource limit code is stable");
 assertEqual(resourceViolations[4]?.code, "LIMIT_MAX_PROP_STRING_LENGTH", "prop string limit code is stable");
+assertEqual(resourceViolations[5]?.code, "LIMIT_MAX_BLUR_RADIUS", "blur budget limit code is stable");
+assertEqual(resourceViolations[6]?.code, "LIMIT_MAX_FILTERED_LAYERS", "filtered layer budget limit code is stable");
+assertEqual(resourceViolations[7]?.code, "LIMIT_MAX_MASKED_LAYERS", "masked layer budget limit code is stable");
+assertEqual(resourceViolations[8]?.code, "LIMIT_MAX_MASK_SOURCE_WIDTH", "mask source width budget limit code is stable");
+assertEqual(resourceViolations[9]?.code, "LIMIT_MAX_MASK_SOURCE_HEIGHT", "mask source height budget limit code is stable");
+assertEqual(resourceViolations[10]?.code, "LIMIT_MAX_TEXT_MOTION_FRAGMENTS", "text motion fragment budget limit code is stable");
+assertEqual(resourceViolations[11]?.code, "LIMIT_MAX_PROCEDURAL_MASK_PIXELS", "procedural mask pixel budget limit code is stable");
+assertEqual(resourceViolations[12]?.code, "LIMIT_MAX_TRANSITION_DURATION", "transition duration budget limit code is stable");
+
+const motionBudgetDocument: KavioDocument = {
+  version: "0.1",
+  composition: { width: 640, height: 360, fps: 24, durationFrames: 60 },
+  assets: {},
+  layers: [
+    {
+      id: "blur-a",
+      type: "shape",
+      shape: "rect",
+      startFrame: 0,
+      durationFrames: 30,
+      transitionIn: { type: "blurDissolve", durationFrames: 12, amount: 20 },
+      mask: {
+        source: {
+          kind: "procedural",
+          type: "radialGradient",
+          seed: 4,
+          resolution: { width: 1920, height: 1080 }
+        }
+      }
+    },
+    {
+      id: "blur-b",
+      type: "shape",
+      shape: "rect",
+      startFrame: 10,
+      durationFrames: 30,
+      effects: [{ type: "blur", radius: 64 }],
+      mask: {
+        source: {
+          kind: "shape",
+          shape: "diamond"
+        }
+      }
+    },
+    {
+      id: "kinetic-text",
+      type: "text",
+      text: "Split me",
+      startFrame: 0,
+      durationFrames: 20,
+      textMotion: {
+        type: "typeOn",
+        split: "char",
+        durationFrames: 8
+      }
+    }
+  ],
+  exports: []
+};
+const motionBudgetInputs = collectCompositionResourceLimitInputs(motionBudgetDocument);
+assertEqual(motionBudgetInputs.blurRadius, 64, "composition budget inputs track max blur radius");
+assertEqual(motionBudgetInputs.filteredLayerCount, 2, "composition budget inputs track simultaneous filtered layers");
+assertEqual(motionBudgetInputs.maskedLayerCount, 2, "composition budget inputs track simultaneous masked layers");
+assertEqual(motionBudgetInputs.maskSourceWidth, 1920, "composition budget inputs track declared mask source width");
+assertEqual(motionBudgetInputs.maskSourceHeight, 1080, "composition budget inputs track declared mask source height");
+assertEqual(motionBudgetInputs.textMotionFragments, 8, "composition budget inputs track text motion fragments");
+assertEqual(motionBudgetInputs.proceduralMaskPixels, 2073600, "composition budget inputs track procedural mask pixel count");
+assertEqual(motionBudgetInputs.transitionDurationFrames, 12, "composition budget inputs track max transition duration");
 
 console.log("Core timeline self-checks passed.");
 

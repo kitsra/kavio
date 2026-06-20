@@ -66,6 +66,9 @@ The summary includes:
 - Prop count.
 - Asset count and asset-type breakdown.
 - Layer count and layer-type breakdown.
+- Mask count, asset-backed mask references, procedural mask seeds, and
+  declared mask resolutions.
+- Track count, clip count, and concrete transition overlap windows.
 - Audio count.
 - Export preset count and names.
 

@@ -544,6 +544,62 @@ pre {
   border-radius: 8px;
 }
 
+.motion-gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 26px;
+}
+
+.motion-card {
+  display: grid;
+  gap: 0;
+  margin: 0;
+  overflow: hidden;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.motion-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  background: var(--night);
+}
+
+.motion-card-wide img {
+  aspect-ratio: 16 / 9;
+}
+
+.landscape-demo-video {
+  display: block;
+  width: 100%;
+  margin: 24px 0;
+  aspect-ratio: 16 / 9;
+  background: var(--night);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.motion-card figcaption {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.motion-card strong {
+  font-size: 1rem;
+}
+
+.motion-card pre {
+  margin: 0;
+  padding: 14px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
 .definition-list {
   display: grid;
   gap: 1px;
@@ -626,6 +682,53 @@ pre {
 .resource-grid span {
   color: var(--muted);
   line-height: 1.5;
+}
+
+.reference-table-wrap {
+  max-width: 100%;
+  margin: 24px 0;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.reference-table {
+  width: 100%;
+  min-width: 720px;
+  border-collapse: collapse;
+  background: var(--white);
+}
+
+.reference-table th,
+.reference-table td {
+  padding: 14px 16px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+.reference-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.reference-table th {
+  color: var(--moss-dark);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: #f1f4ee;
+}
+
+.reference-table td {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.reference-table code {
+  color: var(--ink);
+  font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .example-detail {
@@ -812,6 +915,7 @@ pre {
   .project-grid,
   .link-grid,
   .split-section,
+  .motion-gallery,
   .package-grid,
   .resource-grid,
   .definition-list div,

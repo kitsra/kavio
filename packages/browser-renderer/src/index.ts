@@ -1,5 +1,5 @@
-import { evaluateLayer, getCanvasDimensions, isLayerActive, resolvePoint } from "@kavio/core";
-import type { CanvasDimensions, EvaluatedCaptionState, EvaluatedLayer, Size } from "@kavio/core";
+import { evaluateEasing, evaluateLayer, evaluateTransitionSeries, getCanvasDimensions, isLayerActive, resolvePoint } from "@kavio/core";
+import type { CanvasDimensions, EvaluatedCaptionState, EvaluatedLayer, EvaluatedTransitionOverlap, Size } from "@kavio/core";
 import type {
   KavioCaptionLayer,
   KavioCaptionStyle,
@@ -9,6 +9,9 @@ import type {
   KavioImageAsset,
   KavioLayer,
   KavioLayerOverride,
+  KavioLayerMask,
+  KavioTextLayer,
+  KavioTextMotion,
   KavioTextStyle,
   KavioVideoCrop
 } from "@kavio/schema";
@@ -109,6 +112,19 @@ interface CompositionResources {
 
 interface RenderedContent {
   intrinsicSize?: Size;
+}
+
+interface TransitionRenderState {
+  overlap: EvaluatedTransitionOverlap;
+  role: "previous" | "next";
+  clipId: string;
+  evaluation: EvaluatedLayer;
+}
+
+interface TextMotionFragment {
+  text: string;
+  animatable: boolean;
+  breakAfter?: boolean;
 }
 
 declare global {
@@ -490,9 +506,20 @@ function renderCompositionFrame(
   const dimensions = getCanvasDimensions(composition.composition);
   const root = getRenderRoot(options);
   const stage = createStage(root, dimensions, composition.exports[0]?.background);
-  const layerPromises = composition.layers
-    .filter((layer) => isLayerActive(layer, frame))
-    .map((layer, index) => renderLayer(stage.ownerDocument, composition, layer, index, frame, dimensions));
+  const transitionStates = activeTransitionRenderStates(composition, frame, dimensions);
+  const layerPromises = composition.layers.flatMap((layer, index) => {
+    const transitionState = transitionStates.get(layer.id);
+    if (transitionState !== undefined) {
+      return [
+        renderLayer(stage.ownerDocument, composition, layer, index, frame, dimensions, {
+          evaluation: transitionState.evaluation,
+          transition: transitionState
+        })
+      ];
+    }
+
+    return isLayerActive(layer, frame) ? [renderLayer(stage.ownerDocument, composition, layer, index, frame, dimensions)] : [];
+  });
 
   return Promise.all(layerPromises).then(async (layers) => {
     stage.replaceChildren(...layers.map((layer) => layer.element));
@@ -514,12 +541,20 @@ async function renderLayer(
   layer: KavioLayer,
   index: number,
   frame: number,
-  dimensions: CanvasDimensions
+  dimensions: CanvasDimensions,
+  options: { evaluation?: EvaluatedLayer; transition?: TransitionRenderState } = {}
 ): Promise<RenderedLayer> {
-  const evaluation = evaluateLayer(layer, frame, dimensions);
+  const evaluation = options.evaluation ?? evaluateLayer(layer, frame, dimensions);
   const element = document.createElement("div");
   element.dataset.kavioLayerId = layer.id;
   element.dataset.kavioLayerType = layer.type;
+  if (options.transition !== undefined) {
+    element.dataset.kavioTransitionSeries = "true";
+    element.dataset.kavioTransitionTrack = options.transition.overlap.trackId;
+    element.dataset.kavioTransitionClip = options.transition.clipId;
+    element.dataset.kavioTransitionRole = options.transition.role;
+    element.dataset.kavioTransitionType = options.transition.overlap.transition.type;
+  }
   element.style.position = "absolute";
   element.style.boxSizing = "border-box";
   element.style.left = `${evaluation.position.x}px`;
@@ -532,6 +567,10 @@ async function renderLayer(
   const renderedSize = resolveRenderedSize(evaluation, content.intrinsicSize);
   applyRenderedSize(element, evaluation, renderedSize);
   applyLayerTransform(element, layer, evaluation, dimensions);
+  applyLayerReveal(element, evaluation);
+  applyLayerFilter(element, evaluation);
+  applyLayerWash(document, element, evaluation);
+  applyLayerMask(element, composition, evaluation.mask);
 
   return {
     id: layer.id,
@@ -540,6 +579,363 @@ async function renderLayer(
     element,
     evaluation
   };
+}
+
+function activeTransitionRenderStates(
+  composition: KavioDocument,
+  frame: number,
+  dimensions: CanvasDimensions
+): Map<string, TransitionRenderState> {
+  const states = new Map<string, TransitionRenderState>();
+  const overlaps = evaluateTransitionSeries(composition, frame, dimensions);
+  for (const overlap of overlaps) {
+    states.set(overlap.previous.layerId, {
+      overlap,
+      role: "previous",
+      clipId: overlap.previous.clipId,
+      evaluation: overlap.previous.layer
+    });
+    states.set(overlap.next.layerId, {
+      overlap,
+      role: "next",
+      clipId: overlap.next.clipId,
+      evaluation: overlap.next.layer
+    });
+  }
+  return states;
+}
+
+function applyLayerReveal(element: HTMLElement, evaluation: EvaluatedLayer): void {
+  if (!evaluation.reveal && !evaluation.revealShape && !evaluation.revealPattern) {
+    return;
+  }
+
+  element.style.overflow = "hidden";
+  if (evaluation.revealShape) {
+    element.style.clipPath = revealShapeClipPath(evaluation.revealShape);
+  } else if (evaluation.reveal) {
+    const { top, right, bottom, left } = evaluation.reveal;
+    element.style.clipPath = `inset(${top}% ${right}% ${bottom}% ${left}%)`;
+  }
+
+  if (evaluation.revealPattern?.kind === "clock") {
+    element.style.clipPath = clockWipeClipPath(evaluation.revealPattern);
+  } else if (evaluation.revealPattern) {
+    applyRevealPatternMask(element, evaluation.revealPattern);
+  }
+}
+
+function applyLayerFilter(element: HTMLElement, evaluation: EvaluatedLayer): void {
+  const filters: string[] = [];
+  if (evaluation.filter?.blur !== undefined && evaluation.filter.blur > 0) {
+    filters.push(`blur(${evaluation.filter.blur}px)`);
+  }
+
+  if (filters.length > 0) {
+    element.style.filter = filters.join(" ");
+  }
+}
+
+function applyLayerWash(document: Document, element: HTMLElement, evaluation: EvaluatedLayer): void {
+  if (!evaluation.wash || evaluation.wash.opacity <= 0) {
+    return;
+  }
+
+  element.style.overflow = "hidden";
+  const overlay = document.createElement("div");
+  overlay.dataset.kavioTransitionOverlay = "wash";
+  overlay.style.position = "absolute";
+  overlay.style.inset = "0";
+  overlay.style.pointerEvents = "none";
+  overlay.style.background = evaluation.wash.color;
+  overlay.style.opacity = String(evaluation.wash.opacity);
+  overlay.style.zIndex = "2147483647";
+  element.append(overlay);
+}
+
+function applyLayerMask(
+  element: HTMLElement,
+  composition: KavioDocument,
+  mask: KavioLayerMask | undefined
+): void {
+  if (!mask) {
+    return;
+  }
+
+  const source = mask.source;
+  element.dataset.kavioMaskKind = source.kind;
+  element.dataset.kavioMaskInverted = mask.invert === true ? "true" : "false";
+  element.style.overflow = "hidden";
+
+  if (mask.opacity !== undefined) {
+    element.dataset.kavioMaskOpacity = formatUnit(mask.opacity);
+    const currentOpacity = Number(element.style.opacity || "1");
+    if (Number.isFinite(currentOpacity)) {
+      element.style.opacity = String(currentOpacity * mask.opacity);
+    }
+  }
+
+  switch (source.kind) {
+    case "shape":
+      element.dataset.kavioMaskShape = source.shape;
+      applyCssMaskImage(element, shapeMaskImage(source.shape, mask.invert === true));
+      break;
+    case "asset": {
+      if (mask.invert === true) {
+        throw new Error("Inverted asset masks are not supported by the stable browser renderer.");
+      }
+      const asset = composition.assets[source.asset];
+      if (!asset || asset.type !== "image") {
+        throw new Error(`Mask source references missing image asset "${source.asset}".`);
+      }
+      element.dataset.kavioMaskAsset = source.asset;
+      element.dataset.kavioMaskMode = source.mode ?? "alpha";
+      applyCssMaskImage(element, `url("${escapeCssString(asset.src)}")`);
+      element.style.maskSize = "100% 100%";
+      element.style.webkitMaskSize = "100% 100%";
+      element.style.maskRepeat = "no-repeat";
+      element.style.webkitMaskRepeat = "no-repeat";
+      break;
+    }
+    case "procedural":
+      element.dataset.kavioMaskType = source.type;
+      element.dataset.kavioMaskSeed = String(source.seed);
+      applyCssMaskImage(element, proceduralMaskImage(source, mask.invert === true));
+      if (source.type === "scanlines") {
+        const period = Math.max(2, Math.round(source.frequency ?? 8));
+        const offset = source.seed % period;
+        element.style.maskPosition = `0 ${offset}px`;
+        element.style.webkitMaskPosition = `0 ${offset}px`;
+      }
+      break;
+  }
+}
+
+function applyCssMaskImage(element: HTMLElement, image: string): void {
+  element.style.maskImage = image;
+  element.style.webkitMaskImage = image;
+  element.style.maskSize = "100% 100%";
+  element.style.webkitMaskSize = "100% 100%";
+}
+
+function shapeMaskImage(shape: Extract<KavioLayerMask["source"], { kind: "shape" }>["shape"], inverted: boolean): string {
+  const visible = maskColor(!inverted);
+  const hidden = maskColor(inverted);
+  switch (shape) {
+    case "circle":
+      return `radial-gradient(circle at 50% 50%, ${visible} 0 50%, ${hidden} 50.5% 100%)`;
+    case "diamond":
+      return `conic-gradient(from 45deg at 50% 50%, ${hidden} 0 12.5%, ${visible} 12.5% 37.5%, ${hidden} 37.5% 62.5%, ${visible} 62.5% 87.5%, ${hidden} 87.5% 100%)`;
+    case "rect":
+      return `linear-gradient(${visible}, ${visible})`;
+  }
+}
+
+function proceduralMaskImage(
+  source: Extract<KavioLayerMask["source"], { kind: "procedural" }>,
+  inverted: boolean
+): string {
+  const visible = maskColor(!inverted);
+  const hidden = maskColor(inverted);
+  const softness = Math.round((source.softness ?? 0.12) * 100);
+  switch (source.type) {
+    case "linearGradient": {
+      const direction = source.direction ?? seededDirection(source.seed);
+      const edge = Math.max(0, Math.min(49, softness));
+      return `linear-gradient(${linearGradientDirection(direction)}, ${hidden} 0%, ${hidden} ${50 - edge}%, ${visible} ${50 + edge}%, ${visible} 100%)`;
+    }
+    case "radialGradient": {
+      const edge = Math.max(0, Math.min(49, softness));
+      return `radial-gradient(circle at 50% 50%, ${visible} 0%, ${visible} ${50 - edge}%, ${hidden} ${50 + edge}%, ${hidden} 100%)`;
+    }
+    case "scanlines": {
+      const period = Math.max(2, Math.round(source.frequency ?? 8));
+      const line = Math.max(1, Math.floor(period / 2));
+      return `repeating-linear-gradient(to bottom, ${visible} 0 ${line}px, ${hidden} ${line}px ${period}px)`;
+    }
+  }
+}
+
+function maskColor(visible: boolean): string {
+  return visible ? "#000" : "transparent";
+}
+
+function seededDirection(seed: number): "up" | "down" | "left" | "right" {
+  const directions = ["right", "left", "down", "up"] as const;
+  return directions[Math.abs(seed) % directions.length] ?? "right";
+}
+
+function linearGradientDirection(direction: "up" | "down" | "left" | "right"): string {
+  switch (direction) {
+    case "up":
+      return "to top";
+    case "down":
+      return "to bottom";
+    case "left":
+      return "to left";
+    case "right":
+      return "to right";
+  }
+}
+
+function revealShapeClipPath(reveal: NonNullable<EvaluatedLayer["revealShape"]>): string {
+  const progress = Math.max(0, Math.min(1, reveal.progress));
+  if (reveal.shape === "diamond") {
+    const radius = progress * 100;
+    return `polygon(50% ${50 - radius}%, ${50 + radius}% 50%, 50% ${50 + radius}%, ${50 - radius}% 50%)`;
+  }
+
+  return `circle(${progress * 75}% at 50% 50%)`;
+}
+
+function clockWipeClipPath(reveal: NonNullable<EvaluatedLayer["revealPattern"]>): string {
+  const progress = Math.max(0, Math.min(1, reveal.progress));
+  if (progress <= 0) {
+    return "polygon(50% 50%, 50% 0%, 50% 0%)";
+  }
+  if (progress >= 1) {
+    return "inset(0%)";
+  }
+
+  const clockwise = reveal.direction !== "left" && reveal.direction !== "up";
+  const steps = Math.max(2, Math.ceil((progress * 360) / 15));
+  const points = ["50% 50%"];
+  for (let index = 0; index <= steps; index += 1) {
+    const angle = -90 + (clockwise ? 1 : -1) * progress * 360 * (index / steps);
+    const point = squareEdgePoint(angle);
+    points.push(`${point.x}% ${point.y}%`);
+  }
+
+  return `polygon(${points.join(", ")})`;
+}
+
+function squareEdgePoint(angleDegrees: number): { x: number; y: number } {
+  const angle = (angleDegrees * Math.PI) / 180;
+  const dx = Math.cos(angle);
+  const dy = Math.sin(angle);
+  const scale = 50 / Math.max(Math.abs(dx), Math.abs(dy));
+
+  return {
+    x: 50 + dx * scale,
+    y: 50 + dy * scale
+  };
+}
+
+function applyRevealPatternMask(element: HTMLElement, reveal: NonNullable<EvaluatedLayer["revealPattern"]>): void {
+  if (reveal.kind === "clock") {
+    return;
+  }
+
+  const progress = Math.max(0, Math.min(1, reveal.progress));
+  const rows = Math.max(1, Math.min(32, Math.round(reveal.rows)));
+  const columns = Math.max(1, Math.min(32, Math.round(reveal.columns)));
+  const total = rows * columns;
+  const masks: string[] = [];
+  const sizes: string[] = [];
+  const positions: string[] = [];
+  const tileWidth = 100 / columns;
+  const tileHeight = 100 / rows;
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      const order = reveal.kind === "tiles" ? centeredTileOrder(row, column, rows, columns) : directionalTileOrder(row, column, rows, columns, reveal.direction);
+      const tileProgress = reveal.kind === "bars" ? progress : staggeredTileProgress(progress, order, total, reveal.kind);
+      if (tileProgress <= 0) {
+        continue;
+      }
+
+      const placement = tileMaskPlacement(row, column, tileWidth, tileHeight, tileProgress, reveal.direction, reveal.kind);
+      masks.push("linear-gradient(#000 0 0)");
+      sizes.push(`${placement.width}% ${placement.height}%`);
+      positions.push(`${placement.x}% ${placement.y}%`);
+    }
+  }
+
+  if (masks.length === 0) {
+    element.style.clipPath = "inset(100%)";
+    return;
+  }
+
+  setMaskProperty(element, "mask-image", masks.join(", "));
+  setMaskProperty(element, "mask-size", sizes.join(", "));
+  setMaskProperty(element, "mask-position", positions.join(", "));
+  setMaskProperty(element, "mask-repeat", masks.map(() => "no-repeat").join(", "));
+}
+
+function staggeredTileProgress(progress: number, order: number, total: number, kind: "grid" | "tiles" | "bars"): number {
+  if (kind === "bars") {
+    return progress;
+  }
+
+  const spread = kind === "tiles" ? 0.55 : 0.75;
+  const delay = total <= 1 ? 0 : (order / (total - 1)) * spread;
+  return Math.max(0, Math.min(1, (progress - delay) / (1 - delay)));
+}
+
+function directionalTileOrder(row: number, column: number, rows: number, columns: number, direction: string): number {
+  switch (direction) {
+    case "left":
+      return row * columns + (columns - 1 - column);
+    case "up":
+      return column * rows + (rows - 1 - row);
+    case "down":
+      return column * rows + row;
+    case "right":
+    default:
+      return row * columns + column;
+  }
+}
+
+function centeredTileOrder(row: number, column: number, rows: number, columns: number): number {
+  const centerRow = (rows - 1) / 2;
+  const centerColumn = (columns - 1) / 2;
+  const distance = Math.hypot(row - centerRow, column - centerColumn);
+  const maxDistance = Math.hypot(centerRow, centerColumn) || 1;
+  return Math.round((distance / maxDistance) * (rows * columns - 1));
+}
+
+function tileMaskPlacement(
+  row: number,
+  column: number,
+  tileWidth: number,
+  tileHeight: number,
+  progress: number,
+  direction: string,
+  kind: string
+): { x: number; y: number; width: number; height: number } {
+  if (kind === "tiles") {
+    const width = tileWidth * progress;
+    const height = tileHeight * progress;
+    return {
+      x: column * tileWidth + (tileWidth - width) / 2,
+      y: row * tileHeight + (tileHeight - height) / 2,
+      width,
+      height
+    };
+  }
+
+  if (direction === "up" || direction === "down") {
+    const height = tileHeight * progress;
+    return {
+      x: column * tileWidth,
+      y: direction === "up" ? (row + 1) * tileHeight - height : row * tileHeight,
+      width: tileWidth,
+      height
+    };
+  }
+
+  const width = tileWidth * progress;
+  return {
+    x: direction === "left" ? (column + 1) * tileWidth - width : column * tileWidth,
+    y: row * tileHeight,
+    width,
+    height: tileHeight
+  };
+}
+
+function setMaskProperty(element: HTMLElement, property: string, value: string): void {
+  element.style.setProperty(property, value);
+  element.style.setProperty(`-webkit-${property}`, value);
 }
 
 async function applyLayerContent(
@@ -552,8 +948,8 @@ async function applyLayerContent(
 ): Promise<RenderedContent> {
   switch (layer.type) {
     case "text":
-      element.textContent = layer.text;
       applyTextStyle(element, layer.style);
+      applyTextContent(document, element, layer, evaluation);
       return {};
     case "caption":
       applyCaptionContent(document, element, layer, evaluation.caption, dimensions);
@@ -573,6 +969,263 @@ async function applyLayerContent(
     case "video":
       return applyVideoContent(document, element, composition, layer, evaluation);
   }
+}
+
+const SCRAMBLE_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&*";
+
+function applyTextContent(
+  document: Document,
+  element: HTMLElement,
+  layer: KavioTextLayer,
+  evaluation: EvaluatedLayer
+): void {
+  const motion = layer.textMotion;
+  if (!motion) {
+    element.textContent = layer.text;
+    return;
+  }
+
+  applyTextMotionRestingBox(element, motion, evaluation);
+  const split = motion.split ?? defaultTextMotionSplit(motion.type);
+  const fragments = splitTextMotionFragments(layer.text, split);
+  const animatableCount = fragments.filter((fragment) => fragment.animatable).length;
+  let animatableIndex = 0;
+  const nodes: Node[] = [];
+
+  element.dataset.kavioTextMotionType = motion.type;
+  element.dataset.kavioTextMotionSplit = split;
+  element.dataset.kavioTextMotionPreserveLayout = String(motion.preserveLayout !== false);
+
+  for (const fragment of fragments) {
+    if (!fragment.animatable) {
+      nodes.push(document.createTextNode(fragment.text));
+      if (fragment.breakAfter) {
+        nodes.push(document.createTextNode("\n"));
+      }
+      continue;
+    }
+
+    const fragmentIndex = animatableIndex;
+    animatableIndex += 1;
+    const span = document.createElement("span");
+    span.dataset.kavioTextFragmentIndex = String(fragmentIndex);
+    span.dataset.kavioTextFragmentOrder = String(textMotionOrderIndex(fragmentIndex, animatableCount, motion.origin));
+    span.style.display = "inline-block";
+    span.style.whiteSpace = split === "line" ? "pre-wrap" : "pre";
+    span.textContent = renderTextMotionFragmentText(fragment.text, fragmentIndex, evaluation.localFrame, motion, animatableCount);
+    applyTextMotionFragmentStyle(span, fragmentIndex, animatableCount, evaluation.localFrame, motion);
+    nodes.push(span);
+
+    if (fragment.breakAfter) {
+      nodes.push(document.createTextNode("\n"));
+    }
+  }
+
+  element.replaceChildren(...nodes);
+}
+
+function applyTextMotionRestingBox(element: HTMLElement, motion: KavioTextMotion, evaluation: EvaluatedLayer): void {
+  if (motion.restingBox?.width !== undefined && evaluation.size.width === null) {
+    element.style.width = `${motion.restingBox.width}px`;
+  }
+
+  if (motion.restingBox?.height !== undefined && evaluation.size.height === null) {
+    element.style.height = `${motion.restingBox.height}px`;
+  }
+}
+
+function defaultTextMotionSplit(type: KavioTextMotion["type"]): NonNullable<KavioTextMotion["split"]> {
+  switch (type) {
+    case "cascade":
+    case "highlightSweep":
+      return "word";
+    case "typeOn":
+    case "scramble":
+    case "trackingIn":
+      return "char";
+  }
+}
+
+function splitTextMotionFragments(text: string, split: NonNullable<KavioTextMotion["split"]>): TextMotionFragment[] {
+  switch (split) {
+    case "none":
+      return [{ text, animatable: text.length > 0 }];
+    case "word":
+      return text
+        .split(/(\s+)/u)
+        .filter((part) => part.length > 0)
+        .map((part) => ({ text: part, animatable: !/^\s+$/u.test(part) }));
+    case "char":
+      return Array.from(text).map((character) => ({ text: character, animatable: !/^\s$/u.test(character) }));
+    case "line": {
+      const lines = text.split(/\r\n?|\n/);
+      return lines.map((line, index) => ({ text: line, animatable: line.length > 0, breakAfter: index < lines.length - 1 }));
+    }
+  }
+}
+
+function applyTextMotionFragmentStyle(
+  element: HTMLElement,
+  index: number,
+  count: number,
+  localFrame: number,
+  motion: KavioTextMotion
+): void {
+  const progress = textMotionFragmentProgress(index, count, localFrame, motion);
+  element.dataset.kavioTextFragmentState = progress >= 1 ? "complete" : progress > 0 ? "active" : "pending";
+
+  switch (motion.type) {
+    case "typeOn":
+      element.style.opacity = localFrame >= textMotionDelayFrame(index, count, motion) ? "1" : "0";
+      return;
+    case "cascade": {
+      const offset = cascadeOffset(progress, motion);
+      element.style.opacity = String(roundMotion(progress));
+      element.style.transform = `translate(${roundMotion(offset.x)}px, ${roundMotion(offset.y)}px)`;
+      return;
+    }
+    case "scramble":
+      element.style.opacity = localFrame >= textMotionDelayFrame(index, count, motion) ? "1" : "0";
+      return;
+    case "highlightSweep":
+      applyHighlightSweepStyle(element, index, count, localFrame, motion);
+      return;
+    case "trackingIn": {
+      const order = textMotionOrderIndex(index, count, motion.origin);
+      const direction = index < (count - 1) / 2 ? -1 : 1;
+      const amount = (motion.amount ?? motion.intensity ?? 12) * (1 - progress);
+      element.style.opacity = String(roundMotion(progress));
+      element.style.transform = `translateX(${roundMotion(direction * amount * (order + 1))}px)`;
+      return;
+    }
+  }
+}
+
+function renderTextMotionFragmentText(
+  text: string,
+  index: number,
+  localFrame: number,
+  motion: KavioTextMotion,
+  count: number
+): string {
+  if (motion.type !== "scramble") {
+    return text;
+  }
+
+  const progress = textMotionFragmentProgress(index, count, localFrame, motion);
+  if (progress >= 1 || localFrame < textMotionDelayFrame(index, count, motion)) {
+    return text;
+  }
+
+  return Array.from(text)
+    .map((character, characterIndex) =>
+      /\s/u.test(character)
+        ? character
+        : SCRAMBLE_ALPHABET[textMotionHash(motion.seed ?? 0, index, characterIndex, localFrame) % SCRAMBLE_ALPHABET.length]
+    )
+    .join("");
+}
+
+function applyHighlightSweepStyle(
+  element: HTMLElement,
+  index: number,
+  count: number,
+  localFrame: number,
+  motion: KavioTextMotion
+): void {
+  const durationFrames = motion.durationFrames ?? 18;
+  const raw = durationFrames <= 1 ? 1 : clamp01(localFrame / (durationFrames - 1));
+  const progress = evaluateEasing(motion.easing ?? "outCubic", raw);
+  const sweep = progress * Math.max(0, count - 1);
+  const order = textMotionOrderIndex(index, count, motion.origin);
+  const radius = Math.max(0.5, motion.intensity ?? 0.75);
+  const distance = Math.abs(order - sweep);
+
+  element.style.opacity = "1";
+  if (distance <= radius) {
+    element.dataset.kavioTextFragmentState = "active";
+    element.style.backgroundColor = motion.color ?? "rgba(255, 214, 0, 0.55)";
+  }
+}
+
+function cascadeOffset(progress: number, motion: KavioTextMotion): { x: number; y: number } {
+  const amount = (motion.amount ?? motion.intensity ?? 24) * (1 - progress);
+  switch (motion.direction ?? "up") {
+    case "down":
+      return { x: 0, y: -amount };
+    case "left":
+      return { x: amount, y: 0 };
+    case "right":
+      return { x: -amount, y: 0 };
+    case "up":
+      return { x: 0, y: amount };
+  }
+}
+
+function textMotionFragmentProgress(index: number, count: number, localFrame: number, motion: KavioTextMotion): number {
+  const delayFrame = textMotionDelayFrame(index, count, motion);
+  if (localFrame < delayFrame) {
+    return 0;
+  }
+
+  const durationFrames = motion.durationFrames ?? 12;
+  if (durationFrames <= 1) {
+    return 1;
+  }
+
+  const raw = clamp01((localFrame - delayFrame) / (durationFrames - 1));
+  return evaluateEasing(motion.easing ?? "outCubic", raw);
+}
+
+function textMotionDelayFrame(index: number, count: number, motion: KavioTextMotion): number {
+  const order = textMotionOrderIndex(index, count, motion.origin);
+  const staggerFrames = motion.staggerFrames ?? defaultTextMotionStagger(motion.type);
+  if (staggerFrames > 0) {
+    return Math.round(order * staggerFrames);
+  }
+
+  const durationFrames = motion.durationFrames ?? 1;
+  return count <= 1 ? 0 : Math.round((order / (count - 1)) * Math.max(0, durationFrames - 1));
+}
+
+function textMotionOrderIndex(index: number, count: number, origin: KavioTextMotion["origin"]): number {
+  switch (origin ?? "start") {
+    case "end":
+      return Math.max(0, count - 1 - index);
+    case "center":
+      return Math.abs(index - (count - 1) / 2);
+    case "start":
+      return index;
+  }
+}
+
+function defaultTextMotionStagger(type: KavioTextMotion["type"]): number {
+  switch (type) {
+    case "highlightSweep":
+      return 0;
+    case "cascade":
+      return 2;
+    case "typeOn":
+    case "scramble":
+    case "trackingIn":
+      return 1;
+  }
+}
+
+function textMotionHash(seed: number, fragmentIndex: number, characterIndex: number, frame: number): number {
+  let value = seed | 0;
+  value = Math.imul(value ^ (fragmentIndex + 1), 2_654_435_761);
+  value = Math.imul(value ^ (characterIndex + 17), 2_246_822_519);
+  value = Math.imul(value ^ (frame + 101), 3_266_489_917);
+  return value >>> 0;
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
+function roundMotion(value: number): number {
+  return Math.round(value * 1_000_000) / 1_000_000;
 }
 
 function applyTextStyle(element: HTMLElement, style: KavioTextStyle | undefined): void {
@@ -1249,6 +1902,7 @@ function applyLayerTransform(
     element.style.transformOrigin = `${placement.anchor.x * 100}% ${placement.anchor.y * 100}%`;
     element.style.transform = [
       `translate(${-placement.anchor.x * 100}%, ${-placement.anchor.y * 100}%)`,
+      ...transitionTransformParts(evaluation),
       `rotate(${evaluation.rotation}deg)`,
       `scale(${evaluation.scale})`
     ].join(" ");
@@ -1256,11 +1910,32 @@ function applyLayerTransform(
   }
 
   element.style.transformOrigin = `${evaluation.anchor.x * 100}% ${evaluation.anchor.y * 100}%`;
+  if (evaluation.transform) {
+    element.style.transformStyle = "preserve-3d";
+    element.style.backfaceVisibility = "hidden";
+  }
   element.style.transform = [
     `translate(${-evaluation.anchor.x * 100}%, ${-evaluation.anchor.y * 100}%)`,
+    ...transitionTransformParts(evaluation),
     `rotate(${evaluation.rotation}deg)`,
     `scale(${evaluation.scale})`
   ].join(" ");
+}
+
+function transitionTransformParts(evaluation: EvaluatedLayer): string[] {
+  if (!evaluation.transform) {
+    return [];
+  }
+
+  return [
+    `perspective(1200px)`,
+    `rotateX(${evaluation.transform.rotateX}deg)`,
+    `rotateY(${evaluation.transform.rotateY}deg)`,
+    `skewX(${evaluation.transform.skewX}deg)`,
+    `skewY(${evaluation.transform.skewY}deg)`,
+    `scaleX(${evaluation.transform.scaleX})`,
+    `scaleY(${evaluation.transform.scaleY})`
+  ];
 }
 
 function usesCaptionSafeArea(layer: KavioCaptionLayer): boolean {

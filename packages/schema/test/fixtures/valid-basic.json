@@ -54,7 +54,22 @@
       "type": "text",
       "text": "{{headline}}",
       "startFrame": 0,
-      "durationFrames": 30
+      "durationFrames": 30,
+      "textMotion": {
+        "type": "cascade",
+        "split": "word",
+        "durationFrames": 12,
+        "easing": "outCubic",
+        "staggerFrames": 2,
+        "origin": "start",
+        "preserveLayout": true,
+        "restingBox": {
+          "width": 420,
+          "height": 90
+        },
+        "direction": "up",
+        "amount": 18
+      }
     }
   ],
   "exports": [

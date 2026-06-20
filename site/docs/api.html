@@ -6,12 +6,33 @@
     <title>Kavio API Overview</title>
     <meta
       name="description"
-      content="API and package overview for Kavio schema, core, builder, browser-renderer, render-worker, ffmpeg, and CLI packages."
+      content="API and package overview for Kavio schema, core, builder, browser-renderer, render-worker, ffmpeg, render, CLI, and MCP packages."
     />
     <meta property="og:title" content="Kavio API Overview" />
     <meta property="og:type" content="article" />
     <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Kavio API Overview",
+        "description": "API and package overview for Kavio schema, core, builder, browser-renderer, render-worker, ffmpeg, render, CLI, and MCP packages.",
+        "url": "https://kitsra.github.io/Kavio/site/docs/api.html",
+        "about": "Kavio package APIs, builder methods, motion helpers, and export presets",
+        "programmingLanguage": "TypeScript",
+        "isPartOf": {
+          "@type": "SoftwareSourceCode",
+          "name": "Kavio",
+          "codeRepository": "https://github.com/kitsra/kavio"
+        },
+        "hasPart": [
+          { "@type": "TechArticle", "name": "Builder SDK Method Index", "url": "https://kitsra.github.io/Kavio/site/docs/api.html#builder-methods" },
+          { "@type": "TechArticle", "name": "Motion Helper Index", "url": "https://kitsra.github.io/Kavio/site/docs/api.html#motion-methods" },
+          { "@type": "TechArticle", "name": "Export Preset Index", "url": "https://kitsra.github.io/Kavio/site/docs/api.html#export-methods" }
+        ]
+      }
+    </script>
   </head>
   <body>
     <header class="site-header page-header" aria-label="Primary">
@@ -24,7 +45,7 @@
         <a href="../docs.html" aria-current="page">Docs</a>
         <a href="../examples.html">Examples</a>
         <a href="../packages.html">Packages</a>
-        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+        <a href="https://github.com/kitsra/kavio">GitHub</a>
       </nav>
     </header>
 
@@ -34,8 +55,8 @@
         <h1>Kavio API overview.</h1>
         <p>
           Kavio is split into focused packages so each layer has a clear contract:
-          data, timeline logic, authoring, preview, render orchestration, media
-          planning, and CLI.
+          data, timeline logic, motion authoring, browser preview, render
+          orchestration, media planning, CLI, and agent tools.
         </p>
       </section>
 
@@ -43,9 +64,9 @@
         <h2>Package Contracts</h2>
         <dl class="definition-list">
           <div><dt>@kavio/schema</dt><dd>JSON Schema, shared types, validation, and migration scaffold.</dd></div>
-          <div><dt>@kavio/core</dt><dd>Timeline evaluation, frame math, easing, prop resolution, layout, captions, and resource limits.</dd></div>
-          <div><dt>@kavio/builder</dt><dd>TypeScript authoring helpers that output canonical Kavio JSON.</dd></div>
-          <div><dt>@kavio/browser-renderer</dt><dd>Browser preview and DOM rendering runtime.</dd></div>
+          <div><dt>@kavio/core</dt><dd>Timeline evaluation, transition-series overlap windows, timing, prop resolution, layout, captions, masks, and resource limits.</dd></div>
+          <div><dt>@kavio/builder</dt><dd>TypeScript authoring helpers for canonical JSON, native transitions, cinematic recipes, camera moves, and text motion.</dd></div>
+          <div><dt>@kavio/browser-renderer</dt><dd>Browser preview and DOM rendering runtime for layers, masks, text motion, and transition series.</dd></div>
           <div><dt>@kavio/render-worker</dt><dd>Browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.</dd></div>
           <div><dt>@kavio/ffmpeg</dt><dd>Inspectable FFmpeg plan construction.</dd></div>
           <div><dt>@kavio/cli</dt><dd>Local commands for validation, inspection, migration, and preview.</dd></div>
@@ -57,14 +78,189 @@
       <section class="content-section">
         <h2>Import Style</h2>
         <p>Workspace examples import package helpers directly by package name after the monorepo is built.</p>
-        <pre><code>import { prop, text, video } from "@kavio/builder";</code></pre>
+        <pre><code>import {
+  asset,
+  cinematic,
+  text,
+  textMotion,
+  track,
+  trackClip,
+  transition,
+  video
+} from "@kavio/builder";</code></pre>
+      </section>
+
+      <section class="content-section" id="builder-methods">
+        <h2>Builder SDK Method Index</h2>
+        <p>
+          The <code>@kavio/builder</code> package emits canonical Kavio JSON while
+          giving TypeScript templates a fluent authoring surface. These are the
+          public helpers and methods exposed by the current builder package.
+        </p>
+        <div class="reference-table-wrap">
+          <table class="reference-table">
+            <thead>
+              <tr><th>API</th><th>Methods</th><th>Use</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>video(composition, options?)</code></td>
+                <td><code>new VideoBuilder()</code></td>
+                <td>Create a template builder from width, height, fps, durationFrames, background, and optional metadata.</td>
+              </tr>
+              <tr>
+                <td><code>VideoBuilder</code></td>
+                <td><code>prop()</code>, <code>props()</code>, <code>asset()</code>, <code>assets()</code>, <code>add()</code>, <code>addTrack()</code>, <code>tracks()</code>, <code>audio()</code>, <code>addExport()</code>, <code>exports()</code>, <code>toJSON()</code>, <code>validate()</code></td>
+                <td>Register props and assets, add layers and transition tracks, add audio and export presets, then emit or validate the Kavio document.</td>
+              </tr>
+              <tr>
+                <td><code>LayerBuilder</code></td>
+                <td><code>animate()</code>, <code>motion()</code>, <code>transitionIn()</code>, <code>transitionOut()</code>, <code>enter()</code>, <code>exit()</code>, <code>toInput()</code>, <code>toJSON()</code>, <code>id</code></td>
+                <td>Attach keyframes, native transitions, and fluent entrance/exit motion to video, image, text, shape, and caption layers.</td>
+              </tr>
+              <tr>
+                <td><code>TrackBuilder</code></td>
+                <td><code>clip()</code>, <code>toInput()</code>, <code>toJSON()</code></td>
+                <td>Build top-level transition series from layer ids and overlapping clip timing.</td>
+              </tr>
+              <tr>
+                <td><code>PropReference</code></td>
+                <td><code>toString()</code>, <code>toJSON()</code></td>
+                <td>Represent a prop interpolation such as <code>{{headline}}</code> and carry optional prop metadata.</td>
+              </tr>
+              <tr>
+                <td><code>AssetReference</code></td>
+                <td><code>toDefinition()</code>, <code>toString()</code>, <code>toJSON()</code></td>
+                <td>Represent a named asset reference and generate its asset definition.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="reference-table-wrap">
+          <table class="reference-table">
+            <thead>
+              <tr><th>Namespace</th><th>Helpers</th><th>Output</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>asset</code></td>
+                <td><code>asset.video()</code>, <code>asset.image()</code>, <code>asset.audio()</code>, <code>asset.font()</code></td>
+                <td>Video, image, audio, and font asset definitions with stable ids.</td>
+              </tr>
+              <tr>
+                <td>Layer helpers</td>
+                <td><code>clip()</code>, <code>videoLayer()</code>, <code>image()</code>, <code>text()</code>, <code>shape()</code>, <code>caption()</code>, plus <code>layers.video</code>, <code>layers.clip</code>, <code>layers.image</code>, <code>layers.text</code>, <code>layers.shape</code>, <code>layers.caption</code></td>
+                <td>Layer builders for the five Kavio layer types.</td>
+              </tr>
+              <tr>
+                <td>Document helpers</td>
+                <td><code>prop()</code>, <code>validate()</code>, <code>keyframes()</code>, <code>track()</code>, <code>trackClip()</code></td>
+                <td>Prop interpolation, document validation, normalized keyframe arrays, and transition-track definitions.</td>
+              </tr>
+              <tr>
+                <td><code>transitionSeries</code></td>
+                <td><code>transitionSeries.fromPrevious()</code></td>
+                <td>Converts a native transition into the top-level transition-series shape used between track clips.</td>
+              </tr>
+              <tr>
+                <td><code>crop</code></td>
+                <td><code>crop.center()</code>, <code>crop.subject()</code></td>
+                <td>Video crop metadata for centered cover crops and subject-aware crop keyframes.</td>
+              </tr>
+              <tr>
+                <td>Aliases</td>
+                <td><code>transitions</code>, <code>cinematicPresets</code>, <code>textMotions</code>, <code>exportPresets</code>, <code>presetNamespaces</code>, <code>effect</code></td>
+                <td>Compatibility and namespace aliases for tools, editors, and generated authoring UIs.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="content-section" id="motion-methods">
+        <h2>Motion Helper Index</h2>
+        <p>
+          Motion helpers remain JSON-first: transitions become transition
+          objects, camera helpers become keyframe maps, cinematic presets become
+          layer fragments, and text motion helpers become text-layer fragments.
+        </p>
+        <div class="reference-table-wrap">
+          <table class="reference-table">
+            <thead>
+              <tr><th>Namespace</th><th>Methods</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>transition</code></td>
+                <td><code>fade()</code>, <code>slide()</code>, <code>wipe()</code>, <code>crossfade()</code>, <code>zoom()</code>, <code>push()</code>, <code>spin()</code>, <code>rotate()</code>, <code>flip()</code>, <code>blurDissolve()</code>, <code>colorDissolve()</code>, <code>dip()</code>, <code>iris()</code>, <code>stretch()</code>, <code>squeeze()</code>, <code>clockWipe()</code>, <code>barWipe()</code>, <code>gridWipe()</code>, <code>tileReveal()</code>, <code>radialBlur()</code>, <code>zoomBlur()</code>, <code>bookFlip()</code>, <code>pageCurlLite()</code>, <code>skewSlide()</code>, <code>expandMask()</code>, <code>letterboxReveal()</code>, <code>filmFlash()</code>, <code>cameraWhip()</code></td>
+                <td>Native transition definitions for <code>transitionIn</code>, <code>transitionOut</code>, and transition series.</td>
+              </tr>
+              <tr>
+                <td><code>camera</code></td>
+                <td><code>kenBurns()</code>, <code>pushIn()</code>, <code>pullBack()</code>, <code>pan()</code>, <code>tilt()</code>, <code>parallax()</code>, <code>orbitLite()</code>, <code>handheld()</code>, <code>crashZoom()</code>, <code>dollyZoomLite()</code></td>
+                <td>Deterministic keyframe maps for image and video layers.</td>
+              </tr>
+              <tr>
+                <td><code>cinematic</code></td>
+                <td><code>zoomPush()</code>, <code>whipPan()</code>, <code>filmFlash()</code>, <code>dreamyBlur()</code>, <code>broadcastDip()</code>, <code>irisOpen()</code>, <code>flipCard()</code>, <code>glitchCut()</code>, <code>lightLeak()</code>, <code>kenBurns()</code>, <code>logoSting()</code>, <code>productReveal()</code>, <code>socialHook()</code>, <code>titleSequence()</code>, <code>endCard()</code></td>
+                <td>Reusable layer fragments for common cinematic moves, stings, hooks, reveals, and end cards.</td>
+              </tr>
+              <tr>
+                <td><code>textMotion</code></td>
+                <td><code>rise()</code>, <code>blurIn()</code>, <code>typeOn()</code>, <code>cascade()</code>, <code>scramble()</code>, <code>highlightSweep()</code>, <code>trackingIn()</code></td>
+                <td>Whole-layer entrances and first-class text fragment animation for chars, words, lines, or the whole string.</td>
+              </tr>
+              <tr>
+                <td><code>timing</code></td>
+                <td><code>tween()</code>, <code>spring()</code>, <code>steps()</code>, <code>sequence()</code>, <code>stagger()</code></td>
+                <td>Frame-based timing definitions that can be attached to transitions and keyframes.</td>
+              </tr>
+              <tr>
+                <td><code>easing</code></td>
+                <td><code>linear</code>, <code>inQuad</code>, <code>outQuad</code>, <code>inOutQuad</code>, <code>inCubic</code>, <code>outCubic</code>, <code>inOutCubic</code>, <code>inCirc</code>, <code>outCirc</code>, <code>inOutCirc</code>, <code>inExpo</code>, <code>outExpo</code>, <code>inOutExpo</code>, <code>anticipate</code>, <code>back</code>, <code>inBack</code>, <code>outBack</code>, <code>inOutBack</code>, <code>inElastic</code>, <code>outElastic</code>, <code>inOutElastic</code>, <code>inBounce</code>, <code>outBounce</code>, <code>inOutBounce</code>, <code>cubicBezier()</code></td>
+                <td>Named easing values and a cubic-bezier helper.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="content-section" id="export-methods">
+        <h2>Export Preset Index</h2>
+        <p>
+          Export helpers return plain export preset objects. They can be passed
+          to <code>composition.exports()</code> or used as a base for custom
+          render targets.
+        </p>
+        <div class="reference-table-wrap">
+          <table class="reference-table">
+            <thead>
+              <tr><th>Helper</th><th>Default Target</th><th>Alias</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>exportPreset.vertical()</code></td><td>1080x1920 vertical MP4.</td><td><code>vertical</code></td></tr>
+              <tr><td><code>exportPreset.reels()</code></td><td>1080x1920 reels MP4.</td><td><code>reels</code></td></tr>
+              <tr><td><code>exportPreset.instagramReels()</code></td><td>Instagram Reels 9:16 MP4.</td><td><code>instagramReels</code></td></tr>
+              <tr><td><code>exportPreset.tiktok()</code></td><td>TikTok 9:16 MP4.</td><td><code>tiktok</code></td></tr>
+              <tr><td><code>exportPreset.youtubeShorts()</code></td><td>YouTube Shorts 9:16 MP4.</td><td><code>youtubeShorts</code></td></tr>
+              <tr><td><code>exportPreset.facebookReels()</code></td><td>Facebook Reels 9:16 MP4.</td><td><code>facebookReels</code></td></tr>
+              <tr><td><code>exportPreset.square()</code></td><td>1080x1080 square MP4.</td><td><code>square</code></td></tr>
+              <tr><td><code>exportPreset.portrait()</code></td><td>1080x1350 portrait MP4.</td><td><code>portrait</code></td></tr>
+              <tr><td><code>exportPreset.landscape()</code></td><td>1920x1080 landscape MP4.</td><td><code>landscape</code></td></tr>
+              <tr><td><code>exportPreset.social()</code></td><td>Array of common social presets.</td><td><code>social</code></td></tr>
+              <tr><td><code>exportPreset.custom()</code></td><td>Caller-provided name, width, height, and format options.</td><td><code>customExport</code></td></tr>
+              <tr><td><code>socialMediaPresets</code></td><td>Metadata for Instagram, TikTok, YouTube Shorts, Facebook Reels, square, portrait, and landscape presets.</td><td>none</td></tr>
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
 
     <footer class="footer">
       <a href="../packages.html">Packages</a>
       <a href="../docs.html">Docs</a>
-      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      <a href="https://github.com/kitsra/kavio">GitHub</a>
     </footer>
   </body>
 </html>

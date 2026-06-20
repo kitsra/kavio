@@ -1,0 +1,79 @@
+{
+  "version": "0.1",
+  "composition": {
+    "width": 640,
+    "height": 360,
+    "fps": 24,
+    "durationFrames": 48
+  },
+  "assets": {
+    "matte": {
+      "type": "image",
+      "src": "data:image/png;base64,mask"
+    }
+  },
+  "layers": [
+    {
+      "id": "shape-mask",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 0,
+      "durationFrames": 48,
+      "fill": "#2563eb",
+      "mask": {
+        "source": {
+          "kind": "shape",
+          "shape": "circle"
+        }
+      }
+    },
+    {
+      "id": "asset-mask",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 0,
+      "durationFrames": 48,
+      "fill": "#14b8a6",
+      "mask": {
+        "source": {
+          "kind": "asset",
+          "asset": "matte",
+          "mode": "alpha",
+          "resolution": {
+            "width": 640,
+            "height": 360
+          }
+        }
+      }
+    },
+    {
+      "id": "procedural-mask",
+      "type": "text",
+      "text": "Seeded mask",
+      "startFrame": 0,
+      "durationFrames": 48,
+      "mask": {
+        "source": {
+          "kind": "procedural",
+          "type": "linearGradient",
+          "seed": 42,
+          "direction": "right",
+          "softness": 0.2,
+          "resolution": {
+            "width": 640,
+            "height": 360
+          }
+        },
+        "invert": true
+      }
+    }
+  ],
+  "exports": [
+    {
+      "name": "preview",
+      "format": "png-sequence",
+      "width": 640,
+      "height": 360
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "version": "0.1",
+  "composition": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "durationFrames": 90
+  },
+  "assets": {},
+  "layers": [
+    {
+      "id": "scene-a",
+      "type": "text",
+      "text": "A",
+      "startFrame": 0,
+      "durationFrames": 60
+    },
+    {
+      "id": "scene-b",
+      "type": "text",
+      "text": "B",
+      "startFrame": 48,
+      "durationFrames": 42
+    }
+  ],
+  "tracks": [
+    {
+      "id": "main",
+      "clips": [
+        {
+          "id": "a",
+          "layerId": "scene-a",
+          "startFrame": 0,
+          "durationFrames": 60
+        },
+        {
+          "id": "b",
+          "layerId": "scene-b",
+          "startFrame": 48,
+          "durationFrames": 42,
+          "transitionFromPrevious": {
+            "presentation": {
+              "type": "push",
+              "direction": "left"
+            },
+            "timing": {
+              "type": "tween",
+              "durationFrames": 12,
+              "easing": "outCubic"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "name": "social",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1920
+    }
+  ]
+}

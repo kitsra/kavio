@@ -6,12 +6,12 @@
     <title>Kavio Examples</title>
     <meta
       name="description"
-      content="Examples for Kavio including raw JSON composition, TypeScript builder output, MVP batch demo, and browser-renderer visual fixtures."
+      content="Examples for Kavio including raw JSON composition, TypeScript builder output, motion showcase demos, MVP batch demo, and browser-renderer visual fixtures."
     />
     <meta property="og:title" content="Kavio Examples" />
     <meta
       property="og:description"
-      content="Explore raw JSON, TypeScript builder, MVP batch, and browser-renderer fixtures for Kavio."
+      content="Explore raw JSON, TypeScript builder, transition series, masks, text motion, MVP batch, and browser-renderer fixtures for Kavio."
     />
     <meta property="og:type" content="article" />
     <link rel="icon" href="assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
@@ -36,18 +36,18 @@
         <a href="docs.html">Docs</a>
         <a href="examples.html" aria-current="page">Examples</a>
         <a href="packages.html">Packages</a>
-        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+        <a href="https://github.com/kitsra/kavio">GitHub</a>
       </nav>
     </header>
 
     <main>
       <section class="page-hero">
         <p class="eyebrow">Examples</p>
-        <h1>Reference fixtures for authoring, preview, and batch expansion.</h1>
+        <h1>Reference fixtures for authoring, motion, preview, and batch expansion.</h1>
         <p>
           The examples are intentionally small and deterministic, so they can be
-          validated locally and compared in CI. This page explains the fixtures;
-          runnable source lives in the GitHub repository.
+          validated locally, rendered to MP4, and compared in CI. This page
+          explains the fixtures; runnable source lives in the GitHub repository.
         </p>
       </section>
 
@@ -98,6 +98,133 @@ corepack pnpm --filter @kavio/example-mvp-demo run render</code></pre>
           </p>
         </div>
 
+        <div class="example-detail" id="motion-showcase">
+          <h2>motion-showcase</h2>
+          <p>
+            A renderable motion reel that combines transition series, procedural
+            masks, renderer-backed text motion, stepped glitch timing, and a
+            light-leak style color wash.
+          </p>
+          <pre><code>node packages/cli/dist/index.js validate examples/motion-showcase/composition.json
+node packages/cli/dist/index.js render examples/motion-showcase/composition.json --export motion-showcase --out renders/examples-motion-showcase</code></pre>
+        </div>
+
+        <div class="example-detail" id="motion-gifs">
+          <h2>Motion GIFs and code</h2>
+          <p>
+            Compact previews from the self-promo render show how motion families
+            map back to builder calls. The GIFs are intentionally small so the
+            examples page stays quick to load.
+          </p>
+          <div class="motion-gallery" aria-label="Motion examples">
+            <figure class="motion-card">
+              <img src="assets/examples/native-transitions.gif" alt="Native Kavio transitions animating in a grid" loading="lazy" />
+              <figcaption>
+                <strong>Native transitions</strong>
+                <pre><code>shape("card", {
+  startFrame: 90,
+  durationFrames: 96,
+  transitionIn: transition.cameraWhip({
+    direction: "left",
+    durationFrames: 18
+  })
+});</code></pre>
+              </figcaption>
+            </figure>
+            <figure class="motion-card">
+              <img src="assets/examples/camera-text-motion.gif" alt="Camera helpers and text motion examples animating in Kavio" loading="lazy" />
+              <figcaption>
+                <strong>Camera and text motion</strong>
+                <pre><code>image("shot", {
+  asset: siteHome,
+  keyframes: camera.kenBurns({
+    durationFrames: 116
+  })
+});
+
+text("hook", {
+  text: "Launch in motion",
+  ...textMotion.scramble({ seed: 42 })
+});</code></pre>
+              </figcaption>
+            </figure>
+            <figure class="motion-card">
+              <img src="assets/examples/masks-series.gif" alt="Masks and transition-series previews from a Kavio render" loading="lazy" />
+              <figcaption>
+                <strong>Masks and series</strong>
+                <pre><code>track("main", [
+  trackClip("a", { layerId: "scene-a" }),
+  trackClip("b", {
+    layerId: "scene-b",
+    transitionFromPrevious:
+      transition.push({ direction: "left" })
+  })
+]);</code></pre>
+              </figcaption>
+            </figure>
+            <figure class="motion-card motion-card-wide">
+              <img src="assets/examples/landscape-motion.gif" alt="Landscape Kavio motion demo with transition cards" loading="lazy" />
+              <figcaption>
+                <strong>Landscape companion</strong>
+                <pre><code>video({
+  width: 1920,
+  height: 1080,
+  fps: 30
+}).exports(
+  exportPreset.landscape({
+    name: "kavio-all-motions-landscape"
+  })
+);</code></pre>
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="example-detail" id="kavio-all-motions-demo">
+          <h2>kavio-promo all motions</h2>
+          <p>
+            Vertical and landscape self-promo renders built from the Kavio website
+            screenshots. They lay out every native transition family, camera
+            helper, text motion preset, mask type, timing primitive,
+            transition-series overlap, and cinematic recipe in sequential
+            non-overlapping sections.
+          </p>
+          <video
+            class="landscape-demo-video"
+            src="assets/examples/kavio-all-motions-landscape.mp4"
+            controls
+            muted
+            playsinline
+            preload="metadata"
+          ></video>
+          <pre><code>corepack pnpm --filter @kavio/example-kavio-promo run capture-site
+corepack pnpm --filter @kavio/example-kavio-promo run emit-motion-demo
+node packages/cli/dist/index.js render examples/kavio-promo/generated/all-motions-demo.json --export kavio-all-motions-demo --out renders/kavio-all-motions-demo
+
+corepack pnpm --filter @kavio/example-kavio-promo run emit-motion-demo:landscape
+node packages/cli/dist/index.js render examples/kavio-promo/generated/all-motions-demo-landscape.json --export kavio-all-motions-landscape --out renders/kavio-all-motions-landscape</code></pre>
+        </div>
+
+        <div class="example-detail" id="transition-series">
+          <h2>transition-series</h2>
+          <p>
+            A focused composition-level track example where the outgoing and
+            incoming clips share a deterministic push overlap window.
+          </p>
+          <pre><code>node packages/cli/dist/index.js inspect examples/transition-series/composition.json
+node packages/cli/dist/index.js render examples/transition-series/composition.json --export transition-series --out renders/examples-transition-series</code></pre>
+        </div>
+
+        <div class="example-detail" id="masks-text-motion">
+          <h2>masks-text-motion</h2>
+          <p>
+            A square render that exercises procedural scanline masks, inverted
+            shape masks, scramble text, and type-on text motion.
+          </p>
+          <pre><code>node packages/cli/dist/index.js inspect examples/masks-text-motion/composition.json
+node packages/cli/dist/index.js render examples/masks-text-motion/composition.json --export masks-text-motion --out renders/examples-masks-text-motion</code></pre>
+        </div>
+
         <div class="example-detail" id="visual-fixtures">
           <h2>visual-fixtures</h2>
           <p>
@@ -116,7 +243,7 @@ corepack pnpm --filter @kavio/example-mvp-demo run render</code></pre>
             The shipped website contains the example explanations. The source
             files and runnable fixtures live in the GitHub repository.
           </p>
-          <a href="https://github.com/Kitsra/Kavio">Open GitHub repository</a>
+          <a href="https://github.com/kitsra/kavio">Open GitHub repository</a>
         </div>
       </section>
     </main>
@@ -125,7 +252,7 @@ corepack pnpm --filter @kavio/example-mvp-demo run render</code></pre>
       <a href="index.html">Home</a>
       <a href="docs.html">Docs</a>
       <a href="packages.html">Packages</a>
-      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      <a href="https://github.com/kitsra/kavio">GitHub</a>
     </footer>
   </body>
 </html>

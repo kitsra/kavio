@@ -72,6 +72,7 @@ test("inspects a valid composition in text and JSON modes", async () => {
   assert.match(textResult.stdout, /Duration: 90 frames \(3\.00s\)/);
   assert.match(textResult.stdout, /Assets: 2 \(video: 1, image: 1\)/);
   assert.match(textResult.stdout, /Layers: 2 \(video: 1, text: 1\)/);
+  assert.match(textResult.stdout, /Tracks: 0 \(0 clips, 0 transition windows\)/);
   assert.match(textResult.stdout, /  - social/);
   assert.equal(textResult.stderr, "");
 
@@ -85,6 +86,59 @@ test("inspects a valid composition in text and JSON modes", async () => {
   assert.equal(payload.summary.file, validFile);
   assert.equal(payload.summary.composition.durationSeconds, 3);
   assert.deepEqual(payload.summary.exports.names, ["social"]);
+});
+
+test("inspect reports transition series overlap windows", async () => {
+  const seriesFile = fixturePath("transition-series-composition.json");
+  const textResult = await runCli(["inspect", seriesFile]);
+
+  assert.equal(textResult.status, 0);
+  assert.match(textResult.stdout, /Tracks: 1 \(2 clips, 1 transition windows\)/);
+  assert.match(textResult.stdout, /main: a -> b, push, frames 48-59/);
+
+  const jsonResult = await runCli(["--json", "inspect", seriesFile]);
+  const payload = JSON.parse(jsonResult.stdout);
+
+  assert.equal(jsonResult.status, 0);
+  assert.equal(payload.summary.tracks.count, 1);
+  assert.equal(payload.summary.tracks.clipCount, 2);
+  assert.deepEqual(payload.summary.tracks.transitionWindows, [
+    {
+      trackId: "main",
+      previousClipId: "a",
+      previousLayerId: "scene-a",
+      nextClipId: "b",
+      nextLayerId: "scene-b",
+      startFrame: 48,
+      endFrame: 60,
+      durationFrames: 12,
+      transitionType: "push"
+    }
+  ]);
+});
+
+test("inspect reports mask assets and procedural seeds", async () => {
+  const maskFile = fixturePath("mask-composition.json");
+  const textResult = await runCli(["inspect", maskFile]);
+
+  assert.equal(textResult.status, 0);
+  assert.match(textResult.stdout, /Masks: 3 \(shape: 1, asset: 1, procedural: 1, inverted: 1\)/);
+  assert.match(textResult.stdout, /asset matte on asset-mask, alpha, 320x180/);
+  assert.match(textResult.stdout, /procedural scanlines on procedural-mask, seed 42, 640x360/);
+
+  const jsonResult = await runCli(["--json", "inspect", maskFile]);
+  const payload = JSON.parse(jsonResult.stdout);
+
+  assert.equal(jsonResult.status, 0);
+  assert.equal(payload.summary.masks.count, 3);
+  assert.equal(payload.summary.masks.shapeCount, 1);
+  assert.equal(payload.summary.masks.invertedCount, 1);
+  assert.deepEqual(payload.summary.masks.assetMasks, [
+    { layerId: "asset-mask", asset: "matte", mode: "alpha", width: 320, height: 180 }
+  ]);
+  assert.deepEqual(payload.summary.masks.proceduralMasks, [
+    { layerId: "procedural-mask", type: "scanlines", seed: 42, width: 640, height: 360 }
+  ]);
 });
 
 test("lists social media presets and prints pasteable preset JSON", async () => {

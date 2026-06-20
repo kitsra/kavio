@@ -14,10 +14,10 @@ const valid = {
   exports: [{ name: "reels", format: "mp4", codec: "h264", width: 1080, height: 1920 }]
 };
 
-test("catalog has 7 tools, 4 resources, 3 prompts", () => {
+test("catalog has 7 tools, 5 resources, 3 prompts", () => {
   const c = createCatalog();
   assert.equal(c.tools.length, 7);
-  assert.equal(c.resources.length, 4);
+  assert.equal(c.resources.length, 5);
   assert.equal(c.prompts.length, 3);
   for (const t of c.tools) {
     assert.equal(typeof t.name, "string");

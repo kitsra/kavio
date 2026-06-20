@@ -1,0 +1,129 @@
+{
+  "version": "0.1",
+  "metadata": {
+    "title": "Masks and text motion",
+    "tags": ["example", "motion", "masks", "text-motion"]
+  },
+  "composition": {
+    "width": 1080,
+    "height": 1080,
+    "fps": 30,
+    "durationFrames": 120,
+    "background": "#101820"
+  },
+  "assets": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 0,
+      "durationFrames": 120,
+      "position": { "x": 0, "y": 0 },
+      "anchor": "top-left",
+      "size": { "width": "100%w", "height": "100%h" },
+      "fill": "#101820"
+    },
+    {
+      "id": "scanline-panel",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 0,
+      "durationFrames": 120,
+      "position": { "x": 540, "y": 530 },
+      "anchor": "center",
+      "size": { "width": 760, "height": 520 },
+      "fill": "#38bdf8",
+      "radius": 28,
+      "mask": {
+        "source": {
+          "kind": "procedural",
+          "type": "scanlines",
+          "seed": 21,
+          "frequency": 12,
+          "resolution": { "width": 1080, "height": 1080 }
+        }
+      }
+    },
+    {
+      "id": "iris-panel",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 24,
+      "durationFrames": 80,
+      "position": { "x": 540, "y": 530 },
+      "anchor": "center",
+      "size": { "width": 620, "height": 380 },
+      "fill": "#facc15",
+      "radius": 20,
+      "mask": {
+        "source": {
+          "kind": "shape",
+          "shape": "diamond"
+        },
+        "invert": true
+      },
+      "transitionIn": { "type": "iris", "shape": "diamond", "durationFrames": 18, "easing": "outCubic" }
+    },
+    {
+      "id": "kinetic-title",
+      "type": "text",
+      "text": "TEXT\nMOTION",
+      "startFrame": 12,
+      "durationFrames": 90,
+      "position": { "x": 540, "y": 485 },
+      "anchor": "center",
+      "size": { "width": 740, "height": 230 },
+      "textMotion": {
+        "type": "scramble",
+        "split": "char",
+        "durationFrames": 22,
+        "staggerFrames": 1,
+        "seed": 99,
+        "easing": "outCubic",
+        "preserveLayout": true
+      },
+      "style": {
+        "fontFamily": "Inter",
+        "fontSize": 104,
+        "fontWeight": 900,
+        "color": "#0f172a",
+        "align": "center",
+        "lineHeight": 0.92
+      }
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "text": "procedural masks + seeded kinetic type",
+      "startFrame": 58,
+      "durationFrames": 50,
+      "position": { "x": 540, "y": 820 },
+      "anchor": "center",
+      "textMotion": {
+        "type": "typeOn",
+        "split": "char",
+        "durationFrames": 24,
+        "staggerFrames": 1,
+        "easing": "linear",
+        "preserveLayout": true
+      },
+      "style": {
+        "fontFamily": "Inter",
+        "fontSize": 34,
+        "fontWeight": 700,
+        "color": "#f8fafc",
+        "align": "center"
+      }
+    }
+  ],
+  "exports": [
+    {
+      "name": "masks-text-motion",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1080,
+      "height": 1080
+    }
+  ]
+}

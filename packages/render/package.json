@@ -2,7 +2,7 @@
   "name": "@kavio/render",
   "version": "0.0.0",
   "description": "Render execution layer for Kavio: browser frame capture and FFmpeg encoding.",
-  "license": "Apache-2.0",
+  "license": "Elastic-2.0",
   "type": "module",
   "sideEffects": false,
   "publishConfig": {

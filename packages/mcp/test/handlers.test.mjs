@@ -42,7 +42,106 @@ test("inspectComposition summary", () => {
   const r = inspectComposition({ document: valid });
   assert.equal(r.ok, true);
   assert.equal(r.data.layers.count, 1);
+  assert.equal(r.data.tracks.count, 0);
   assert.equal(r.data.exports.names[0], "reels");
+});
+
+test("inspectComposition includes transition series overlap windows", () => {
+  const document = {
+    ...valid,
+    composition: { ...valid.composition, durationFrames: 90 },
+    layers: [
+      { id: "scene-a", type: "text", text: "A", startFrame: 0, durationFrames: 60 },
+      { id: "scene-b", type: "text", text: "B", startFrame: 48, durationFrames: 42 }
+    ],
+    tracks: [
+      {
+        id: "main",
+        clips: [
+          { id: "a", layerId: "scene-a", startFrame: 0, durationFrames: 60 },
+          {
+            id: "b",
+            layerId: "scene-b",
+            startFrame: 48,
+            durationFrames: 42,
+            transitionFromPrevious: {
+              presentation: { type: "push", direction: "left" },
+              timing: { type: "tween", durationFrames: 12, easing: "outCubic" }
+            }
+          }
+        ]
+      }
+    ]
+  };
+  const r = inspectComposition({ document });
+  assert.equal(r.ok, true);
+  assert.equal(r.data.tracks.count, 1);
+  assert.equal(r.data.tracks.clipCount, 2);
+  assert.deepEqual(r.data.tracks.transitionWindows, [
+    {
+      trackId: "main",
+      previousClipId: "a",
+      previousLayerId: "scene-a",
+      nextClipId: "b",
+      nextLayerId: "scene-b",
+      startFrame: 48,
+      endFrame: 60,
+      durationFrames: 12,
+      transitionType: "push"
+    }
+  ]);
+});
+
+test("inspectComposition includes mask assets and procedural seeds", () => {
+  const document = {
+    ...valid,
+    assets: {
+      matte: { type: "image", src: "data:image/png;base64,mask" }
+    },
+    layers: [
+      {
+        id: "asset-mask",
+        type: "shape",
+        shape: "rect",
+        startFrame: 0,
+        durationFrames: 30,
+        mask: {
+          source: {
+            kind: "asset",
+            asset: "matte",
+            mode: "alpha",
+            resolution: { width: 320, height: 180 }
+          }
+        }
+      },
+      {
+        id: "seeded-mask",
+        type: "text",
+        text: "Seed",
+        startFrame: 0,
+        durationFrames: 30,
+        mask: {
+          source: {
+            kind: "procedural",
+            type: "scanlines",
+            seed: 42,
+            resolution: { width: 640, height: 360 }
+          },
+          invert: true
+        }
+      }
+    ]
+  };
+  const r = inspectComposition({ document });
+  assert.equal(r.ok, true);
+  assert.equal(r.data.masks.count, 2);
+  assert.equal(r.data.masks.invertedCount, 1);
+  assert.deepEqual(r.data.masks.assetMasks, [
+    { layerId: "asset-mask", asset: "matte", mode: "alpha", width: 320, height: 180 }
+  ]);
+  assert.deepEqual(r.data.masks.proceduralMasks, [
+    { layerId: "seeded-mask", type: "scanlines", seed: 42, width: 640, height: 360 }
+  ]);
 });
 
 test("migrateComposition no-op", () => {

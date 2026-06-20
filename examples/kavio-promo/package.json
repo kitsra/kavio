@@ -9,6 +9,8 @@
     "collect-copy": "tsc -p tsconfig.json && node dist/collect-copy.js",
     "capture-site": "tsc -p tsconfig.json && node dist/capture-site-cli.js",
     "emit": "tsc -p tsconfig.json && node dist/emit.js",
+    "emit-motion-demo": "tsc -p tsconfig.json && node dist/all-motions-demo.js",
+    "emit-motion-demo:landscape": "tsc -p tsconfig.json && node dist/all-motions-landscape-demo.js",
     "render": "tsc -p tsconfig.json && node dist/render.js",
     "verify": "tsc -p tsconfig.json && node dist/verify-cli.js"
   },

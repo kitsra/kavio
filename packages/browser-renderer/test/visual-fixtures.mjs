@@ -42,8 +42,16 @@ const styleProperties = [
   "textShadow",
   "objectFit",
   "objectPosition",
+  "maskImage",
+  "maskPosition",
+  "maskRepeat",
+  "maskSize",
   "pointerEvents",
-  "userSelect"
+  "userSelect",
+  "webkitMaskImage",
+  "webkitMaskPosition",
+  "webkitMaskRepeat",
+  "webkitMaskSize"
 ];
 
 class FakeStyle {

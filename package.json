@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "JSON-first programmable video engine for automation, AI templates, and future visual editing.",
-  "license": "Apache-2.0",
+  "license": "Elastic-2.0",
   "type": "module",
   "bin": {
     "kavio": "./bin/kavio.js",
@@ -20,10 +20,11 @@
     "install:render-binaries": "corepack pnpm run install:render-ffmpeg && corepack pnpm run install:render-browsers",
     "install:render-browsers": "corepack pnpm --filter @kavio/render run install:browsers",
     "install:render-ffmpeg": "corepack pnpm rebuild ffmpeg-static",
-    "pack:dry": "corepack pnpm run build && corepack pnpm run verify:render-optional-deps && corepack pnpm -r --filter './packages/*' pack --dry-run",
+    "pack:dry": "corepack pnpm run build && corepack pnpm run verify:render-optional-deps && corepack pnpm run verify:package-metadata && corepack pnpm -r --filter './packages/*' pack --dry-run",
     "release:check": "corepack pnpm test && corepack pnpm run pack:dry",
+    "verify:package-metadata": "node scripts/verify-package-metadata.mjs",
     "verify:render-optional-deps": "node scripts/verify-render-optional-deps.mjs",
-    "test": "corepack pnpm --filter @kavio/schema test && corepack pnpm --filter @kavio/core test && corepack pnpm --filter @kavio/browser-renderer test && corepack pnpm --filter @kavio/render-worker test && corepack pnpm --filter @kavio/ffmpeg test && corepack pnpm --filter @kavio/render test && corepack pnpm --filter @kavio/builder test && corepack pnpm --filter @kavio/cli test && corepack pnpm --filter @kavio/mcp test && corepack pnpm --filter @kavio/example-basic-builder run build && corepack pnpm --filter @kavio/example-basic-builder run emit > /tmp/kavio-basic-builder.json && diff -u examples/basic-json/composition.json /tmp/kavio-basic-builder.json && corepack pnpm --filter @kavio/example-mvp-demo run build && corepack pnpm --filter @kavio/example-mvp-demo run validate"
+    "test": "corepack pnpm --filter @kavio/schema test && corepack pnpm --filter @kavio/core test && corepack pnpm --filter @kavio/browser-renderer test && corepack pnpm --filter @kavio/render-worker test && corepack pnpm --filter @kavio/ffmpeg test && corepack pnpm --filter @kavio/render test && corepack pnpm --filter @kavio/builder test && corepack pnpm --filter @kavio/cli test && corepack pnpm --filter @kavio/mcp test && corepack pnpm run verify:package-metadata && corepack pnpm --filter @kavio/example-basic-builder run build && corepack pnpm --filter @kavio/example-basic-builder run emit > /tmp/kavio-basic-builder.json && diff -u examples/basic-json/composition.json /tmp/kavio-basic-builder.json && corepack pnpm --filter @kavio/example-mvp-demo run build && corepack pnpm --filter @kavio/example-mvp-demo run validate"
   },
   "keywords": [
     "video",
@@ -34,12 +35,12 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/Kitsra/Kavio.git"
+    "url": "https://github.com/kitsra/kavio.git"
   },
   "bugs": {
-    "url": "https://github.com/Kitsra/Kavio/issues"
+    "url": "https://github.com/kitsra/kavio/issues"
   },
-  "homepage": "https://github.com/Kitsra/Kavio#readme",
+  "homepage": "https://github.com/kitsra/kavio#readme",
   "devDependencies": {
     "typescript": "^6.0.3"
   }

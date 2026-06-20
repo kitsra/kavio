@@ -60,6 +60,9 @@ Returns a compact summary of a valid composition:
 - prop count
 - asset, layer, audio, and export counts
 - layer and asset type breakdowns
+- mask counts, asset-backed mask references, procedural mask seeds, and mask
+  resolutions
+- transition-series track, clip, and overlap-window summaries
 - export names
 
 Use this after generation to help an agent reason about document shape without
@@ -153,7 +156,10 @@ The server exposes these resources:
 - `kavio://presets.json`: standard export presets.
 - `kavio://examples/basic.json`: minimal valid composition example.
 - `kavio://enums.json`: allowed enum values for layer types, asset types,
-  export formats, easing names, effect names, prop types, and related fields.
+  export formats, easing names, effect names, mask source names, prop types, and
+  related fields.
+- `kavio://motion-support.json`: current transition/effect/mask support states
+  by render target, plus the motion performance budgets used during planning.
 
 Agents should read the schema and enum resources before authoring new document
 shapes, and use the basic example as a compact structural reference.

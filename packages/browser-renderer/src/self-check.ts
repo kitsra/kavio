@@ -26,6 +26,7 @@ class FakeTextNode {
 }
 
 type FakeChild = FakeElement | FakeTextNode;
+type StyledElement = { style: CSSStyleDeclaration | FakeStyle };
 
 class FakeElement {
   readonly dataset: Record<string, string> = {};
@@ -223,11 +224,11 @@ function renderedElement(element: HTMLElement | undefined): FakeElement {
   return element as unknown as FakeElement;
 }
 
-function styleValue(element: FakeElement, property: string): string {
-  return String(element.style[property] ?? "");
+function styleValue(element: StyledElement, property: string): string {
+  return String((element.style as unknown as Record<string, unknown>)[property] ?? "");
 }
 
-function customStyleValue(element: FakeElement, property: string): string {
+function customStyleValue(element: StyledElement, property: string): string {
   return element.style.getPropertyValue(property);
 }
 
@@ -240,7 +241,7 @@ function childElement(element: FakeElement, index: number): FakeElement {
   return child;
 }
 
-function assert(value: boolean, message: string): void {
+function assert(value: boolean, message: string): asserts value {
   if (!value) {
     throw new Error(message);
   }
@@ -425,6 +426,68 @@ const composition: KavioDocument = {
         }
       },
       safeArea: "bottom"
+    },
+    {
+      id: "seriesA",
+      type: "shape",
+      shape: "rect",
+      startFrame: 18,
+      durationFrames: 14,
+      position: { x: 100, y: 220 },
+      size: { width: 120, height: 70 },
+      fill: "#334155",
+      z: 5
+    },
+    {
+      id: "seriesB",
+      type: "shape",
+      shape: "rect",
+      startFrame: 24,
+      durationFrames: 16,
+      position: { x: 260, y: 220 },
+      size: { width: 120, height: 70 },
+      fill: "#38bdf8",
+      z: 6
+    },
+    {
+      id: "gridTransition",
+      type: "shape",
+      shape: "rect",
+      startFrame: 30,
+      durationFrames: 10,
+      position: { x: 420, y: 340 },
+      size: { width: 120, height: 80 },
+      fill: "#00aa88",
+      transitionIn: { type: "gridWipe", direction: "right", rows: 2, columns: 3, durationFrames: 5 }
+    },
+    {
+      id: "whipTransition",
+      type: "shape",
+      shape: "rect",
+      startFrame: 30,
+      durationFrames: 10,
+      position: { x: 560, y: 340 },
+      size: { width: 120, height: 80 },
+      fill: "#cc3366",
+      transitionIn: { type: "cameraWhip", direction: "left", durationFrames: 5, amount: 14, intensity: 10 }
+    }
+  ],
+  tracks: [
+    {
+      id: "series",
+      clips: [
+        { id: "a", layerId: "seriesA", startFrame: 18, durationFrames: 14 },
+        {
+          id: "b",
+          layerId: "seriesB",
+          startFrame: 24,
+          durationFrames: 16,
+          transitionFromPrevious: {
+            presentation: { type: "push", direction: "left" },
+            timing: { type: "tween", durationFrames: 6, easing: "outCubic" }
+          }
+        }
+      ]
     }
   ]
 };
@@ -518,6 +581,29 @@ if (!activeWord) {
 }
 assertEqual(activeWord.textContent, "from", "caption active word follows local frame state");
 assertEqual(styleValue(activeWord, "color"), "#ffd400", "caption active word applies highlight color");
+
+const maskTransitionFrame = await renderer.renderFrame(32);
+const gridTransition = maskTransitionFrame.layers.find((entry) => entry.id === "gridTransition")?.element;
+assert(gridTransition !== undefined, "grid transition layer renders during its entrance");
+assert(
+  customStyleValue(gridTransition, "mask-image").includes("linear-gradient"),
+  "grid wipe applies a deterministic CSS mask"
+);
+const whipTransitionFrame = await renderer.renderFrame(30);
+const whipTransition = whipTransitionFrame.layers.find((entry) => entry.id === "whipTransition")?.element;
+assert(whipTransition !== undefined, "camera whip layer renders at its first frame");
+assert(styleValue(whipTransition, "filter").includes("blur(14px)"), "camera whip applies blur at the first frame");
+assert(styleValue(whipTransition, "transform").includes("skewY(-10deg)"), "camera whip applies directional skew");
+
+const seriesFrame = await renderer.renderFrame(24);
+const seriesPrevious = renderedElement(seriesFrame.layers.find((entry) => entry.id === "seriesA")?.element);
+const seriesNext = renderedElement(seriesFrame.layers.find((entry) => entry.id === "seriesB")?.element);
+assertEqual(seriesPrevious.dataset.kavioTransitionSeries, "true", "transition series renders the outgoing clip through the overlap evaluator");
+assertEqual(seriesPrevious.dataset.kavioTransitionRole, "previous", "transition series labels the outgoing clip role");
+assertEqual(seriesPrevious.dataset.kavioTransitionType, "push", "transition series exposes the transition type");
+assertEqual(seriesNext.dataset.kavioTransitionSeries, "true", "transition series renders the incoming clip through the overlap evaluator");
+assertEqual(seriesNext.dataset.kavioTransitionRole, "next", "transition series labels the incoming clip role");
+assert(styleValue(seriesNext, "left") !== "260px", "incoming transition-series clip uses evaluated transition position");
 
 const verticalPreview = createExportPreviewComposition(composition, "vertical");
 assertEqual(verticalPreview.exportIndex, 1, "export preview resolves selected export by name");

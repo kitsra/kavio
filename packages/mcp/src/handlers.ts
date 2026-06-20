@@ -1,5 +1,11 @@
 import { isAbsolute, relative, resolve } from "node:path";
-import { applyExportPreset, resolveTemplateProps } from "@kavio/core";
+import {
+  applyExportPreset,
+  collectCompositionResourceLimitInputs,
+  collectResourceLimitViolations,
+  compileTransitionOverlapWindows,
+  resolveTemplateProps
+} from "@kavio/core";
 import { socialMediaPresets } from "@kavio/builder";
 import { assembleRenderCommand, renderBatch, type FfmpegRunner, type RenderBatchOptions } from "@kavio/render";
 import { expandRenderBatch, type BrowserDriver, type RenderBatchInput, type RenderBatchRow } from "@kavio/render-worker";
@@ -46,6 +52,22 @@ export function inspectComposition(input: unknown): ToolResult {
       props: { count: doc.props === undefined ? 0 : Object.keys(doc.props).length },
       assets: { count: Object.keys(doc.assets).length, types: countTypes(Object.values(doc.assets)) },
       layers: { count: doc.layers.length, types: countTypes(doc.layers) },
+      masks: inspectMasks(doc),
+      tracks: {
+        count: doc.tracks === undefined ? 0 : doc.tracks.length,
+        clipCount: doc.tracks === undefined ? 0 : doc.tracks.reduce((total, track) => total + track.clips.length, 0),
+        transitionWindows: compileTransitionOverlapWindows(doc.tracks).map((window) => ({
+          trackId: window.trackId,
+          previousClipId: window.previousClipId,
+          previousLayerId: window.previousLayerId,
+          nextClipId: window.nextClipId,
+          nextLayerId: window.nextLayerId,
+          startFrame: window.startFrame,
+          endFrame: window.endFrame,
+          durationFrames: window.durationFrames,
+          transitionType: window.transition.type
+        }))
+      },
       audio: { count: doc.audio === undefined ? 0 : doc.audio.length },
       exports: {
         count: doc.exports.length,
@@ -53,6 +75,87 @@ export function inspectComposition(input: unknown): ToolResult {
       }
     }
   };
+}
+
+interface MaskSummary {
+  count: number;
+  shapeCount: number;
+  assetMasks: Array<{
+    layerId: string;
+    asset: string;
+    mode: string;
+    width?: number;
+    height?: number;
+  }>;
+  proceduralMasks: Array<{
+    layerId: string;
+    type: string;
+    seed: number;
+    direction?: string;
+    width?: number;
+    height?: number;
+  }>;
+  invertedCount: number;
+}
+
+function inspectMasks(document: KavioDocument): MaskSummary {
+  const summary: MaskSummary = {
+    count: 0,
+    shapeCount: 0,
+    assetMasks: [],
+    proceduralMasks: [],
+    invertedCount: 0
+  };
+
+  for (const layer of document.layers) {
+    const mask = layer.mask;
+    if (!mask) {
+      continue;
+    }
+
+    summary.count += 1;
+    if (mask.invert === true) {
+      summary.invertedCount += 1;
+    }
+
+    switch (mask.source.kind) {
+      case "shape":
+        summary.shapeCount += 1;
+        break;
+      case "asset":
+        summary.assetMasks.push(withResolution({
+          layerId: layer.id,
+          asset: mask.source.asset,
+          mode: mask.source.mode ?? "alpha"
+        }, mask.source.resolution));
+        break;
+      case "procedural":
+        summary.proceduralMasks.push(withResolution({
+          layerId: layer.id,
+          type: mask.source.type,
+          seed: mask.source.seed,
+          ...(mask.source.direction === undefined ? {} : { direction: mask.source.direction })
+        }, mask.source.resolution));
+        break;
+    }
+  }
+
+  return summary;
+}
+
+function withResolution<T extends { width?: number; height?: number }>(
+  value: Omit<T, "width" | "height">,
+  resolution: { width: number; height: number } | undefined
+): T {
+  return (
+    resolution === undefined
+      ? value
+      : {
+          ...value,
+          width: resolution.width,
+          height: resolution.height
+        }
+  ) as T;
 }
 
 export function migrateComposition(input: unknown): ToolResult {
@@ -111,6 +214,10 @@ export function planRender(input: unknown): ToolResult {
     }
     try {
       const view = applyExportPreset(resolution.value, job.preset);
+      const violations = collectResourceLimitViolations(collectCompositionResourceLimitInputs(view));
+      if (violations.length > 0) {
+        return { ok: false, errors: violations };
+      }
       const ffmpegArgs = assembleRenderCommand({
         view,
         preset: job.preset,

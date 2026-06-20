@@ -67,6 +67,9 @@ importers:
       '@kavio/builder':
         specifier: workspace:*
         version: link:../builder
+      '@kavio/core':
+        specifier: workspace:*
+        version: link:../core
       '@kavio/render':
         specifier: workspace:*
         version: link:../render

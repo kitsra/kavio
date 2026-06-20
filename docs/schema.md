@@ -104,7 +104,8 @@ All layers share:
 - `startFrame`
 - `durationFrames`
 - Optional `position`, `anchor`, `size`, `opacity`, `rotation`, `scale`, `z`,
-  `track`, `keyframes`, `effects`, `transitionIn`, and `transitionOut`.
+  `track`, `keyframes`, `effects`, `mask`, `transitionIn`, and
+  `transitionOut`.
 
 Layer timing is inclusive at `startFrame` and exclusive at
 `startFrame + durationFrames`.
@@ -131,8 +132,9 @@ The MVP supports numeric keyframes for:
 - `scale`
 - `rotation`
 
-Supported easing names include `linear`, quadratic/cubic in/out variants, back
-easing variants, and `cubic-bezier(x1,y1,x2,y2)`.
+Supported easing names include `linear`, quadratic/cubic, circular, exponential,
+back/anticipate, elastic, and bounce variants, plus
+`cubic-bezier(x1,y1,x2,y2)`.
 
 ```json
 {
@@ -144,6 +146,124 @@ easing variants, and `cubic-bezier(x1,y1,x2,y2)`.
   }
 }
 ```
+
+Keyframe segments may also use deterministic timing objects. The timing on a
+keyframe controls interpolation from that keyframe to the next keyframe.
+
+```json
+{
+  "keyframes": {
+    "opacity": [
+      { "frame": 0, "value": 0, "timing": { "type": "steps", "steps": 4 } },
+      { "frame": 15, "value": 1 }
+    ]
+  }
+}
+```
+
+## Transitions
+
+`transitionIn` and `transitionOut` use local layer frames and require `type`.
+Legacy flat transitions keep using `durationFrames` and optional `easing`.
+Transitions may instead provide a `timing` object, whose duration is used when
+`durationFrames` is omitted. Native transition types are `fade`, `slide`,
+`wipe`, `crossfade`, `zoom`, `push`, `spin`, `rotate`, `flip`, `blurDissolve`,
+`colorDissolve`, `dip`, `iris`, `stretch`, `squeeze`, `clockWipe`, `barWipe`,
+`gridWipe`, `tileReveal`, `radialBlur`, `zoomBlur`, `bookFlip`,
+`pageCurlLite`, `skewSlide`, `expandMask`, `letterboxReveal`, `filmFlash`, and
+`cameraWhip`.
+
+Optional tuning fields include `direction`, `axis`, `shape`, `color`, `amount`,
+`intensity`, `rows`, `columns`, and `easing`; see [Animation](animation.md) for
+behavior details.
+
+Deterministic timing object types are:
+
+- `tween`: optional `durationFrames` plus named `easing`.
+- `spring`: optional `durationFrames`, `stiffness`, `damping`, `mass`,
+  `restSpeed`, and `bounce`.
+- `steps`: optional `durationFrames`, required `steps`, and optional
+  `direction` of `start` or `end`.
+- `sequence`: ordered `segments`, each with `durationFrames`, optional nested
+  `timing`, and optional `from` / `to` progress values.
+- `stagger`: child offset timing with `childCount`, `eachFrames`, nested
+  `timing`, optional `childIndex`, and optional `from`.
+
+```json
+{
+  "transitionIn": {
+    "type": "fade",
+    "timing": {
+      "type": "sequence",
+      "segments": [
+        { "durationFrames": 4, "from": 0, "to": -0.1, "timing": { "type": "tween", "easing": "anticipate" } },
+        { "durationFrames": 8, "from": -0.1, "to": 1, "timing": { "type": "spring", "stiffness": 120, "damping": 12 } }
+      ]
+    }
+  }
+}
+```
+
+## Transition Series
+
+`tracks` is an optional composition-level model for clip-to-clip transitions.
+Each track contains ordered `clips` that reference existing layer IDs. A clip
+can declare `transitionFromPrevious` with split `presentation` and `timing`
+objects:
+
+```json
+{
+  "id": "b",
+  "layerId": "scene-b",
+  "startFrame": 48,
+  "durationFrames": 42,
+  "transitionFromPrevious": {
+    "presentation": { "type": "push", "direction": "left" },
+    "timing": { "type": "tween", "durationFrames": 12, "easing": "outCubic" }
+  }
+}
+```
+
+The core evaluator compiles each `transitionFromPrevious` into an explicit
+overlap window that starts at the incoming clip's `startFrame`. Browser preview
+and browser-backed render paths consume those overlap windows so outgoing and
+incoming clips are evaluated together on the same frame. The timing duration
+must fit inside both the previous clip and the incoming clip, and transition
+windows on the same track may not overlap.
+
+Per-layer `transitionIn` and `transitionOut` remain valid for entrances, exits,
+overlays, and existing compositions.
+
+## Masks
+
+Layer `mask` is the Phase 8 source model for deterministic matte data. The
+stable schema accepts:
+
+- shape masks: `rect`, `circle`, and `diamond`
+- image asset masks: `{ "kind": "asset", "asset": "id", "mode": "alpha" }`
+- procedural masks: `linearGradient`, `radialGradient`, and `scanlines`
+
+Procedural masks require an integer `seed`. Asset masks must reference an image
+asset. Optional `resolution` metadata declares the intended mask sampling size
+and is checked against render-planning budgets.
+
+```json
+{
+  "mask": {
+    "source": {
+      "kind": "procedural",
+      "type": "scanlines",
+      "seed": 42,
+      "frequency": 10,
+      "resolution": { "width": 1080, "height": 1920 }
+    }
+  }
+}
+```
+
+Video masks, luma asset masks, noise/dither/threshold fields, light leaks, film
+burns, and generated overlays are reserved for later phases and are not valid
+stable schema values today.
 
 ## Captions
 

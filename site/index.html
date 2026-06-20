@@ -34,9 +34,9 @@
         "@graph": [
           {
             "@type": "Organization",
-            "@id": "https://github.com/Kitsra#organization",
+            "@id": "https://github.com/kitsra#organization",
             "name": "Kitsra",
-            "url": "https://github.com/Kitsra"
+            "url": "https://github.com/kitsra"
           },
           {
             "@type": "Brand",
@@ -50,21 +50,21 @@
             "name": "Kavio",
             "url": "https://kitsra.github.io/Kavio/site/",
             "description": "Documentation and examples for Kavio, a JSON-first programmable video engine.",
-            "publisher": { "@id": "https://github.com/Kitsra#organization" },
+            "publisher": { "@id": "https://github.com/kitsra#organization" },
             "image": { "@id": "https://kitsra.github.io/Kavio/site/assets/brand/kavio-og-card.png#image" },
             "inLanguage": "en"
           },
           {
             "@type": "SoftwareSourceCode",
-            "@id": "https://github.com/Kitsra/Kavio#source",
+            "@id": "https://github.com/kitsra/kavio#source",
             "name": "Kavio",
-            "codeRepository": "https://github.com/Kitsra/Kavio",
+            "codeRepository": "https://github.com/kitsra/kavio",
             "programmingLanguage": "TypeScript",
-            "license": "https://www.apache.org/licenses/LICENSE-2.0",
-            "description": "JSON-first programmable video engine for automation, AI templates, and future visual editing.",
+            "license": "https://www.elastic.co/licensing/elastic-license",
+            "description": "Source-available JSON-first programmable video engine for automation, AI templates, cinematic motion, and future visual editing.",
             "isAccessibleForFree": true,
             "applicationCategory": "DeveloperApplication",
-            "publisher": { "@id": "https://github.com/Kitsra#organization" },
+            "publisher": { "@id": "https://github.com/kitsra#organization" },
             "brand": { "@id": "https://kitsra.github.io/Kavio/site/#brand" }
           },
           {
@@ -73,7 +73,7 @@
             "url": "https://kitsra.github.io/Kavio/site/",
             "name": "Kavio",
             "isPartOf": { "@id": "https://kitsra.github.io/Kavio/site/#website" },
-            "about": { "@id": "https://github.com/Kitsra/Kavio#source" },
+            "about": { "@id": "https://github.com/kitsra/kavio#source" },
             "primaryImageOfPage": { "@id": "https://kitsra.github.io/Kavio/site/assets/brand/kavio-og-card.png#image" }
           },
           {
@@ -99,7 +99,7 @@
         <a href="docs.html">Docs</a>
         <a href="examples.html">Examples</a>
         <a href="packages.html">Packages</a>
-        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+        <a href="https://github.com/kitsra/kavio">GitHub</a>
       </nav>
     </header>
 
@@ -111,13 +111,13 @@
           <p class="eyebrow">JSON-first programmable video</p>
           <h1 id="hero-title">Kavio</h1>
           <p class="hero-copy">
-            Portable video templates for automation, AI generation, browser preview,
-            and future visual editing.
+            Portable video templates for automation, AI generation, cinematic
+            motion, browser preview, and future visual editing.
           </p>
           <div class="hero-actions" aria-label="Key links">
             <a class="button primary" href="docs/getting-started.html">Get started</a>
             <a class="button secondary" href="docs.html">Read the docs</a>
-            <a class="button secondary" href="https://github.com/Kitsra/Kavio">GitHub repo</a>
+            <a class="button secondary" href="https://github.com/kitsra/kavio">GitHub repo</a>
           </div>
         </div>
       </section>
@@ -148,8 +148,8 @@
             <span class="feature-index">03</span>
             <h3>Pre-release engine</h3>
             <p>
-              Schema, validation, core timeline logic, builder APIs, browser preview,
-              render-worker contracts, FFmpeg planning, and CLI tools are in place.
+              Schema, validation, native transitions, masks, text motion, browser
+              preview, render-worker contracts, FFmpeg planning, and CLI tools are in place.
             </p>
           </article>
         </div>
@@ -215,11 +215,11 @@
           </a>
           <a href="docs/preview.html">
             <strong>Browser preview</strong>
-            <span>Scrub frames, play timelines, and inspect export overrides.</span>
+            <span>Scrub frames, play timelines, transition series, masks, and export overrides.</span>
           </a>
           <a href="docs/rendering.html">
             <strong>Rendering</strong>
-            <span>Implemented render path, current limits, and remaining hardening work.</span>
+            <span>Browser-backed MP4 rendering with motion budgets and current limits.</span>
           </a>
           <a href="docs/mcp.html">
             <strong>MCP server</strong>
@@ -258,6 +258,27 @@
           </article>
           <article class="example">
             <div>
+              <h3>motion-showcase</h3>
+              <p>Transition series, masks, kinetic type, and cinematic helper output in one renderable reel.</p>
+            </div>
+            <a href="examples.html#motion-showcase">Read guide</a>
+          </article>
+          <article class="example">
+            <div>
+              <h3>kavio-promo all motions</h3>
+              <p>Self-promo reel covering every motion family with mobile website proof.</p>
+            </div>
+            <a href="examples.html#kavio-all-motions-demo">Read guide</a>
+          </article>
+          <article class="example">
+            <div>
+              <h3>masks-text-motion</h3>
+              <p>Procedural masks, inverted shape masks, scramble text, and type-on captions.</p>
+            </div>
+            <a href="examples.html#masks-text-motion">Read guide</a>
+          </article>
+          <article class="example">
+            <div>
               <h3>visual-fixtures</h3>
               <p>Fixed-frame browser-renderer regression material and DOM snapshot.</p>
             </div>
@@ -289,7 +310,7 @@
       <a href="docs.html">Docs</a>
       <a href="examples.html">Examples</a>
       <a href="brand.html">Brand assets</a>
-      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      <a href="https://github.com/kitsra/kavio">GitHub</a>
     </footer>
 
     <script src="script.js"></script>

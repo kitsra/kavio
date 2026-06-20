@@ -69,6 +69,24 @@ workflow. Consumers can install from `https://npm.pkg.github.com` by mapping the
 - [Examples](docs/examples.md)
 - [MVP demo fixture](docs/demo.md)
 
+## Motion Demos
+
+The site includes a tracked 30-second landscape motion reel so it can be viewed
+directly from GitHub or the presentation site:
+
+- [Landscape all-motions MP4](site/assets/examples/kavio-all-motions-landscape.mp4)
+- [Examples page with GIF previews and code snippets](site/examples.html#motion-gifs)
+
+Regenerate the vertical and landscape demo compositions from the self-promo site
+screenshots:
+
+```bash
+corepack pnpm --filter @kavio/example-kavio-promo run capture-site
+corepack pnpm --filter @kavio/example-kavio-promo run emit-motion-demo
+corepack pnpm --filter @kavio/example-kavio-promo run emit-motion-demo:landscape
+node packages/cli/dist/index.js render examples/kavio-promo/generated/all-motions-demo-landscape.json --export kavio-all-motions-landscape --out renders/kavio-all-motions-landscape
+```
+
 ## Packages
 
 - `@kavio/schema`: JSON Schema, shared types, validation, and migration scaffold.
@@ -139,3 +157,10 @@ packages/              npm workspace packages
 This repo is configured for pnpm with `minimumReleaseAge=4320`. Do not add or
 upgrade dependencies with clients that bypass the age gate. See
 [SECURITY.md](SECURITY.md) for the project security model.
+
+## License
+
+Kavio is source-available under the Elastic License 2.0 (`Elastic-2.0`). The
+license allows use, modification, derivative works, and redistribution subject
+to its terms, including limits on offering Kavio itself as a hosted or managed
+service. It is not an OSI open source license. See [LICENSE](LICENSE).

@@ -78,6 +78,10 @@
             "dataset": {
               "kavioLayerId": "motion-panel",
               "kavioLayerType": "shape",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "procedural",
+              "kavioMaskSeed": "7",
+              "kavioMaskType": "scanlines",
               "kavioShape": "rect"
             },
             "nodeType": "element",
@@ -88,11 +92,18 @@
               "boxSizing": "border-box",
               "height": "128px",
               "left": "80px",
+              "maskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "maskPosition": "0 7px",
+              "maskSize": "100% 100%",
               "opacity": "0.86",
+              "overflow": "hidden",
               "position": "absolute",
               "top": "68px",
               "transform": "translate(0%, 0%) rotate(-3deg) scale(1)",
               "transformOrigin": "0% 0%",
+              "webkitMaskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "webkitMaskPosition": "0 7px",
+              "webkitMaskSize": "100% 100%",
               "width": "220px",
               "zIndex": "1"
             },
@@ -110,6 +121,18 @@
             },
             "id": "motion-panel",
             "localFrame": 0,
+            "mask": {
+              "source": {
+                "frequency": 10,
+                "kind": "procedural",
+                "resolution": {
+                  "height": 360,
+                  "width": 640
+                },
+                "seed": 7,
+                "type": "scanlines"
+              }
+            },
             "opacity": 0.86,
             "position": {
               "x": 80,
@@ -156,19 +179,29 @@
               "kavioAsset": "fixture-poster",
               "kavioFit": "contain",
               "kavioLayerId": "poster-card",
-              "kavioLayerType": "image"
+              "kavioLayerType": "image",
+              "kavioMaskAsset": "fixture-poster",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "asset",
+              "kavioMaskMode": "alpha"
             },
             "nodeType": "element",
             "style": {
               "boxSizing": "border-box",
               "height": "90px",
               "left": "430px",
+              "maskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "maskRepeat": "no-repeat",
+              "maskSize": "100% 100%",
               "opacity": "0.95",
               "overflow": "hidden",
               "position": "absolute",
               "top": "92px",
               "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
               "transformOrigin": "50% 50%",
+              "webkitMaskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "webkitMaskRepeat": "no-repeat",
+              "webkitMaskSize": "100% 100%",
               "width": "180px",
               "zIndex": "2"
             },
@@ -186,6 +219,17 @@
             },
             "id": "poster-card",
             "localFrame": 0,
+            "mask": {
+              "source": {
+                "asset": "fixture-poster",
+                "kind": "asset",
+                "mode": "alpha",
+                "resolution": {
+                  "height": 160,
+                  "width": 320
+                }
+              }
+            },
             "opacity": 0.95,
             "position": {
               "x": 430,
@@ -437,6 +481,10 @@
             "dataset": {
               "kavioLayerId": "motion-panel",
               "kavioLayerType": "shape",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "procedural",
+              "kavioMaskSeed": "7",
+              "kavioMaskType": "scanlines",
               "kavioShape": "rect"
             },
             "nodeType": "element",
@@ -447,11 +495,18 @@
               "boxSizing": "border-box",
               "height": "128px",
               "left": "80px",
+              "maskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "maskPosition": "0 7px",
+              "maskSize": "100% 100%",
               "opacity": "0.86",
+              "overflow": "hidden",
               "position": "absolute",
               "top": "68px",
               "transform": "translate(0%, 0%) rotate(-3deg) scale(1)",
               "transformOrigin": "0% 0%",
+              "webkitMaskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "webkitMaskPosition": "0 7px",
+              "webkitMaskSize": "100% 100%",
               "width": "220px",
               "zIndex": "1"
             },
@@ -481,19 +536,29 @@
               "kavioAsset": "fixture-poster",
               "kavioFit": "contain",
               "kavioLayerId": "poster-card",
-              "kavioLayerType": "image"
+              "kavioLayerType": "image",
+              "kavioMaskAsset": "fixture-poster",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "asset",
+              "kavioMaskMode": "alpha"
             },
             "nodeType": "element",
             "style": {
               "boxSizing": "border-box",
               "height": "90px",
               "left": "430px",
+              "maskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "maskRepeat": "no-repeat",
+              "maskSize": "100% 100%",
               "opacity": "0.95",
               "overflow": "hidden",
               "position": "absolute",
               "top": "92px",
               "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
               "transformOrigin": "50% 50%",
+              "webkitMaskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "webkitMaskRepeat": "no-repeat",
+              "webkitMaskSize": "100% 100%",
               "width": "180px",
               "zIndex": "2"
             },
@@ -678,6 +743,10 @@
             "dataset": {
               "kavioLayerId": "motion-panel",
               "kavioLayerType": "shape",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "procedural",
+              "kavioMaskSeed": "7",
+              "kavioMaskType": "scanlines",
               "kavioShape": "rect"
             },
             "nodeType": "element",
@@ -688,11 +757,18 @@
               "boxSizing": "border-box",
               "height": "128px",
               "left": "96px",
+              "maskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "maskPosition": "0 7px",
+              "maskSize": "100% 100%",
               "opacity": "0.86",
+              "overflow": "hidden",
               "position": "absolute",
               "top": "68px",
               "transform": "translate(0%, 0%) rotate(-0.5deg) scale(1.04)",
               "transformOrigin": "0% 0%",
+              "webkitMaskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "webkitMaskPosition": "0 7px",
+              "webkitMaskSize": "100% 100%",
               "width": "220px",
               "zIndex": "1"
             },
@@ -710,6 +786,18 @@
             },
             "id": "motion-panel",
             "localFrame": 12,
+            "mask": {
+              "source": {
+                "frequency": 10,
+                "kind": "procedural",
+                "resolution": {
+                  "height": 360,
+                  "width": 640
+                },
+                "seed": 7,
+                "type": "scanlines"
+              }
+            },
             "opacity": 0.86,
             "position": {
               "x": 96,
@@ -756,19 +844,29 @@
               "kavioAsset": "fixture-poster",
               "kavioFit": "contain",
               "kavioLayerId": "poster-card",
-              "kavioLayerType": "image"
+              "kavioLayerType": "image",
+              "kavioMaskAsset": "fixture-poster",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "asset",
+              "kavioMaskMode": "alpha"
             },
             "nodeType": "element",
             "style": {
               "boxSizing": "border-box",
               "height": "90px",
               "left": "430px",
+              "maskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "maskRepeat": "no-repeat",
+              "maskSize": "100% 100%",
               "opacity": "0.95",
               "overflow": "hidden",
               "position": "absolute",
               "top": "92px",
               "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
               "transformOrigin": "50% 50%",
+              "webkitMaskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "webkitMaskRepeat": "no-repeat",
+              "webkitMaskSize": "100% 100%",
               "width": "180px",
               "zIndex": "2"
             },
@@ -786,6 +884,17 @@
             },
             "id": "poster-card",
             "localFrame": 12,
+            "mask": {
+              "source": {
+                "asset": "fixture-poster",
+                "kind": "asset",
+                "mode": "alpha",
+                "resolution": {
+                  "height": 160,
+                  "width": 320
+                }
+              }
+            },
             "opacity": 0.95,
             "position": {
               "x": 430,
@@ -810,10 +919,52 @@
         },
         {
           "element": {
-            "children": [],
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "0",
+                  "kavioTextFragmentOrder": "0",
+                  "kavioTextFragmentState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "0.921283",
+                  "transform": "translate(0px, 1.41691px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Fixed Frames"
+              },
+              {
+                "nodeType": "text",
+                "textContent": "\n"
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "1",
+                  "kavioTextFragmentOrder": "1",
+                  "kavioTextFragmentState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "0.370262",
+                  "transform": "translate(0px, 11.335277px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Stay Boring"
+              }
+            ],
             "dataset": {
               "kavioLayerId": "headline",
-              "kavioLayerType": "text"
+              "kavioLayerType": "text",
+              "kavioTextMotionPreserveLayout": "true",
+              "kavioTextMotionSplit": "line",
+              "kavioTextMotionType": "cascade"
             },
             "nodeType": "element",
             "style": {
@@ -1111,6 +1262,10 @@
             "dataset": {
               "kavioLayerId": "motion-panel",
               "kavioLayerType": "shape",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "procedural",
+              "kavioMaskSeed": "7",
+              "kavioMaskType": "scanlines",
               "kavioShape": "rect"
             },
             "nodeType": "element",
@@ -1121,11 +1276,18 @@
               "boxSizing": "border-box",
               "height": "128px",
               "left": "96px",
+              "maskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "maskPosition": "0 7px",
+              "maskSize": "100% 100%",
               "opacity": "0.86",
+              "overflow": "hidden",
               "position": "absolute",
               "top": "68px",
               "transform": "translate(0%, 0%) rotate(-0.5deg) scale(1.04)",
               "transformOrigin": "0% 0%",
+              "webkitMaskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "webkitMaskPosition": "0 7px",
+              "webkitMaskSize": "100% 100%",
               "width": "220px",
               "zIndex": "1"
             },
@@ -1155,19 +1317,29 @@
               "kavioAsset": "fixture-poster",
               "kavioFit": "contain",
               "kavioLayerId": "poster-card",
-              "kavioLayerType": "image"
+              "kavioLayerType": "image",
+              "kavioMaskAsset": "fixture-poster",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "asset",
+              "kavioMaskMode": "alpha"
             },
             "nodeType": "element",
             "style": {
               "boxSizing": "border-box",
               "height": "90px",
               "left": "430px",
+              "maskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "maskRepeat": "no-repeat",
+              "maskSize": "100% 100%",
               "opacity": "0.95",
               "overflow": "hidden",
               "position": "absolute",
               "top": "92px",
               "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
               "transformOrigin": "50% 50%",
+              "webkitMaskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "webkitMaskRepeat": "no-repeat",
+              "webkitMaskSize": "100% 100%",
               "width": "180px",
               "zIndex": "2"
             },
@@ -1175,10 +1347,52 @@
             "textContent": ""
           },
           {
-            "children": [],
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "0",
+                  "kavioTextFragmentOrder": "0",
+                  "kavioTextFragmentState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "0.921283",
+                  "transform": "translate(0px, 1.41691px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Fixed Frames"
+              },
+              {
+                "nodeType": "text",
+                "textContent": "\n"
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "1",
+                  "kavioTextFragmentOrder": "1",
+                  "kavioTextFragmentState": "active"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "0.370262",
+                  "transform": "translate(0px, 11.335277px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Stay Boring"
+              }
+            ],
             "dataset": {
               "kavioLayerId": "headline",
-              "kavioLayerType": "text"
+              "kavioLayerType": "text",
+              "kavioTextMotionPreserveLayout": "true",
+              "kavioTextMotionSplit": "line",
+              "kavioTextMotionType": "cascade"
             },
             "nodeType": "element",
             "style": {
@@ -1392,6 +1606,10 @@
             "dataset": {
               "kavioLayerId": "motion-panel",
               "kavioLayerType": "shape",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "procedural",
+              "kavioMaskSeed": "7",
+              "kavioMaskType": "scanlines",
               "kavioShape": "rect"
             },
             "nodeType": "element",
@@ -1402,11 +1620,18 @@
               "boxSizing": "border-box",
               "height": "128px",
               "left": "112px",
+              "maskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "maskPosition": "0 7px",
+              "maskSize": "100% 100%",
               "opacity": "0.86",
+              "overflow": "hidden",
               "position": "absolute",
               "top": "68px",
               "transform": "translate(0%, 0%) rotate(2deg) scale(1.08)",
               "transformOrigin": "0% 0%",
+              "webkitMaskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "webkitMaskPosition": "0 7px",
+              "webkitMaskSize": "100% 100%",
               "width": "220px",
               "zIndex": "1"
             },
@@ -1424,6 +1649,18 @@
             },
             "id": "motion-panel",
             "localFrame": 24,
+            "mask": {
+              "source": {
+                "frequency": 10,
+                "kind": "procedural",
+                "resolution": {
+                  "height": 360,
+                  "width": 640
+                },
+                "seed": 7,
+                "type": "scanlines"
+              }
+            },
             "opacity": 0.86,
             "position": {
               "x": 112,
@@ -1470,19 +1707,29 @@
               "kavioAsset": "fixture-poster",
               "kavioFit": "contain",
               "kavioLayerId": "poster-card",
-              "kavioLayerType": "image"
+              "kavioLayerType": "image",
+              "kavioMaskAsset": "fixture-poster",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "asset",
+              "kavioMaskMode": "alpha"
             },
             "nodeType": "element",
             "style": {
               "boxSizing": "border-box",
               "height": "90px",
               "left": "430px",
+              "maskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "maskRepeat": "no-repeat",
+              "maskSize": "100% 100%",
               "opacity": "0.95",
               "overflow": "hidden",
               "position": "absolute",
               "top": "92px",
               "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
               "transformOrigin": "50% 50%",
+              "webkitMaskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "webkitMaskRepeat": "no-repeat",
+              "webkitMaskSize": "100% 100%",
               "width": "180px",
               "zIndex": "2"
             },
@@ -1500,6 +1747,17 @@
             },
             "id": "poster-card",
             "localFrame": 24,
+            "mask": {
+              "source": {
+                "asset": "fixture-poster",
+                "kind": "asset",
+                "mode": "alpha",
+                "resolution": {
+                  "height": 160,
+                  "width": 320
+                }
+              }
+            },
             "opacity": 0.95,
             "position": {
               "x": 430,
@@ -1524,10 +1782,52 @@
         },
         {
           "element": {
-            "children": [],
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "0",
+                  "kavioTextFragmentOrder": "0",
+                  "kavioTextFragmentState": "complete"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "1",
+                  "transform": "translate(0px, 0px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Fixed Frames"
+              },
+              {
+                "nodeType": "text",
+                "textContent": "\n"
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "1",
+                  "kavioTextFragmentOrder": "1",
+                  "kavioTextFragmentState": "complete"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "1",
+                  "transform": "translate(0px, 0px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Stay Boring"
+              }
+            ],
             "dataset": {
               "kavioLayerId": "headline",
-              "kavioLayerType": "text"
+              "kavioLayerType": "text",
+              "kavioTextMotionPreserveLayout": "true",
+              "kavioTextMotionSplit": "line",
+              "kavioTextMotionType": "cascade"
             },
             "nodeType": "element",
             "style": {
@@ -1825,6 +2125,10 @@
             "dataset": {
               "kavioLayerId": "motion-panel",
               "kavioLayerType": "shape",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "procedural",
+              "kavioMaskSeed": "7",
+              "kavioMaskType": "scanlines",
               "kavioShape": "rect"
             },
             "nodeType": "element",
@@ -1835,11 +2139,18 @@
               "boxSizing": "border-box",
               "height": "128px",
               "left": "112px",
+              "maskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "maskPosition": "0 7px",
+              "maskSize": "100% 100%",
               "opacity": "0.86",
+              "overflow": "hidden",
               "position": "absolute",
               "top": "68px",
               "transform": "translate(0%, 0%) rotate(2deg) scale(1.08)",
               "transformOrigin": "0% 0%",
+              "webkitMaskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "webkitMaskPosition": "0 7px",
+              "webkitMaskSize": "100% 100%",
               "width": "220px",
               "zIndex": "1"
             },
@@ -1869,19 +2180,29 @@
               "kavioAsset": "fixture-poster",
               "kavioFit": "contain",
               "kavioLayerId": "poster-card",
-              "kavioLayerType": "image"
+              "kavioLayerType": "image",
+              "kavioMaskAsset": "fixture-poster",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "asset",
+              "kavioMaskMode": "alpha"
             },
             "nodeType": "element",
             "style": {
               "boxSizing": "border-box",
               "height": "90px",
               "left": "430px",
+              "maskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "maskRepeat": "no-repeat",
+              "maskSize": "100% 100%",
               "opacity": "0.95",
               "overflow": "hidden",
               "position": "absolute",
               "top": "92px",
               "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
               "transformOrigin": "50% 50%",
+              "webkitMaskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "webkitMaskRepeat": "no-repeat",
+              "webkitMaskSize": "100% 100%",
               "width": "180px",
               "zIndex": "2"
             },
@@ -1889,10 +2210,52 @@
             "textContent": ""
           },
           {
-            "children": [],
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "0",
+                  "kavioTextFragmentOrder": "0",
+                  "kavioTextFragmentState": "complete"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "1",
+                  "transform": "translate(0px, 0px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Fixed Frames"
+              },
+              {
+                "nodeType": "text",
+                "textContent": "\n"
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "1",
+                  "kavioTextFragmentOrder": "1",
+                  "kavioTextFragmentState": "complete"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "1",
+                  "transform": "translate(0px, 0px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Stay Boring"
+              }
+            ],
             "dataset": {
               "kavioLayerId": "headline",
-              "kavioLayerType": "text"
+              "kavioLayerType": "text",
+              "kavioTextMotionPreserveLayout": "true",
+              "kavioTextMotionSplit": "line",
+              "kavioTextMotionType": "cascade"
             },
             "nodeType": "element",
             "style": {
@@ -2106,6 +2469,10 @@
             "dataset": {
               "kavioLayerId": "motion-panel",
               "kavioLayerType": "shape",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "procedural",
+              "kavioMaskSeed": "7",
+              "kavioMaskType": "scanlines",
               "kavioShape": "rect"
             },
             "nodeType": "element",
@@ -2116,11 +2483,18 @@
               "boxSizing": "border-box",
               "height": "128px",
               "left": "124.34026465028356px",
+              "maskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "maskPosition": "0 7px",
+              "maskSize": "100% 100%",
               "opacity": "0.86",
+              "overflow": "hidden",
               "position": "absolute",
               "top": "68px",
               "transform": "translate(0%, 0%) rotate(3.5652173913043477deg) scale(1.017391304347826)",
               "transformOrigin": "0% 0%",
+              "webkitMaskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "webkitMaskPosition": "0 7px",
+              "webkitMaskSize": "100% 100%",
               "width": "220px",
               "zIndex": "1"
             },
@@ -2138,6 +2512,18 @@
             },
             "id": "motion-panel",
             "localFrame": 36,
+            "mask": {
+              "source": {
+                "frequency": 10,
+                "kind": "procedural",
+                "resolution": {
+                  "height": 360,
+                  "width": 640
+                },
+                "seed": 7,
+                "type": "scanlines"
+              }
+            },
             "opacity": 0.86,
             "position": {
               "x": 124.340265,
@@ -2184,19 +2570,29 @@
               "kavioAsset": "fixture-poster",
               "kavioFit": "contain",
               "kavioLayerId": "poster-card",
-              "kavioLayerType": "image"
+              "kavioLayerType": "image",
+              "kavioMaskAsset": "fixture-poster",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "asset",
+              "kavioMaskMode": "alpha"
             },
             "nodeType": "element",
             "style": {
               "boxSizing": "border-box",
               "height": "90px",
               "left": "430px",
+              "maskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "maskRepeat": "no-repeat",
+              "maskSize": "100% 100%",
               "opacity": "0.95",
               "overflow": "hidden",
               "position": "absolute",
               "top": "92px",
               "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
               "transformOrigin": "50% 50%",
+              "webkitMaskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "webkitMaskRepeat": "no-repeat",
+              "webkitMaskSize": "100% 100%",
               "width": "180px",
               "zIndex": "2"
             },
@@ -2214,6 +2610,17 @@
             },
             "id": "poster-card",
             "localFrame": 36,
+            "mask": {
+              "source": {
+                "asset": "fixture-poster",
+                "kind": "asset",
+                "mode": "alpha",
+                "resolution": {
+                  "height": 160,
+                  "width": 320
+                }
+              }
+            },
             "opacity": 0.95,
             "position": {
               "x": 430,
@@ -2238,10 +2645,52 @@
         },
         {
           "element": {
-            "children": [],
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "0",
+                  "kavioTextFragmentOrder": "0",
+                  "kavioTextFragmentState": "complete"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "1",
+                  "transform": "translate(0px, 0px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Fixed Frames"
+              },
+              {
+                "nodeType": "text",
+                "textContent": "\n"
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "1",
+                  "kavioTextFragmentOrder": "1",
+                  "kavioTextFragmentState": "complete"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "1",
+                  "transform": "translate(0px, 0px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Stay Boring"
+              }
+            ],
             "dataset": {
               "kavioLayerId": "headline",
-              "kavioLayerType": "text"
+              "kavioLayerType": "text",
+              "kavioTextMotionPreserveLayout": "true",
+              "kavioTextMotionSplit": "line",
+              "kavioTextMotionType": "cascade"
             },
             "nodeType": "element",
             "style": {
@@ -2539,6 +2988,10 @@
             "dataset": {
               "kavioLayerId": "motion-panel",
               "kavioLayerType": "shape",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "procedural",
+              "kavioMaskSeed": "7",
+              "kavioMaskType": "scanlines",
               "kavioShape": "rect"
             },
             "nodeType": "element",
@@ -2549,11 +3002,18 @@
               "boxSizing": "border-box",
               "height": "128px",
               "left": "124.34026465028356px",
+              "maskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "maskPosition": "0 7px",
+              "maskSize": "100% 100%",
               "opacity": "0.86",
+              "overflow": "hidden",
               "position": "absolute",
               "top": "68px",
               "transform": "translate(0%, 0%) rotate(3.5652173913043477deg) scale(1.017391304347826)",
               "transformOrigin": "0% 0%",
+              "webkitMaskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "webkitMaskPosition": "0 7px",
+              "webkitMaskSize": "100% 100%",
               "width": "220px",
               "zIndex": "1"
             },
@@ -2583,19 +3043,29 @@
               "kavioAsset": "fixture-poster",
               "kavioFit": "contain",
               "kavioLayerId": "poster-card",
-              "kavioLayerType": "image"
+              "kavioLayerType": "image",
+              "kavioMaskAsset": "fixture-poster",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "asset",
+              "kavioMaskMode": "alpha"
             },
             "nodeType": "element",
             "style": {
               "boxSizing": "border-box",
               "height": "90px",
               "left": "430px",
+              "maskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "maskRepeat": "no-repeat",
+              "maskSize": "100% 100%",
               "opacity": "0.95",
               "overflow": "hidden",
               "position": "absolute",
               "top": "92px",
               "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
               "transformOrigin": "50% 50%",
+              "webkitMaskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "webkitMaskRepeat": "no-repeat",
+              "webkitMaskSize": "100% 100%",
               "width": "180px",
               "zIndex": "2"
             },
@@ -2603,10 +3073,52 @@
             "textContent": ""
           },
           {
-            "children": [],
+            "children": [
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "0",
+                  "kavioTextFragmentOrder": "0",
+                  "kavioTextFragmentState": "complete"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "1",
+                  "transform": "translate(0px, 0px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Fixed Frames"
+              },
+              {
+                "nodeType": "text",
+                "textContent": "\n"
+              },
+              {
+                "children": [],
+                "dataset": {
+                  "kavioTextFragmentIndex": "1",
+                  "kavioTextFragmentOrder": "1",
+                  "kavioTextFragmentState": "complete"
+                },
+                "nodeType": "element",
+                "style": {
+                  "display": "inline-block",
+                  "opacity": "1",
+                  "transform": "translate(0px, 0px)",
+                  "whiteSpace": "pre-wrap"
+                },
+                "tagName": "span",
+                "textContent": "Stay Boring"
+              }
+            ],
             "dataset": {
               "kavioLayerId": "headline",
-              "kavioLayerType": "text"
+              "kavioLayerType": "text",
+              "kavioTextMotionPreserveLayout": "true",
+              "kavioTextMotionSplit": "line",
+              "kavioTextMotionType": "cascade"
             },
             "nodeType": "element",
             "style": {
@@ -2820,6 +3332,10 @@
             "dataset": {
               "kavioLayerId": "motion-panel",
               "kavioLayerType": "shape",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "procedural",
+              "kavioMaskSeed": "7",
+              "kavioMaskType": "scanlines",
               "kavioShape": "rect"
             },
             "nodeType": "element",
@@ -2830,11 +3346,18 @@
               "boxSizing": "border-box",
               "height": "128px",
               "left": "128px",
+              "maskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "maskPosition": "0 7px",
+              "maskSize": "100% 100%",
               "opacity": "0.86",
+              "overflow": "hidden",
               "position": "absolute",
               "top": "68px",
               "transform": "translate(0%, 0%) rotate(5deg) scale(0.96)",
               "transformOrigin": "0% 0%",
+              "webkitMaskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "webkitMaskPosition": "0 7px",
+              "webkitMaskSize": "100% 100%",
               "width": "220px",
               "zIndex": "1"
             },
@@ -2852,6 +3375,18 @@
             },
             "id": "motion-panel",
             "localFrame": 47,
+            "mask": {
+              "source": {
+                "frequency": 10,
+                "kind": "procedural",
+                "resolution": {
+                  "height": 360,
+                  "width": 640
+                },
+                "seed": 7,
+                "type": "scanlines"
+              }
+            },
             "opacity": 0.86,
             "position": {
               "x": 128,
@@ -2898,19 +3433,29 @@
               "kavioAsset": "fixture-poster",
               "kavioFit": "contain",
               "kavioLayerId": "poster-card",
-              "kavioLayerType": "image"
+              "kavioLayerType": "image",
+              "kavioMaskAsset": "fixture-poster",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "asset",
+              "kavioMaskMode": "alpha"
             },
             "nodeType": "element",
             "style": {
               "boxSizing": "border-box",
               "height": "90px",
               "left": "430px",
+              "maskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "maskRepeat": "no-repeat",
+              "maskSize": "100% 100%",
               "opacity": "0.95",
               "overflow": "hidden",
               "position": "absolute",
               "top": "92px",
               "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
               "transformOrigin": "50% 50%",
+              "webkitMaskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "webkitMaskRepeat": "no-repeat",
+              "webkitMaskSize": "100% 100%",
               "width": "180px",
               "zIndex": "2"
             },
@@ -2928,6 +3473,17 @@
             },
             "id": "poster-card",
             "localFrame": 47,
+            "mask": {
+              "source": {
+                "asset": "fixture-poster",
+                "kind": "asset",
+                "mode": "alpha",
+                "resolution": {
+                  "height": 160,
+                  "width": 320
+                }
+              }
+            },
             "opacity": 0.95,
             "position": {
               "x": 430,
@@ -3179,6 +3735,10 @@
             "dataset": {
               "kavioLayerId": "motion-panel",
               "kavioLayerType": "shape",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "procedural",
+              "kavioMaskSeed": "7",
+              "kavioMaskType": "scanlines",
               "kavioShape": "rect"
             },
             "nodeType": "element",
@@ -3189,11 +3749,18 @@
               "boxSizing": "border-box",
               "height": "128px",
               "left": "128px",
+              "maskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "maskPosition": "0 7px",
+              "maskSize": "100% 100%",
               "opacity": "0.86",
+              "overflow": "hidden",
               "position": "absolute",
               "top": "68px",
               "transform": "translate(0%, 0%) rotate(5deg) scale(0.96)",
               "transformOrigin": "0% 0%",
+              "webkitMaskImage": "repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 10px)",
+              "webkitMaskPosition": "0 7px",
+              "webkitMaskSize": "100% 100%",
               "width": "220px",
               "zIndex": "1"
             },
@@ -3223,19 +3790,29 @@
               "kavioAsset": "fixture-poster",
               "kavioFit": "contain",
               "kavioLayerId": "poster-card",
-              "kavioLayerType": "image"
+              "kavioLayerType": "image",
+              "kavioMaskAsset": "fixture-poster",
+              "kavioMaskInverted": "false",
+              "kavioMaskKind": "asset",
+              "kavioMaskMode": "alpha"
             },
             "nodeType": "element",
             "style": {
               "boxSizing": "border-box",
               "height": "90px",
               "left": "430px",
+              "maskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "maskRepeat": "no-repeat",
+              "maskSize": "100% 100%",
               "opacity": "0.95",
               "overflow": "hidden",
               "position": "absolute",
               "top": "92px",
               "transform": "translate(-50%, -50%) rotate(0deg) scale(1)",
               "transformOrigin": "50% 50%",
+              "webkitMaskImage": "url(\"data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22320%22%20height%3D%22160%22%20viewBox%3D%220%200%20320%20160%22%3E%3Crect%20width%3D%22320%22%20height%3D%22160%22%20fill%3D%22%2319273a%22%2F%3E%3Ccircle%20cx%3D%2280%22%20cy%3D%2280%22%20r%3D%2252%22%20fill%3D%22%23f5c542%22%2F%3E%3Cpath%20d%3D%22M160%2040h110v80H160z%22%20fill%3D%22%234ecdc4%22%2F%3E%3C%2Fsvg%3E\")",
+              "webkitMaskRepeat": "no-repeat",
+              "webkitMaskSize": "100% 100%",
               "width": "180px",
               "zIndex": "2"
             },

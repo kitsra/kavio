@@ -1,0 +1,101 @@
+{
+  "version": "0.1",
+  "metadata": {
+    "title": "Transition series overlap",
+    "tags": ["example", "motion", "transition-series"]
+  },
+  "composition": {
+    "width": 960,
+    "height": 540,
+    "fps": 30,
+    "durationFrames": 96,
+    "background": "#0f172a"
+  },
+  "assets": {},
+  "layers": [
+    {
+      "id": "scene-a",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 0,
+      "durationFrames": 60,
+      "position": { "x": 480, "y": 270 },
+      "anchor": "center",
+      "size": { "width": 680, "height": 320 },
+      "fill": "#4f46e5",
+      "radius": 16
+    },
+    {
+      "id": "scene-a-label",
+      "type": "text",
+      "text": "OUTGOING",
+      "startFrame": 0,
+      "durationFrames": 60,
+      "position": { "x": 480, "y": 270 },
+      "anchor": "center",
+      "style": {
+        "fontFamily": "Inter",
+        "fontSize": 72,
+        "fontWeight": 900,
+        "color": "#eef2ff",
+        "align": "center"
+      }
+    },
+    {
+      "id": "scene-b",
+      "type": "shape",
+      "shape": "rect",
+      "startFrame": 48,
+      "durationFrames": 48,
+      "position": { "x": 480, "y": 270 },
+      "anchor": "center",
+      "size": { "width": 680, "height": 320 },
+      "fill": "#f97316",
+      "radius": 16
+    },
+    {
+      "id": "scene-b-label",
+      "type": "text",
+      "text": "INCOMING",
+      "startFrame": 54,
+      "durationFrames": 42,
+      "position": { "x": 480, "y": 270 },
+      "anchor": "center",
+      "transitionIn": { "type": "fade", "durationFrames": 8 },
+      "style": {
+        "fontFamily": "Inter",
+        "fontSize": 72,
+        "fontWeight": 900,
+        "color": "#fff7ed",
+        "align": "center"
+      }
+    }
+  ],
+  "tracks": [
+    {
+      "id": "main",
+      "clips": [
+        { "id": "a", "layerId": "scene-a", "startFrame": 0, "durationFrames": 60 },
+        {
+          "id": "b",
+          "layerId": "scene-b",
+          "startFrame": 48,
+          "durationFrames": 48,
+          "transitionFromPrevious": {
+            "presentation": { "type": "push", "direction": "left" },
+            "timing": { "type": "tween", "durationFrames": 12, "easing": "outCubic" }
+          }
+        }
+      ]
+    }
+  ],
+  "exports": [
+    {
+      "name": "transition-series",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 960,
+      "height": 540
+    }
+  ]
+}

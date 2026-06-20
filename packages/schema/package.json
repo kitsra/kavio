@@ -2,7 +2,7 @@
   "name": "@kavio/schema",
   "version": "0.0.0",
   "description": "Canonical Kavio JSON Schema, TypeScript types, and validation contract.",
-  "license": "Apache-2.0",
+  "license": "Elastic-2.0",
   "type": "module",
   "sideEffects": false,
   "publishConfig": {

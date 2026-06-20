@@ -61,6 +61,15 @@
       "fill": "#2563eb",
       "stroke": { "color": "#bfdbfe", "width": 3 },
       "radius": 18,
+      "mask": {
+        "source": {
+          "kind": "procedural",
+          "type": "scanlines",
+          "seed": 7,
+          "frequency": 10,
+          "resolution": { "width": 640, "height": 360 }
+        }
+      },
       "z": 1
     },
     {
@@ -74,12 +83,30 @@
       "anchor": "center",
       "size": { "width": 180 },
       "opacity": 0.95,
+      "mask": {
+        "source": {
+          "kind": "asset",
+          "asset": "fixture-poster",
+          "mode": "alpha",
+          "resolution": { "width": 320, "height": 160 }
+        }
+      },
       "z": 2
     },
     {
       "id": "headline",
       "type": "text",
       "text": "Fixed Frames\nStay Boring",
+      "textMotion": {
+        "type": "cascade",
+        "split": "line",
+        "durationFrames": 8,
+        "easing": "outCubic",
+        "staggerFrames": 3,
+        "preserveLayout": true,
+        "direction": "up",
+        "amount": 18
+      },
       "startFrame": 8,
       "durationFrames": 32,
       "position": { "x": "50%w", "y": "43%h" },

@@ -29,6 +29,13 @@
       },
       "maxItems": 512
     },
+    "tracks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/track"
+      },
+      "maxItems": 64
+    },
     "audio": {
       "type": "array",
       "items": {
@@ -413,6 +420,16 @@
             "$ref": "#/$defs/effect"
           }
         },
+        "mask": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/layerMask"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "transitionIn": {
           "oneOf": [
             {
@@ -513,6 +530,9 @@
             },
             "style": {
               "$ref": "#/$defs/textStyle"
+            },
+            "textMotion": {
+              "$ref": "#/$defs/textMotion"
             }
           }
         }
@@ -589,6 +609,145 @@
       ],
       "unevaluatedProperties": false
     },
+    "track": {
+      "type": "object",
+      "required": ["id", "clips"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "clips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/trackClip"
+          }
+        }
+      }
+    },
+    "trackClip": {
+      "type": "object",
+      "required": ["id", "layerId", "startFrame", "durationFrames"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/identifier"
+        },
+        "layerId": {
+          "$ref": "#/$defs/identifier"
+        },
+        "startFrame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "transitionFromPrevious": {
+          "$ref": "#/$defs/transitionSeriesDefinition"
+        }
+      }
+    },
+    "transitionSeriesDefinition": {
+      "type": "object",
+      "required": ["presentation", "timing"],
+      "additionalProperties": false,
+      "properties": {
+        "presentation": {
+          "$ref": "#/$defs/transitionPresentation"
+        },
+        "timing": {
+          "$ref": "#/$defs/transitionTiming"
+        }
+      }
+    },
+    "transitionPresentation": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "enum": [
+            "fade",
+            "slide",
+            "wipe",
+            "crossfade",
+            "zoom",
+            "push",
+            "spin",
+            "rotate",
+            "flip",
+            "blurDissolve",
+            "colorDissolve",
+            "dip",
+            "iris",
+            "stretch",
+            "squeeze",
+            "clockWipe",
+            "barWipe",
+            "gridWipe",
+            "tileReveal",
+            "radialBlur",
+            "zoomBlur",
+            "bookFlip",
+            "pageCurlLite",
+            "skewSlide",
+            "expandMask",
+            "letterboxReveal",
+            "filmFlash",
+            "cameraWhip"
+          ]
+        },
+        "direction": {
+          "enum": ["up", "down", "left", "right"]
+        },
+        "axis": {
+          "enum": ["x", "y"]
+        },
+        "shape": {
+          "enum": ["circle", "diamond"]
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        }
+      }
+    },
+    "transitionTiming": {
+      "type": "object",
+      "required": ["type", "durationFrames"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "const": "tween"
+        },
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "easing": {
+          "$ref": "#/$defs/easing"
+        }
+      }
+    },
     "textStyle": {
       "type": "object",
       "additionalProperties": false,
@@ -662,6 +821,67 @@
               "type": "null"
             }
           ]
+        }
+      }
+    },
+    "textMotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "enum": ["typeOn", "cascade", "scramble", "highlightSweep", "trackingIn"]
+        },
+        "split": {
+          "enum": ["none", "word", "char", "line"]
+        },
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "easing": {
+          "$ref": "#/$defs/easing"
+        },
+        "staggerFrames": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "origin": {
+          "enum": ["start", "center", "end"]
+        },
+        "seed": {
+          "type": "integer"
+        },
+        "preserveLayout": {
+          "type": "boolean"
+        },
+        "restingBox": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "type": "number",
+              "minimum": 0
+            },
+            "height": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "direction": {
+          "enum": ["up", "down", "left", "right"]
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "color": {
+          "$ref": "#/$defs/color"
         }
       }
     },
@@ -1030,6 +1250,16 @@
             "$ref": "#/$defs/effect"
           }
         },
+        "mask": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/layerMask"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "transitionIn": {
           "oneOf": [
             {
@@ -1155,6 +1385,9 @@
         },
         "easing": {
           "$ref": "#/$defs/easing"
+        },
+        "timing": {
+          "$ref": "#/$defs/timing"
         }
       }
     },
@@ -1203,13 +1436,157 @@
         }
       ]
     },
-    "transition": {
+    "layerMask": {
       "type": "object",
-      "required": ["type", "durationFrames"],
+      "required": ["source"],
       "additionalProperties": false,
       "properties": {
+        "source": {
+          "$ref": "#/$defs/maskSource"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "invert": {
+          "type": "boolean"
+        }
+      }
+    },
+    "maskSource": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["kind", "shape"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "shape"
+            },
+            "shape": {
+              "enum": ["rect", "circle", "diamond"]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "asset"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "asset"
+            },
+            "asset": {
+              "$ref": "#/$defs/identifier"
+            },
+            "mode": {
+              "const": "alpha"
+            },
+            "resolution": {
+              "$ref": "#/$defs/maskResolution"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["kind", "type", "seed"],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "procedural"
+            },
+            "type": {
+              "enum": ["linearGradient", "radialGradient", "scanlines"]
+            },
+            "seed": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "direction": {
+              "enum": ["up", "down", "left", "right"]
+            },
+            "softness": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "frequency": {
+              "type": "number",
+              "minimum": 1,
+              "maximum": 256
+            },
+            "resolution": {
+              "$ref": "#/$defs/maskResolution"
+            }
+          }
+        }
+      ]
+    },
+    "maskResolution": {
+      "type": "object",
+      "required": ["width", "height"],
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096
+        }
+      }
+    },
+    "transition": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "anyOf": [
+        { "required": ["durationFrames"] },
+        {
+          "properties": {
+            "timing": {
+              "$ref": "#/$defs/timingWithDuration"
+            }
+          },
+          "required": ["timing"]
+        }
+      ],
+      "properties": {
         "type": {
-          "enum": ["fade", "slide", "wipe", "crossfade"]
+          "enum": [
+            "fade",
+            "slide",
+            "wipe",
+            "crossfade",
+            "zoom",
+            "push",
+            "spin",
+            "rotate",
+            "flip",
+            "blurDissolve",
+            "colorDissolve",
+            "dip",
+            "iris",
+            "stretch",
+            "squeeze",
+            "clockWipe",
+            "barWipe",
+            "gridWipe",
+            "tileReveal",
+            "radialBlur",
+            "zoomBlur",
+            "bookFlip",
+            "pageCurlLite",
+            "skewSlide",
+            "expandMask",
+            "letterboxReveal",
+            "filmFlash",
+            "cameraWhip"
+          ]
         },
         "durationFrames": {
           "type": "integer",
@@ -1218,10 +1595,250 @@
         "direction": {
           "enum": ["up", "down", "left", "right"]
         },
+        "axis": {
+          "enum": ["x", "y"]
+        },
+        "shape": {
+          "enum": ["circle", "diamond"]
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rows": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
+        "columns": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32
+        },
         "easing": {
           "$ref": "#/$defs/easing"
+        },
+        "timing": {
+          "$ref": "#/$defs/timing"
         }
       }
+    },
+    "timing": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "tween"
+            },
+            "durationFrames": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "easing": {
+              "$ref": "#/$defs/easing"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "spring"
+            },
+            "durationFrames": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "stiffness": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "damping": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "mass": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "restSpeed": {
+              "type": "number",
+              "minimum": 0
+            },
+            "bounce": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "steps"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "steps"
+            },
+            "durationFrames": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "steps": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "direction": {
+              "enum": ["start", "end"]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "segments"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "sequence"
+            },
+            "segments": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/$defs/timingSequenceSegment"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": ["type", "timing", "childCount", "eachFrames"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "stagger"
+            },
+            "timing": {
+              "$ref": "#/$defs/timing"
+            },
+            "childCount": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "eachFrames": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "childIndex": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "from": {
+              "enum": ["start", "center", "end"]
+            }
+          }
+        }
+      ]
+    },
+    "timingSequenceSegment": {
+      "type": "object",
+      "required": ["durationFrames"],
+      "additionalProperties": false,
+      "properties": {
+        "durationFrames": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "timing": {
+          "$ref": "#/$defs/timing"
+        },
+        "from": {
+          "type": "number"
+        },
+        "to": {
+          "type": "number"
+        }
+      }
+    },
+    "timingWithDuration": {
+      "oneOf": [
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/timing"
+            },
+            {
+              "type": "object",
+              "required": ["durationFrames"],
+              "properties": {
+                "type": {
+                  "enum": ["tween", "spring", "steps"]
+                },
+                "durationFrames": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          ]
+        },
+        {
+          "allOf": [
+            {
+              "$ref": "#/$defs/timing"
+            },
+            {
+              "type": "object",
+              "required": ["segments"],
+              "properties": {
+                "type": {
+                  "const": "sequence"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "object",
+          "required": ["type", "timing", "childCount", "eachFrames"],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "stagger"
+            },
+            "timing": {
+              "$ref": "#/$defs/timingWithDuration"
+            },
+            "childCount": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "eachFrames": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "childIndex": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "from": {
+              "enum": ["start", "center", "end"]
+            }
+          }
+        }
+      ]
     },
     "position": {
       "type": "object",
@@ -1452,9 +2069,23 @@
             "inCubic",
             "outCubic",
             "inOutCubic",
+            "inCirc",
+            "outCirc",
+            "inOutCirc",
+            "inExpo",
+            "outExpo",
+            "inOutExpo",
+            "anticipate",
+            "back",
             "inBack",
             "outBack",
-            "inOutBack"
+            "inOutBack",
+            "inElastic",
+            "outElastic",
+            "inOutElastic",
+            "inBounce",
+            "outBounce",
+            "inOutBounce"
           ]
         },
         {

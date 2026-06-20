@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
 import { socialMediaPresets, type SocialMediaPresetDefinition } from "@kavio/builder";
+import { compileTransitionOverlapWindows } from "@kavio/core";
 import {
   schemaVersion,
   validateComposition,
@@ -74,6 +75,12 @@ interface InspectSummary {
     count: number;
     types: Record<string, number>;
   };
+  masks: MaskSummary;
+  tracks: {
+    count: number;
+    clipCount: number;
+    transitionWindows: TransitionWindowSummary[];
+  };
   audio: {
     count: number;
   };
@@ -81,6 +88,43 @@ interface InspectSummary {
     count: number;
     names: string[];
   };
+}
+
+interface MaskSummary {
+  count: number;
+  shapeCount: number;
+  assetMasks: MaskAssetSummary[];
+  proceduralMasks: ProceduralMaskSummary[];
+  invertedCount: number;
+}
+
+interface MaskAssetSummary {
+  layerId: string;
+  asset: string;
+  mode: string;
+  width?: number;
+  height?: number;
+}
+
+interface ProceduralMaskSummary {
+  layerId: string;
+  type: string;
+  seed: number;
+  direction?: string;
+  width?: number;
+  height?: number;
+}
+
+interface TransitionWindowSummary {
+  trackId: string;
+  previousClipId: string;
+  previousLayerId: string;
+  nextClipId: string;
+  nextLayerId: string;
+  startFrame: number;
+  endFrame: number;
+  durationFrames: number;
+  transitionType: string;
 }
 
 interface InspectOutput {
@@ -871,6 +915,22 @@ function inspectDocument(filePath: string, document: KavioDocument): InspectSumm
       count: document.layers.length,
       types: countTypes(document.layers)
     },
+    masks: inspectMasks(document),
+    tracks: {
+      count: document.tracks === undefined ? 0 : document.tracks.length,
+      clipCount: document.tracks === undefined ? 0 : document.tracks.reduce((total, track) => total + track.clips.length, 0),
+      transitionWindows: compileTransitionOverlapWindows(document.tracks).map((window) => ({
+        trackId: window.trackId,
+        previousClipId: window.previousClipId,
+        previousLayerId: window.previousLayerId,
+        nextClipId: window.nextClipId,
+        nextLayerId: window.nextLayerId,
+        startFrame: window.startFrame,
+        endFrame: window.endFrame,
+        durationFrames: window.durationFrames,
+        transitionType: window.transition.type
+      }))
+    },
     audio: {
       count: document.audio === undefined ? 0 : document.audio.length
     },
@@ -879,6 +939,66 @@ function inspectDocument(filePath: string, document: KavioDocument): InspectSumm
       names: document.exports.map((entry, index) => readName(entry) ?? `export-${index + 1}`)
     }
   };
+}
+
+function inspectMasks(document: KavioDocument): MaskSummary {
+  const summary: MaskSummary = {
+    count: 0,
+    shapeCount: 0,
+    assetMasks: [],
+    proceduralMasks: [],
+    invertedCount: 0
+  };
+
+  for (const layer of document.layers) {
+    const mask = layer.mask;
+    if (!mask) {
+      continue;
+    }
+
+    summary.count += 1;
+    if (mask.invert === true) {
+      summary.invertedCount += 1;
+    }
+
+    switch (mask.source.kind) {
+      case "shape":
+        summary.shapeCount += 1;
+        break;
+      case "asset":
+        summary.assetMasks.push(withResolution({
+          layerId: layer.id,
+          asset: mask.source.asset,
+          mode: mask.source.mode ?? "alpha"
+        }, mask.source.resolution));
+        break;
+      case "procedural":
+        summary.proceduralMasks.push(withResolution({
+          layerId: layer.id,
+          type: mask.source.type,
+          seed: mask.source.seed,
+          ...(mask.source.direction === undefined ? {} : { direction: mask.source.direction })
+        }, mask.source.resolution));
+        break;
+    }
+  }
+
+  return summary;
+}
+
+function withResolution<T extends MaskAssetSummary | ProceduralMaskSummary>(
+  summary: Omit<T, "width" | "height">,
+  resolution: { width: number; height: number } | undefined
+): T {
+  return (
+    resolution === undefined
+      ? summary
+      : {
+          ...summary,
+          width: resolution.width,
+          height: resolution.height
+        }
+  ) as T;
 }
 
 function countTypes(items: readonly unknown[]): Record<string, number> {
@@ -932,12 +1052,31 @@ function writeInspection(summary: InspectSummary): void {
   writeStdout(`Props: ${summary.props.count}\n`);
   writeStdout(`Assets: ${summary.assets.count}${formatTypeCounts(summary.assets.types)}\n`);
   writeStdout(`Layers: ${summary.layers.count}${formatTypeCounts(summary.layers.types)}\n`);
+  writeStdout(
+    `Masks: ${summary.masks.count} (shape: ${summary.masks.shapeCount}, asset: ${summary.masks.assetMasks.length}, procedural: ${summary.masks.proceduralMasks.length}, inverted: ${summary.masks.invertedCount})\n`
+  );
+  for (const mask of summary.masks.assetMasks) {
+    writeStdout(`  - asset ${mask.asset} on ${mask.layerId}, ${mask.mode}${formatResolution(mask.width, mask.height)}\n`);
+  }
+  for (const mask of summary.masks.proceduralMasks) {
+    writeStdout(`  - procedural ${mask.type} on ${mask.layerId}, seed ${mask.seed}${formatResolution(mask.width, mask.height)}\n`);
+  }
+  writeStdout(`Tracks: ${summary.tracks.count} (${summary.tracks.clipCount} clips, ${summary.tracks.transitionWindows.length} transition windows)\n`);
+  for (const window of summary.tracks.transitionWindows) {
+    writeStdout(
+      `  - ${window.trackId}: ${window.previousClipId} -> ${window.nextClipId}, ${window.transitionType}, frames ${window.startFrame}-${window.endFrame - 1}\n`
+    );
+  }
   writeStdout(`Audio: ${summary.audio.count}\n`);
   writeStdout(`Exports: ${summary.exports.count}\n`);
 
   for (const exportName of summary.exports.names) {
     writeStdout(`  - ${exportName}\n`);
   }
+}
+
+function formatResolution(width: number | undefined, height: number | undefined): string {
+  return width === undefined || height === undefined ? "" : `, ${width}x${height}`;
 }
 
 function writeSocialMediaPresets(presets: readonly SocialMediaPresetDefinition[]): void {

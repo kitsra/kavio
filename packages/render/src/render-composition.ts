@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { applyExportPreset, collectResourceLimitViolations, resolveTemplateProps } from "@kavio/core";
+import { applyExportPreset, collectCompositionResourceLimitInputs, collectResourceLimitViolations, resolveTemplateProps } from "@kavio/core";
 import {
   extensionForFormat,
   validateComposition,
@@ -72,13 +72,7 @@ export async function renderComposition(
     return { ok: false, errors: validation.errors };
   }
 
-  const violations = collectResourceLimitViolations({
-    frames: view.composition.durationFrames,
-    width: view.composition.width,
-    height: view.composition.height,
-    layerCount: view.layers.length,
-    assetCount: Object.keys(view.assets).length
-  });
+  const violations = collectResourceLimitViolations(collectCompositionResourceLimitInputs(view));
   if (violations.length > 0) {
     return { ok: false, errors: violations };
   }

@@ -56,6 +56,9 @@ Top-level exports:
 - `validate(input)`
 - `keyframes(frames)`
 - `easing`
+- `timing`
+- `transition`, `camera`, `cinematic`, `textMotion`, `effect`
+- `presetNamespaces`
 
 Asset helpers:
 

@@ -6,12 +6,33 @@
     <title>Kavio Template Authoring</title>
     <meta
       name="description"
-      content="Author Kavio templates with props, assets, layers, exports, animation, and the TypeScript builder SDK."
+      content="Author Kavio templates with props, assets, layers, exports, native transitions, transition series, masks, text motion, and the TypeScript builder SDK."
     />
     <meta property="og:title" content="Kavio Template Authoring" />
     <meta property="og:type" content="article" />
     <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "TechArticle",
+        "headline": "Kavio Template Authoring",
+        "description": "Author Kavio templates with props, assets, layers, exports, native transitions, transition series, masks, text motion, and the TypeScript builder SDK.",
+        "url": "https://kitsra.github.io/Kavio/site/docs/authoring.html",
+        "about": "Kavio JSON template authoring and builder SDK authoring",
+        "programmingLanguage": "TypeScript",
+        "isPartOf": {
+          "@type": "SoftwareSourceCode",
+          "name": "Kavio",
+          "codeRepository": "https://github.com/kitsra/kavio"
+        },
+        "hasPart": [
+          { "@type": "TechArticle", "name": "Template Format Reference", "url": "https://kitsra.github.io/Kavio/site/docs/authoring.html#template-format" },
+          { "@type": "TechArticle", "name": "Props, Assets, Layers, And Exports", "url": "https://kitsra.github.io/Kavio/site/docs/authoring.html#template-fields" },
+          { "@type": "TechArticle", "name": "Motion, Masks, Tracks, And Audio", "url": "https://kitsra.github.io/Kavio/site/docs/authoring.html#motion-fields" }
+        ]
+      }
+    </script>
   </head>
   <body>
     <header class="site-header page-header" aria-label="Primary">
@@ -24,7 +45,7 @@
         <a href="../docs.html" aria-current="page">Docs</a>
         <a href="../examples.html">Examples</a>
         <a href="../packages.html">Packages</a>
-        <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+        <a href="https://github.com/kitsra/kavio">GitHub</a>
       </nav>
     </header>
 
@@ -34,7 +55,8 @@
         <h1>Author reusable video templates.</h1>
         <p>
           Kavio templates can be written directly as JSON or emitted through the
-          TypeScript builder SDK. Both paths produce canonical composition data.
+          TypeScript builder SDK. Both paths produce canonical composition data
+          with deterministic motion.
         </p>
       </section>
 
@@ -46,6 +68,7 @@
           <li>Use named assets so layer definitions stay stable and reusable.</li>
           <li>Give layers clear ids that survive debugging, preview, and export overrides.</li>
           <li>Define export presets for the aspect ratios and codecs you intend to support.</li>
+          <li>Use native transitions, timing objects, masks, text motion, and transition tracks as data.</li>
           <li>Keep generated outputs out of version control unless they are intentional fixtures.</li>
         </ul>
       </section>
@@ -79,20 +102,201 @@ composition
   .exports(exportPreset.reels());</code></pre>
       </section>
 
+      <section class="content-section" id="template-format">
+        <h2>Template Format Reference</h2>
+        <p>
+          A Kavio template is a versioned JSON document. Raw JSON and builder
+          output use the same top-level fields, so templates can move between
+          command line validation, browser preview, MCP tools, and render jobs.
+        </p>
+        <div class="reference-table-wrap">
+          <table class="reference-table">
+            <thead>
+              <tr><th>Field</th><th>Required</th><th>Shape</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>version</code></td><td>yes</td><td><code>"0.1"</code></td><td>Composition schema version.</td></tr>
+              <tr><td><code>metadata</code></td><td>no</td><td><code>{ title, author, tags, createdAt }</code></td><td>Human and indexing metadata for a template.</td></tr>
+              <tr><td><code>composition</code></td><td>yes</td><td><code>{ width, height, fps, durationFrames, background, colorSpace }</code></td><td>Canvas timing and base visual settings.</td></tr>
+              <tr><td><code>props</code></td><td>no</td><td>Map of prop definitions.</td><td>Batch/editor inputs such as headline, color, logo URL, or media URL.</td></tr>
+              <tr><td><code>assets</code></td><td>yes</td><td>Map of video, image, audio, and font assets.</td><td>Reusable external media references.</td></tr>
+              <tr><td><code>layers</code></td><td>yes</td><td>Array of video, image, text, shape, and caption layers.</td><td>Timeline visuals rendered in z order.</td></tr>
+              <tr><td><code>tracks</code></td><td>no</td><td>Array of transition tracks.</td><td>Clip-to-clip transition series that preserve ordinary layers.</td></tr>
+              <tr><td><code>audio</code></td><td>no</td><td>Array of audio tracks.</td><td>Music, voiceover, source audio, and sound effects.</td></tr>
+              <tr><td><code>exports</code></td><td>yes</td><td>Array of export presets.</td><td>Named output targets such as reels, square, portrait, and landscape.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <pre><code>{
+  "version": "0.1",
+  "metadata": { "title": "Launch Reel", "tags": ["template", "social"] },
+  "composition": { "width": 1080, "height": 1920, "fps": 30, "durationFrames": 240 },
+  "props": {
+    "headline": { "type": "string", "required": true, "maxLength": 80 },
+    "brandColor": { "type": "color", "default": "#db614d" }
+  },
+  "assets": {
+    "hero": { "type": "image", "src": "{{heroUrl}}" }
+  },
+  "layers": [],
+  "audio": [],
+  "exports": [{ "name": "reels", "format": "mp4", "width": 1080, "height": 1920 }]
+}</code></pre>
+      </section>
+
+      <section class="content-section" id="template-fields">
+        <h2>Props, Assets, Layers, And Exports</h2>
+        <p>
+          These fields are the authoring vocabulary most templates use. Values
+          may be literals or prop interpolations such as <code>{{headline}}</code>.
+        </p>
+        <div class="reference-table-wrap">
+          <table class="reference-table">
+            <thead>
+              <tr><th>Area</th><th>Fields</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Prop definition</td>
+                <td><code>type</code>, <code>required</code>, <code>default</code>, <code>maxLength</code>, <code>min</code>, <code>max</code>, <code>options</code>, <code>description</code></td>
+                <td>Prop types are <code>string</code>, <code>number</code>, <code>boolean</code>, <code>color</code>, <code>url</code>, <code>enum</code>, and <code>asset</code>.</td>
+              </tr>
+              <tr>
+                <td>Asset definition</td>
+                <td><code>type</code>, <code>src</code>, <code>checksum</code>, <code>trimStartFrames</code>, <code>trimEndFrames</code>, <code>loop</code>, <code>family</code>, <code>weight</code>, <code>style</code></td>
+                <td>Asset types are <code>video</code>, <code>image</code>, <code>audio</code>, and <code>font</code>. Font assets require <code>family</code>.</td>
+              </tr>
+              <tr>
+                <td>Common layer fields</td>
+                <td><code>id</code>, <code>type</code>, <code>startFrame</code>, <code>durationFrames</code>, <code>position</code>, <code>anchor</code>, <code>size</code>, <code>opacity</code>, <code>rotation</code>, <code>scale</code>, <code>z</code>, <code>track</code>, <code>keyframes</code>, <code>effects</code>, <code>mask</code>, <code>transitionIn</code>, <code>transitionOut</code></td>
+                <td>Common fields apply to video, image, text, shape, and caption layers.</td>
+              </tr>
+              <tr>
+                <td>Video layer</td>
+                <td><code>asset</code>, <code>fit</code>, <code>crop</code>, <code>muted</code>, <code>volume</code>, <code>playbackRate</code></td>
+                <td><code>fit</code> accepts <code>cover</code>, <code>contain</code>, <code>fill</code>, or <code>none</code>. Crop can be centered or subject-aware.</td>
+              </tr>
+              <tr>
+                <td>Image layer</td>
+                <td><code>asset</code>, <code>fit</code></td>
+                <td>Use image layers for logos, screenshots, product images, and generated stills.</td>
+              </tr>
+              <tr>
+                <td>Text layer</td>
+                <td><code>text</code>, <code>style</code>, <code>textMotion</code></td>
+                <td>Style supports font family, size, weight, style, color, align, line height, letter spacing, max lines, wrap, background, padding, stroke, and shadow.</td>
+              </tr>
+              <tr>
+                <td>Shape layer</td>
+                <td><code>shape</code>, <code>fill</code>, <code>stroke</code>, <code>radius</code></td>
+                <td>The current built-in shape is <code>rect</code>.</td>
+              </tr>
+              <tr>
+                <td>Caption layer</td>
+                <td><code>source</code>, <code>style</code>, <code>safeArea</code></td>
+                <td>Caption source can be inline cues, VTT, SRT, or an asset reference. Highlight modes are <code>none</code>, <code>word</code>, and <code>line</code>.</td>
+              </tr>
+              <tr>
+                <td>Export preset</td>
+                <td><code>name</code>, <code>format</code>, <code>codec</code>, <code>width</code>, <code>height</code>, <code>fps</code>, <code>bitrate</code>, <code>crf</code>, <code>audioCodec</code>, <code>audioBitrate</code>, <code>loudnessLufs</code>, <code>background</code>, <code>layerOverrides</code></td>
+                <td>Export formats include <code>mp4</code>, <code>webm</code>, <code>mov</code>, <code>gif</code>, and <code>png-sequence</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="content-section" id="motion-fields">
+        <h2>Motion, Masks, Tracks, And Audio</h2>
+        <p>
+          Kavio motion is data, so builders, editors, and AI tools can all emit
+          the same fields without depending on a particular runtime component.
+        </p>
+        <div class="reference-table-wrap">
+          <table class="reference-table">
+            <thead>
+              <tr><th>Feature</th><th>Fields</th><th>Values</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Keyframes</td>
+                <td><code>opacity</code>, <code>x</code>, <code>y</code>, <code>scale</code>, <code>rotation</code></td>
+                <td>Each keyframe uses <code>frame</code>, <code>value</code>, optional <code>easing</code>, and optional <code>timing</code>.</td>
+              </tr>
+              <tr>
+                <td>Timing</td>
+                <td><code>type</code>, <code>durationFrames</code>, <code>easing</code>, <code>stiffness</code>, <code>damping</code>, <code>mass</code>, <code>restSpeed</code>, <code>bounce</code>, <code>steps</code>, <code>direction</code>, <code>segments</code>, <code>childCount</code>, <code>eachFrames</code>, <code>childIndex</code>, <code>from</code></td>
+                <td>Timing types are <code>tween</code>, <code>spring</code>, <code>steps</code>, <code>sequence</code>, and <code>stagger</code>.</td>
+              </tr>
+              <tr>
+                <td>Transition</td>
+                <td><code>type</code>, <code>durationFrames</code>, <code>direction</code>, <code>axis</code>, <code>shape</code>, <code>color</code>, <code>amount</code>, <code>intensity</code>, <code>rows</code>, <code>columns</code>, <code>easing</code>, <code>timing</code></td>
+                <td>Transition types include fade, slide, wipe, crossfade, zoom, push, spin, rotate, flip, blur dissolve, color dissolve, dip, iris, stretch, squeeze, clock wipe, bar wipe, grid wipe, tile reveal, radial blur, zoom blur, book flip, page curl, skew slide, expand mask, letterbox reveal, film flash, and camera whip.</td>
+              </tr>
+              <tr>
+                <td>Text motion</td>
+                <td><code>type</code>, <code>split</code>, <code>durationFrames</code>, <code>easing</code>, <code>staggerFrames</code>, <code>origin</code>, <code>seed</code>, <code>preserveLayout</code>, <code>restingBox</code>, <code>direction</code>, <code>amount</code>, <code>intensity</code>, <code>color</code></td>
+                <td>Text motion types are <code>typeOn</code>, <code>cascade</code>, <code>scramble</code>, <code>highlightSweep</code>, and <code>trackingIn</code>. Split modes are <code>none</code>, <code>word</code>, <code>char</code>, and <code>line</code>.</td>
+              </tr>
+              <tr>
+                <td>Mask</td>
+                <td><code>source</code>, <code>opacity</code>, <code>invert</code></td>
+                <td>Mask sources can be shape masks, asset alpha masks, or procedural masks such as linear gradient, radial gradient, and scanlines.</td>
+              </tr>
+              <tr>
+                <td>Track clip</td>
+                <td><code>id</code>, <code>layerId</code>, <code>startFrame</code>, <code>durationFrames</code>, <code>transitionFromPrevious</code></td>
+                <td>Transition tracks describe how ordinary layers overlap and transition between each other.</td>
+              </tr>
+              <tr>
+                <td>Audio track</td>
+                <td><code>id</code>, <code>asset</code>, <code>role</code>, <code>startFrame</code>, <code>durationFrames</code>, <code>offsetFrames</code>, <code>volume</code>, <code>fadeInFrames</code>, <code>fadeOutFrames</code>, <code>loop</code>, <code>duck</code></td>
+                <td>Audio roles are <code>music</code>, <code>voiceover</code>, <code>sfx</code>, and <code>source</code>. Ducking targets another role with amountDb, attackFrames, and releaseFrames.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <section class="content-section">
-        <h2>Animation</h2>
+        <h2>Motion</h2>
         <p>
           Kavio supports timeline-safe motion through frame-based timing,
-          keyframes, easing, captions, and layout-aware layer fields. Prefer
-          animation that remains valid across export aspect ratios.
+          keyframes, native transitions, transition series, masks, text motion,
+          captions, and layout-aware layer fields. Prefer animation that remains
+          valid across export aspect ratios.
         </p>
+        <pre><code>import { cinematic, text, textMotion, track, trackClip, transition } from "@kavio/builder";
+
+text("hook", {
+  text: "Launch in motion",
+  startFrame: 24,
+  durationFrames: 72,
+  ...textMotion.scramble({ split: "char", seed: 42 })
+}).enter(transition.cameraWhip({ direction: "left", durationFrames: 8 }));
+
+track("main", [
+  trackClip("outgoing", { layerId: "scene-a", startFrame: 0, durationFrames: 60 }),
+  trackClip("incoming", {
+    layerId: "scene-b",
+    startFrame: 48,
+    durationFrames: 60,
+    transitionFromPrevious: transition.push({
+      direction: "left",
+      durationFrames: 12,
+      easing: "outCubic"
+    })
+  })
+]);
+
+cinematic.glitchCut({ durationFrames: 8 });</code></pre>
       </section>
     </main>
 
     <footer class="footer">
       <a href="../docs.html">Docs</a>
       <a href="../examples.html">Examples</a>
-      <a href="https://github.com/Kitsra/Kavio">GitHub</a>
+      <a href="https://github.com/kitsra/kavio">GitHub</a>
     </footer>
   </body>
 </html>

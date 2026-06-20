@@ -49,6 +49,12 @@
             "easing": "bounce"
           }
         ]
+      },
+      "mask": {
+        "source": {
+          "kind": "procedural",
+          "type": "noise"
+        }
       }
     },
     {
@@ -57,6 +63,11 @@
       "text": "{{missingProp}}",
       "startFrame": 0,
       "durationFrames": 30,
+      "transitionIn": {
+        "type": "slide",
+        "direction": "diagonal",
+        "easing": "bounce"
+      },
       "style": {
         "fontSize": "{{headline}}"
       }

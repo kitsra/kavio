@@ -2,7 +2,7 @@
   "name": "@kavio/core",
   "version": "0.0.0",
   "description": "Pure timeline evaluation primitives for Kavio compositions.",
-  "license": "Apache-2.0",
+  "license": "Elastic-2.0",
   "type": "module",
   "sideEffects": false,
   "publishConfig": {
