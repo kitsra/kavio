@@ -1,3 +1,9 @@
 packages:
   - "packages/*"
   - "examples/*"
+allowBuilds:
+  ffmpeg-static: true
+engineStrict: true
+minimumReleaseAge: 4320
+strictPeerDependencies: true
+verifyDepsBeforeRun: false
