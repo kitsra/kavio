@@ -22,7 +22,7 @@ for (const name of Object.keys(optionalDependencies)) {
 if (missing.length > 0) {
   console.error(
     [
-      `@kavio/render requires its optional packages to be installed before packing: ${missing.join(", ")}`,
+      `@kitsra/kavio-render requires its optional packages to be installed before packing: ${missing.join(", ")}`,
       "Install dependencies with optional packages enabled:",
       "  corepack pnpm install --frozen-lockfile",
       "",
@@ -33,5 +33,5 @@ if (missing.length > 0) {
 }
 
 console.log(
-  `@kavio/render optional packages installed: ${Object.keys(optionalDependencies).join(", ")}`
+  `@kitsra/kavio-render optional packages installed: ${Object.keys(optionalDependencies).join(", ")}`
 );

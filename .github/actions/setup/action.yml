@@ -1,0 +1,44 @@
+name: Setup workspace
+description: Set up Node + Corepack/pnpm and verify the pnpm age-gate support.
+
+inputs:
+  node-version:
+    description: Node.js version to install.
+    required: false
+    default: "22"
+  registry-url:
+    description: Optional npm registry URL to configure for publishing.
+    required: false
+    default: ""
+  scope:
+    description: Optional npm scope to bind to the registry.
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        registry-url: ${{ inputs.registry-url }}
+        scope: ${{ inputs.scope }}
+
+    - name: Enable Corepack
+      shell: bash
+      run: corepack enable
+
+    - name: Verify pnpm age-gate support
+      shell: bash
+      run: |
+        PNPM_VERSION="$(corepack pnpm --version)"
+        export PNPM_VERSION
+        echo "Using pnpm ${PNPM_VERSION}"
+        node --input-type=module <<'NODE'
+        const version = process.env.PNPM_VERSION?.split("-")[0] ?? "";
+        const [major = 0, minor = 0] = version.split(".").map(Number);
+        if (major < 10 || (major === 10 && minor < 16)) {
+          throw new Error(`pnpm ${process.env.PNPM_VERSION} does not support the configured age gate`);
+        }
+        NODE

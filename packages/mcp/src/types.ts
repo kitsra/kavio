@@ -1,4 +1,4 @@
-import type { KavioError } from "@kavio/schema";
+import type { KavioError } from "@kitsra/kavio-schema";
 
 export type JsonSchema = Record<string, unknown>;
 

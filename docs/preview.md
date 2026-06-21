@@ -1,7 +1,7 @@
 # Browser Preview
 
 Kavio preview is browser-based. It loads a valid composition, evaluates the
-timeline with `@kavio/core`, and renders visible layers into a DOM stage.
+timeline with `@kitsra/kavio-core`, and renders visible layers into a DOM stage.
 
 ## Start A Preview
 
@@ -39,10 +39,10 @@ The current preview UI supports:
 
 ## Runtime API
 
-`@kavio/browser-renderer` exposes a DOM runtime for app integrations.
+`@kitsra/kavio-browser-renderer` exposes a DOM runtime for app integrations.
 
 ```ts
-import { installBrowserRendererRuntime } from "@kavio/browser-renderer";
+import { installBrowserRendererRuntime } from "@kitsra/kavio-browser-renderer";
 
 const runtime = installBrowserRendererRuntime({
   document,
@@ -59,7 +59,7 @@ The runtime is also installed on `window.__kavio` when
 ## Programmatic Preview Controller
 
 ```ts
-import { createBrowserPreviewController } from "@kavio/browser-renderer";
+import { createBrowserPreviewController } from "@kitsra/kavio-browser-renderer";
 
 const controller = createBrowserPreviewController({
   root: document.getElementById("preview-root")!,

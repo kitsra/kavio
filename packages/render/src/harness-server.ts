@@ -1,8 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
-import { getCanvasDimensions } from "@kavio/core";
-import { createRenderHarnessHtml } from "@kavio/browser-renderer";
-import type { KavioAssetDefinition, KavioDocument } from "@kavio/schema";
+import { getCanvasDimensions } from "@kitsra/kavio-core";
+import { createRenderHarnessHtml } from "@kitsra/kavio-browser-renderer";
+import type { KavioAssetDefinition, KavioDocument } from "@kitsra/kavio-schema";
 
 export interface RenderHarnessServer {
   url: string;
@@ -16,7 +16,7 @@ export interface CreateRenderHarnessServerOptions {
 /**
  * Tiny localhost static server that feeds the headless render harness page to
  * Chromium: the shared harness HTML, `/composition.json`, and the vendored
- * `@kavio/core` and `@kavio/browser-renderer` ESM bundles.
+ * `@kitsra/kavio-core` and `@kitsra/kavio-browser-renderer` ESM bundles.
  */
 export async function createRenderHarnessServer(
   options: CreateRenderHarnessServerOptions

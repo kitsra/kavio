@@ -1,6 +1,6 @@
 # CLI Reference
 
-The Kavio CLI lives in `@kavio/cli`. In this repository, run it from the built
+The Kavio CLI lives in `@kitsra/kavio-cli`. In this repository, run it from the built
 workspace:
 
 ```bash

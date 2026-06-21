@@ -1,6 +1,6 @@
-import { asset, caption, clip, exportPreset, image, keyframes, prop, shape, text, validate, video } from "@kavio/builder";
-import { expandRenderBatch } from "@kavio/render-worker";
-import type { RenderBatchInput, RenderBatchJob, RenderBatchRow } from "@kavio/render-worker";
+import { asset, caption, clip, exportPreset, image, keyframes, prop, shape, text, validate, video } from "@kitsra/kavio-builder";
+import { expandRenderBatch } from "@kitsra/kavio-render-worker";
+import type { RenderBatchInput, RenderBatchJob, RenderBatchRow } from "@kitsra/kavio-render-worker";
 
 const durationFrames = 300;
 
@@ -435,7 +435,7 @@ export function validateFixture(): void {
 export function summarizeExpandedJobs(jobs: readonly RenderBatchJob[] = expandedJobs): unknown {
   return {
     renderImplemented: "shared-render-pipeline",
-    note: "Use the render script to create local MP4 outputs through @kavio/render.",
+    note: "Use the render script to create local MP4 outputs through @kitsra/kavio-render.",
     totalJobs: jobs.length,
     outputs: jobs.map((job) => ({
       id: job.id,

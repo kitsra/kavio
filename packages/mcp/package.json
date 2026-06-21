@@ -1,5 +1,5 @@
 {
-  "name": "@kavio/mcp",
+  "name": "@kitsra/kavio-mcp",
   "version": "0.0.0",
   "description": "Model Context Protocol server and provider tool adapters for Kavio.",
   "license": "Elastic-2.0",
@@ -9,11 +9,11 @@
   },
   "bin": { "kavio-mcp": "./dist/bin.js" },
   "dependencies": {
-    "@kavio/builder": "workspace:*",
-    "@kavio/core": "workspace:*",
-    "@kavio/render": "workspace:*",
-    "@kavio/render-worker": "workspace:*",
-    "@kavio/schema": "workspace:*",
+    "@kitsra/kavio-builder": "workspace:*",
+    "@kitsra/kavio-core": "workspace:*",
+    "@kitsra/kavio-render": "workspace:*",
+    "@kitsra/kavio-render-worker": "workspace:*",
+    "@kitsra/kavio-schema": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.25.0"
   },
   "devDependencies": {

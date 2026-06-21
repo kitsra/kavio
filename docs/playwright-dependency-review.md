@@ -1,14 +1,14 @@
 # Playwright Dependency Review
 
 This review records the browser automation dependency decision. It began as a
-pre-install review for `@kavio/render-worker`; the concrete Playwright
-implementation now lives in `@kavio/render`.
+pre-install review for `@kitsra/kavio-render-worker`; the concrete Playwright
+implementation now lives in `@kitsra/kavio-render`.
 
 ## Decision
 
 - Package: `playwright`
-- Intended consumer: `PlaywrightDriver` implementation in `@kavio/render`
-- Install status: installed as an optional dependency of `@kavio/render`
+- Intended consumer: `PlaywrightDriver` implementation in `@kitsra/kavio-render`
+- Install status: installed as an optional dependency of `@kitsra/kavio-render`
 - Version policy: newest stable version allowed by the repository's configured
   pnpm package-age gate
 
@@ -22,7 +22,7 @@ other non-age-gated clients to add or resolve Playwright.
 If Playwright needs to be upgraded, use a reviewed command such as:
 
 ```sh
-corepack pnpm add --filter @kavio/render playwright
+corepack pnpm add --filter @kitsra/kavio-render playwright
 ```
 
 Do not relax `.npmrc`, switch registries, pin an unreviewed tarball URL, or run
@@ -45,7 +45,7 @@ explicit browser-binary workflow; keep recording:
 
 ## Runtime Contract
 
-The `@kavio/render-worker` public API defines the driver contract and
+The `@kitsra/kavio-render-worker` public API defines the driver contract and
 deterministic launch metadata. The Playwright-backed driver must:
 
 - open a `KavioDocument`
@@ -56,4 +56,4 @@ deterministic launch metadata. The Playwright-backed driver must:
 - omit the screenshot background for transparent overlay frames
 - record the Chromium revision in render metadata
 
-Playwright imports should remain quarantined in `@kavio/render`.
+Playwright imports should remain quarantined in `@kitsra/kavio-render`.

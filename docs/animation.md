@@ -147,7 +147,7 @@ the timing duration defines the transition window.
 The TypeScript builder exposes the same presets:
 
 ```ts
-import { text, transition } from "@kavio/builder";
+import { text, transition } from "@kitsra/kavio-builder";
 
 text("headline", {
   text: "Launch day",
@@ -188,7 +188,7 @@ properties such as `scale`, `x`, `y`, and `rotation`. They work on static image
 layers without changing the layer type:
 
 ```ts
-import { camera, image } from "@kavio/builder";
+import { camera, image } from "@kitsra/kavio-builder";
 
 image("hero-still", {
   asset: heroStill,
@@ -229,7 +229,7 @@ transitions and numeric keyframes, so generated compositions remain portable and
 inspectable:
 
 ```ts
-import { asset, cinematic, image, video } from "@kavio/builder";
+import { asset, cinematic, image, video } from "@kitsra/kavio-builder";
 
 const hero = asset.image("hero", "{{heroUrl}}");
 
@@ -293,7 +293,7 @@ recipe is clearer. Cinematic presets still compile to native Kavio JSON.
 
 ## Text Motion Helpers
 
-`@kavio/builder` includes a `textMotion` namespace for whole text layer
+`@kitsra/kavio-builder` includes a `textMotion` namespace for whole text layer
 entrances and safe split-based text fragments:
 
 - `textMotion.rise({ durationFrames, easing, direction })` emits a native
@@ -466,7 +466,7 @@ The MVP demo uses the shared Kavio render pipeline and shows:
 Run:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run render
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run render
 ```
 
 The demo is useful for visual inspection, but real template animation should be

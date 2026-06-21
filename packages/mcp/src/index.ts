@@ -1,4 +1,4 @@
-export const KAVIO_MCP_PACKAGE = "@kavio/mcp";
+export const KAVIO_MCP_PACKAGE = "@kitsra/kavio-mcp";
 
 export { createCatalog, type CreateCatalogOptions } from "./catalog.js";
 export type {

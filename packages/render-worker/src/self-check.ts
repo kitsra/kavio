@@ -16,7 +16,7 @@ import {
   withRenderCleanup
 } from "./index.js";
 import type { BrowserDriver, BrowserFrameCapture, BrowserFrameCaptureOptions, BrowserOpenOptions } from "./index.js";
-import type { KavioDocument, KavioExportPreset } from "@kavio/schema";
+import type { KavioDocument, KavioExportPreset } from "@kitsra/kavio-schema";
 
 const squarePreset: KavioExportPreset = {
   name: "Square HD",

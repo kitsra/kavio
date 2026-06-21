@@ -10,7 +10,7 @@ import type {
   KavioVideoAsset,
   KavioVideoCrop,
   KavioVideoLayer
-} from "@kavio/schema";
+} from "@kitsra/kavio-schema";
 
 export type FfmpegPlanStepKind = "input" | "filter" | "map" | "output" | "argument";
 

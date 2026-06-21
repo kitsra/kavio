@@ -19,12 +19,12 @@ captures browser-rendered frames, and encodes MP4 files with FFmpeg.
 Useful commands:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run build
-corepack pnpm --filter @kavio/example-mvp-demo run emit
-corepack pnpm --filter @kavio/example-mvp-demo run emit:batch
-corepack pnpm --filter @kavio/example-mvp-demo run emit:expanded
-corepack pnpm --filter @kavio/example-mvp-demo run validate
-corepack pnpm --filter @kavio/example-mvp-demo run render
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run build
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run emit
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run emit:batch
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run emit:expanded
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run validate
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run render
 ```
 
 `render` writes all 15 outputs to `examples/mvp-demo/renders/mvp-demo`.

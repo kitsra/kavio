@@ -12,5 +12,5 @@ JSON so it can run in Node without Playwright, Chromium, or external assets.
 Regenerate the snapshot after intentional fixture or renderer-output changes:
 
 ```sh
-corepack pnpm --filter @kavio/browser-renderer test -- --update-visual-fixtures
+corepack pnpm --filter @kitsra/kavio-browser-renderer test -- --update-visual-fixtures
 ```

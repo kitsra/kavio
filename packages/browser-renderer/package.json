@@ -1,5 +1,5 @@
 {
-  "name": "@kavio/browser-renderer",
+  "name": "@kitsra/kavio-browser-renderer",
   "version": "0.0.0",
   "description": "Browser runtime for previewing and rendering Kavio frames.",
   "license": "Elastic-2.0",
@@ -9,8 +9,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@kavio/core": "workspace:*",
-    "@kavio/schema": "workspace:*"
+    "@kitsra/kavio-core": "workspace:*",
+    "@kitsra/kavio-schema": "workspace:*"
   },
   "exports": {
     ".": {

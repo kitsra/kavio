@@ -2,9 +2,6 @@ name: CI
 
 on:
   pull_request:
-  push:
-    branches:
-      - main
 
 permissions:
   contents: read
@@ -22,27 +19,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          fetch-depth: 0
 
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Verify pnpm age-gate support
-        run: |
-          PNPM_VERSION="$(corepack pnpm --version)"
-          export PNPM_VERSION
-          echo "Using pnpm ${PNPM_VERSION}"
-          node --input-type=module <<'NODE'
-          const version = process.env.PNPM_VERSION?.split("-")[0] ?? "";
-          const [major = 0, minor = 0] = version.split(".").map(Number);
-          if (major < 10 || (major === 10 && minor < 16)) {
-            throw new Error(`pnpm ${process.env.PNPM_VERSION} does not support the configured age gate`);
-          }
-          NODE
+      - name: Setup workspace
+        uses: ./.github/actions/setup
 
       - name: Install dependencies
         run: corepack pnpm install --frozen-lockfile --ignore-scripts
@@ -55,3 +36,6 @@ jobs:
 
       - name: Package dry run
         run: corepack pnpm run pack:dry
+
+      - name: Changeset status
+        run: corepack pnpm exec changeset status --since=origin/${{ github.base_ref }}

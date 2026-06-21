@@ -5,8 +5,8 @@ import type {
   KavioExportFormat,
   KavioExportPreset,
   KavioJsonValue
-} from "@kavio/schema";
-import { extensionForFormat } from "@kavio/schema";
+} from "@kitsra/kavio-schema";
+import { extensionForFormat } from "@kitsra/kavio-schema";
 
 export type BrowserDriverKind = "playwright" | "puppeteer" | "cloud-browser";
 export type BrowserEngine = "chromium";

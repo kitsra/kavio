@@ -74,8 +74,8 @@ Stop the server with `Ctrl+C`.
 The builder example emits the same JSON as the raw JSON fixture:
 
 ```bash
-corepack pnpm --filter @kavio/example-basic-builder run build
-corepack pnpm --filter @kavio/example-basic-builder run emit
+corepack pnpm --filter @kitsra/kavio-example-basic-builder run build
+corepack pnpm --filter @kitsra/kavio-example-basic-builder run emit
 ```
 
 See [builder.md](builder.md) for SDK usage.
@@ -86,15 +86,15 @@ The MVP demo creates one template, five prop rows, and three export presets,
 which expand to 15 render jobs.
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run build
-corepack pnpm --filter @kavio/example-mvp-demo run validate
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run build
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run validate
 ```
 
 This validates the expanded jobs. To create local demo MP4s through the shared
 render pipeline:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run render
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run render
 ```
 
 Local rendering requires the optional Playwright Chromium browser and FFmpeg

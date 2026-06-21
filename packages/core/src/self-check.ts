@@ -23,7 +23,7 @@ import {
   timingDurationFrames
 } from "./index.js";
 import type { CaptionTimelineLayer, TimelineLayer } from "./index.js";
-import type { KavioDocument } from "@kavio/schema";
+import type { KavioDocument } from "@kitsra/kavio-schema";
 
 const dimensions = { width: 1000, height: 500 };
 const layer: TimelineLayer = {

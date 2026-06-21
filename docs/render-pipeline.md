@@ -1,7 +1,7 @@
 # Render Pipeline Guide
 
 Kavio now has an end-to-end local render path for opaque video outputs. The
-general `kavio render` command delegates to `@kavio/render`, which captures
+general `kavio render` command delegates to `@kitsra/kavio-render`, which captures
 browser-rendered overlay frames with Playwright, composes media with FFmpeg, and
 returns structured output and metadata.
 
@@ -45,7 +45,7 @@ The render pipeline works like this:
 
 ## Why FFmpeg Planning Is Separate
 
-`@kavio/ffmpeg` builds inspectable plans before anything is executed. This makes
+`@kitsra/kavio-ffmpeg` builds inspectable plans before anything is executed. This makes
 rendering safer to test and debug:
 
 - Inputs are explicit.
@@ -63,7 +63,7 @@ render.
 Commands:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run render
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run render
 ```
 
 Outputs:
@@ -72,7 +72,7 @@ Outputs:
 
 ## Render Metadata
 
-`@kavio/render-worker` defines metadata and `@kavio/render` records it for
+`@kitsra/kavio-render-worker` defines metadata and `@kitsra/kavio-render` records it for
 successful outputs:
 
 - output name and path

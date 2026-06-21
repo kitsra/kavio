@@ -2,14 +2,14 @@ import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { applyExportPreset, collectCompositionResourceLimitInputs, collectResourceLimitViolations, resolveTemplateProps } from "@kavio/core";
+import { applyExportPreset, collectCompositionResourceLimitInputs, collectResourceLimitViolations, resolveTemplateProps } from "@kitsra/kavio-core";
 import {
   extensionForFormat,
   validateComposition,
   type KavioDocument,
   type KavioError,
   type KavioExportPreset
-} from "@kavio/schema";
+} from "@kitsra/kavio-schema";
 import {
   captureFrames,
   createRenderMetadata,
@@ -18,7 +18,7 @@ import {
   type BrowserDriver,
   type RenderChecksum,
   type RenderOutputMetadata
-} from "@kavio/render-worker";
+} from "@kitsra/kavio-render-worker";
 import { assembleRenderCommand } from "./assemble-command.js";
 import { createFfmpegRunner, type FfmpegRunner } from "./ffmpeg-runner.js";
 import { isRenderError, renderError } from "./errors.js";
@@ -26,7 +26,7 @@ import { PlaywrightDriver } from "./playwright-driver.js";
 import { withEffectiveCodecs } from "./encoding.js";
 
 export interface RenderCompositionOptions {
-  preset: string | import("@kavio/schema").KavioExportPreset;
+  preset: string | import("@kitsra/kavio-schema").KavioExportPreset;
   propValues?: Record<string, unknown>;
   outDir?: string;
   outputName?: string;

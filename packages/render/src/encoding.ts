@@ -3,7 +3,7 @@ import type {
   KavioExportCodec,
   KavioExportFormat,
   KavioExportPreset
-} from "@kavio/schema";
+} from "@kitsra/kavio-schema";
 
 export function withEffectiveCodecs(preset: KavioExportPreset): KavioExportPreset {
   return {

@@ -1,4 +1,4 @@
-import { expandRenderBatch, type BrowserDriver, type RenderBatchInput } from "@kavio/render-worker";
+import { expandRenderBatch, type BrowserDriver, type RenderBatchInput } from "@kitsra/kavio-render-worker";
 import { renderComposition, type RenderCompositionOptions, type RenderCompositionResult } from "./render-composition.js";
 import type { FfmpegRunner } from "./ffmpeg-runner.js";
 

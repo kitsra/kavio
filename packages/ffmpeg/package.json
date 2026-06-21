@@ -1,5 +1,5 @@
 {
-  "name": "@kavio/ffmpeg",
+  "name": "@kitsra/kavio-ffmpeg",
   "version": "0.0.0",
   "description": "FFmpeg planning primitives for Kavio rendering.",
   "license": "Elastic-2.0",
@@ -9,7 +9,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@kavio/schema": "workspace:*"
+    "@kitsra/kavio-schema": "workspace:*"
   },
   "exports": {
     ".": {

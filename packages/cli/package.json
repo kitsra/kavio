@@ -1,5 +1,5 @@
 {
-  "name": "@kavio/cli",
+  "name": "@kitsra/kavio-cli",
   "version": "0.0.0",
   "description": "Local CLI for Kavio validation, migration, preview, and rendering.",
   "license": "Elastic-2.0",
@@ -11,10 +11,10 @@
     "kavio": "./dist/index.js"
   },
   "dependencies": {
-    "@kavio/builder": "workspace:*",
-    "@kavio/core": "workspace:*",
-    "@kavio/render": "workspace:*",
-    "@kavio/schema": "workspace:*"
+    "@kitsra/kavio-builder": "workspace:*",
+    "@kitsra/kavio-core": "workspace:*",
+    "@kitsra/kavio-render": "workspace:*",
+    "@kitsra/kavio-schema": "workspace:*"
   },
   "exports": {
     ".": {

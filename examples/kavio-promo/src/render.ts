@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import { createFfmpegRunner, renderComposition } from "@kavio/render";
+import { createFfmpegRunner, renderComposition } from "@kitsra/kavio-render";
 import { captureWebsiteScreenshots } from "./capture-site.js";
 import { buildPromoComposition, sceneTimings } from "./composition.js";
 import { readPromoCopy, writePromoCopy } from "./copy.js";
@@ -33,7 +33,7 @@ async function main(): Promise<void> {
   }
   const ffmpegPath = (await runProcess("which", ["ffmpeg"])).stdout.trim();
 
-  process.stdout.write("Rendering source MP4 with @kavio/render...\n");
+  process.stdout.write("Rendering source MP4 with @kitsra/kavio-render...\n");
   const result = await renderComposition(composition, {
     preset: "kavio-instagram-reel-source",
     outDir: dirname(intermediateOutput.pathname),

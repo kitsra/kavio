@@ -70,7 +70,7 @@ git diff --check
 For demo-output changes, also run:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run render
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run render
 ```
 
 Then inspect all three aspect ratios.

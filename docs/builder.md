@@ -1,6 +1,6 @@
 # Builder SDK
 
-`@kavio/builder` is the TypeScript authoring layer for generating canonical
+`@kitsra/kavio-builder` is the TypeScript authoring layer for generating canonical
 Kavio JSON. It is useful when templates are easier to compose with variables,
 helpers, shared functions, or generated variants.
 
@@ -18,7 +18,7 @@ import {
   text,
   transition,
   video
-} from "@kavio/builder";
+} from "@kitsra/kavio-builder";
 
 const headline = prop("headline", {
   type: "string",
@@ -344,8 +344,8 @@ The workspace includes a builder example that emits JSON equivalent to the raw
 JSON example:
 
 ```bash
-corepack pnpm --filter @kavio/example-basic-builder run build
-corepack pnpm --filter @kavio/example-basic-builder run emit
+corepack pnpm --filter @kitsra/kavio-example-basic-builder run build
+corepack pnpm --filter @kitsra/kavio-example-basic-builder run emit
 ```
 
 The root test suite compares this output against

@@ -6,7 +6,7 @@
 
 Kavio is a JSON-first programmable video engine for automation, AI-generated
 templates, and future visual editing. It is the video-engine expansion of
-Kitsra, but the source and packages use the Kavio name and `@kavio/*` package
+Kitsra, but the source and packages use the Kavio name and `@kitsra/kavio-*` package
 scope.
 
 The core idea is that video templates should be portable data, not locked to one
@@ -40,12 +40,16 @@ node bin/kavio.js preview examples/basic-json/composition.json
 See [docs/getting-started.md](docs/getting-started.md) for a fuller walkthrough.
 
 For local linked installs, the root package exposes `kavio` and `kavio-mcp`
-bin wrappers after the workspace has been installed and built. Published npm
-usage should prefer `@kavio/cli` and `@kavio/mcp`.
+bin wrappers after the workspace has been installed and built. Installing the
+repo directly (`npm i github:kitsra/kavio`) runs the `prepare` build hook, so the
+wrappers work without a manual build step. Published npm usage should prefer
+`@kitsra/kavio-cli` and `@kitsra/kavio-mcp`.
 
-GitHub Packages publishing is available through the `Publish GitHub Packages`
-workflow. Consumers can install from `https://npm.pkg.github.com` by mapping the
-`@kavio` scope; see [docs/packages.md](docs/packages.md#github-packages).
+Releases are managed with [Changesets](https://github.com/changesets/changesets)
+and published to both **npmjs.com** (public, via the `Release` workflow) and
+**GitHub Packages** (via the `Publish GitHub Packages` workflow). See
+[docs/packages.md](docs/packages.md#release-flow) for the release flow, required
+secrets, and how consumers provision the optional render binaries.
 
 ## Documentation
 
@@ -81,32 +85,32 @@ Regenerate the vertical and landscape demo compositions from the self-promo site
 screenshots:
 
 ```bash
-corepack pnpm --filter @kavio/example-kavio-promo run capture-site
-corepack pnpm --filter @kavio/example-kavio-promo run emit-motion-demo
-corepack pnpm --filter @kavio/example-kavio-promo run emit-motion-demo:landscape
+corepack pnpm --filter @kitsra/kavio-example-kavio-promo run capture-site
+corepack pnpm --filter @kitsra/kavio-example-kavio-promo run emit-motion-demo
+corepack pnpm --filter @kitsra/kavio-example-kavio-promo run emit-motion-demo:landscape
 node packages/cli/dist/index.js render examples/kavio-promo/generated/all-motions-demo-landscape.json --export kavio-all-motions-landscape --out renders/kavio-all-motions-landscape
 ```
 
 ## Packages
 
-- `@kavio/schema`: JSON Schema, shared types, validation, and migration scaffold.
-- `@kavio/core`: pure timeline evaluation, frame math, easing, prop resolution,
+- `@kitsra/kavio-schema`: JSON Schema, shared types, validation, and migration scaffold.
+- `@kitsra/kavio-core`: pure timeline evaluation, frame math, easing, prop resolution,
   layout, captions, and resource limits.
-- `@kavio/builder`: TypeScript authoring SDK that outputs canonical Kavio JSON.
-- `@kavio/browser-renderer`: browser preview and DOM rendering runtime.
-- `@kavio/render-worker`: browser-driver contracts, frame capture helpers,
+- `@kitsra/kavio-builder`: TypeScript authoring SDK that outputs canonical Kavio JSON.
+- `@kitsra/kavio-browser-renderer`: browser preview and DOM rendering runtime.
+- `@kitsra/kavio-render-worker`: browser-driver contracts, frame capture helpers,
   batch expansion, metadata, and cleanup primitives.
-- `@kavio/ffmpeg`: inspectable FFmpeg plan construction.
-- `@kavio/render`: render execution layer (PlaywrightDriver, FFmpeg runner,
+- `@kitsra/kavio-ffmpeg`: inspectable FFmpeg plan construction.
+- `@kitsra/kavio-render`: render execution layer (PlaywrightDriver, FFmpeg runner,
   pure command assembly, single and batch rendering).
-- `@kavio/cli`: local command line for validation, inspection, migration,
+- `@kitsra/kavio-cli`: local command line for validation, inspection, migration,
   preview, and rendering.
-- `@kavio/mcp`: Model Context Protocol server plus Anthropic/OpenAI/Gemini tool
+- `@kitsra/kavio-mcp`: Model Context Protocol server plus Anthropic/OpenAI/Gemini tool
   adapters so AI agents can author, validate, plan, and render Kavio videos.
 
 ## AI Agents (MCP)
 
-`@kavio/mcp` exposes Kavio to AI agents as a Model Context Protocol server plus
+`@kitsra/kavio-mcp` exposes Kavio to AI agents as a Model Context Protocol server plus
 generated per-provider tool schemas, all from a single tool catalog.
 
 Run the server (stdio) in an MCP host:

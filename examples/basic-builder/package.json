@@ -1,5 +1,5 @@
 {
-  "name": "@kavio/example-basic-builder",
+  "name": "@kitsra/kavio-example-basic-builder",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,6 +9,6 @@
     "emit": "node dist/index.js"
   },
   "dependencies": {
-    "@kavio/builder": "workspace:*"
+    "@kitsra/kavio-builder": "workspace:*"
   }
 }

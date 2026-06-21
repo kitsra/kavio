@@ -14,7 +14,7 @@ reserved for later render paths and fail with a clear render error today.
 
 ## What Exists Now
 
-`@kavio/render-worker` includes:
+`@kitsra/kavio-render-worker` includes:
 
 - Browser-driver contracts.
 - Deterministic Chromium launch metadata and flags.
@@ -28,7 +28,7 @@ reserved for later render paths and fail with a clear render error today.
 - Cleanup primitives for browser contexts, temporary frames, temporary files,
   and custom cleanup hooks.
 
-`@kavio/ffmpeg` includes:
+`@kitsra/kavio-ffmpeg` includes:
 
 - Inspectable FFmpeg plan objects.
 - Argument rendering from plan steps.
@@ -55,19 +55,19 @@ The MVP demo can generate and validate 15 expanded render jobs:
 Run:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run build
-corepack pnpm --filter @kavio/example-mvp-demo run validate
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run build
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run validate
 ```
 
 It can also create local demo MP4s through the shared render pipeline:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run render
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run render
 ```
 
 This command prepares deterministic synthetic video/audio assets, reuses the
 Kavio brand logo, expands five rows across three export presets, and renders all
-15 MP4 outputs with `@kavio/render`.
+15 MP4 outputs with `@kitsra/kavio-render`.
 Local rendering requires the optional Playwright Chromium browser and FFmpeg
 binary to be available.
 

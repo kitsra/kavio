@@ -116,7 +116,7 @@ you need reusable helper functions, shared prop definitions, or generated
 variants.
 
 ```ts
-import { exportPreset, prop, text, video } from "@kavio/builder";
+import { exportPreset, prop, text, video } from "@kitsra/kavio-builder";
 
 const headline = prop("headline", { type: "string", required: true, maxLength: 80 });
 
@@ -145,7 +145,7 @@ For batch templates, validate the expanded render jobs, not only the base
 template. The MVP demo does this:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run validate
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run validate
 ```
 
 ## Authoring Checklist

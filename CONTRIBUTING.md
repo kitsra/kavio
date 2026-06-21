@@ -5,7 +5,7 @@ Thanks for helping build Kavio.
 ## Development Principles
 
 - Keep the canonical JSON format small, explicit, and versioned.
-- Prefer pure functions in `@kavio/core`; rendering side effects belong in
+- Prefer pure functions in `@kitsra/kavio-core`; rendering side effects belong in
   renderer packages.
 - Keep preview and export behavior aligned by sharing renderer code.
 - Add tests for schema errors, frame evaluation, and migrations as soon as each

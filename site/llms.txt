@@ -94,15 +94,15 @@ Important builder exports include `video`, `prop`, `validate`, `keyframes`,
 
 ## Packages
 
-- `@kavio/schema`: JSON Schema, shared types, validation, and migration scaffold.
-- `@kavio/core`: timeline evaluation, frame math, easing, prop resolution, layout, captions, and limits.
-- `@kavio/builder`: TypeScript authoring SDK with social export presets that outputs canonical Kavio JSON.
-- `@kavio/browser-renderer`: browser preview and DOM rendering runtime for text, video, image, shape, and captions.
-- `@kavio/render-worker`: browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.
-- `@kavio/ffmpeg`: inspectable FFmpeg plan construction.
-- `@kavio/cli`: local commands for validation, inspection, migration, preview, presets, and rendering.
-- `@kavio/render`: render execution layer for browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.
-- `@kavio/mcp`: MCP server and provider tool adapters for agent-facing Kavio workflows.
+- `@kitsra/kavio-schema`: JSON Schema, shared types, validation, and migration scaffold.
+- `@kitsra/kavio-core`: timeline evaluation, frame math, easing, prop resolution, layout, captions, and limits.
+- `@kitsra/kavio-builder`: TypeScript authoring SDK with social export presets that outputs canonical Kavio JSON.
+- `@kitsra/kavio-browser-renderer`: browser preview and DOM rendering runtime for text, video, image, shape, and captions.
+- `@kitsra/kavio-render-worker`: browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.
+- `@kitsra/kavio-ffmpeg`: inspectable FFmpeg plan construction.
+- `@kitsra/kavio-cli`: local commands for validation, inspection, migration, preview, presets, and rendering.
+- `@kitsra/kavio-render`: render execution layer for browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.
+- `@kitsra/kavio-mcp`: MCP server and provider tool adapters for agent-facing Kavio workflows.
 
 ## Examples Covered
 

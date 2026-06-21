@@ -1,0 +1,23 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.0.0/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@kitsra/kavio-schema",
+      "@kitsra/kavio-core",
+      "@kitsra/kavio-browser-renderer",
+      "@kitsra/kavio-render-worker",
+      "@kitsra/kavio-ffmpeg",
+      "@kitsra/kavio-render",
+      "@kitsra/kavio-builder",
+      "@kitsra/kavio-cli",
+      "@kitsra/kavio-mcp"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@kitsra/kavio-example-*"]
+}
