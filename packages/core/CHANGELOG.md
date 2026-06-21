@@ -1,5 +1,13 @@
 # @kitsra/kavio-core
 
+## 0.1.1
+
+### Patch Changes
+
+- 38e0355: Add package README files so npm package pages include getting-started guidance.
+- Updated dependencies [38e0355]
+  - @kitsra/kavio-schema@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
