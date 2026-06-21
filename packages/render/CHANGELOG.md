@@ -1,5 +1,15 @@
 # @kitsra/kavio-render
 
+## 0.1.3
+
+### Patch Changes
+
+- @kitsra/kavio-schema@0.1.3
+- @kitsra/kavio-core@0.1.3
+- @kitsra/kavio-browser-renderer@0.1.3
+- @kitsra/kavio-render-worker@0.1.3
+- @kitsra/kavio-ffmpeg@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
