@@ -321,7 +321,7 @@ node packages/cli/dist/index.js validate examples/basic-json/composition.json
 Or use the package API:
 
 ```ts
-import { validateComposition } from "@kavio/schema";
+import { validateComposition } from "@kitsra/kavio-schema";
 
 const result = validateComposition(document);
 if (!result.ok) {

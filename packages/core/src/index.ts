@@ -16,7 +16,7 @@ import type {
   KavioTrackClip,
   KavioTransitionSeriesDefinition,
   KavioTransition
-} from "@kavio/schema";
+} from "@kitsra/kavio-schema";
 
 export type UnitValue = number | `${number}%` | `${number}%w` | `${number}%h`;
 export type Axis = "x" | "y" | "width" | "height";

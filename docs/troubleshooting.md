@@ -14,7 +14,7 @@ corepack pnpm run build
 For one example:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run build
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run build
 ```
 
 ## Validation Fails
@@ -122,7 +122,7 @@ corepack pnpm test
 Regenerate the current sample outputs:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run render
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run render
 ```
 
 The demo template reserves separate layout zones for headline, CTA, and captions.

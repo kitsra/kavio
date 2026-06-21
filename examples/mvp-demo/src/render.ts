@@ -1,4 +1,4 @@
-import { renderBatch, type RenderBatchInput } from "@kavio/render";
+import { renderBatch, type RenderBatchInput } from "@kitsra/kavio-render";
 import { prepareDemoAssets } from "./prepare-assets.js";
 import { batchManifest, rows, template } from "./fixture.js";
 
@@ -13,7 +13,7 @@ declare const process: {
 /**
  * Render the MVP demo end-to-end via the real pipeline: generate synthetic
  * assets, point each prop row at them, then expand template x rows x presets
- * (5 x 3 = 15 MP4s) through @kavio/render.
+ * (5 x 3 = 15 MP4s) through @kitsra/kavio-render.
  */
 async function main(): Promise<number> {
   const outDir = batchManifest.outputDirectory;

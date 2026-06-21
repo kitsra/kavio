@@ -6,6 +6,8 @@ coverage/
 .cache/
 .env
 .env.*
+.env_*
+*.env
 !.env.example
 tmp/
 renders/

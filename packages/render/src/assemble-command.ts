@@ -5,15 +5,15 @@ import type {
   KavioExportPreset,
   KavioVideoAsset,
   KavioVideoLayer
-} from "@kavio/schema";
-import { extensionForFormat } from "@kavio/schema";
+} from "@kitsra/kavio-schema";
+import { extensionForFormat } from "@kitsra/kavio-schema";
 import type {
   FfmpegAudioTrackPlanOptions,
   FfmpegBaseVideoPlanOptions,
   FfmpegFilterChain,
   FfmpegPlan
-} from "@kavio/ffmpeg";
-import { buildFilterComplexArgs, planAudioMix, planBaseVideoSequence, planOverlayCompositing } from "@kavio/ffmpeg";
+} from "@kitsra/kavio-ffmpeg";
+import { buildFilterComplexArgs, planAudioMix, planBaseVideoSequence, planOverlayCompositing } from "@kitsra/kavio-ffmpeg";
 import { renderError } from "./errors.js";
 import { audioEncoder, defaultAudioCodec, defaultVideoCodec, pixelFormat, videoEncoder } from "./encoding.js";
 

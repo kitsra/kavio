@@ -1,4 +1,4 @@
-import { asset, clip, crop, exportPreset, prop, text, video } from "@kavio/builder";
+import { asset, clip, crop, exportPreset, prop, text, video } from "@kitsra/kavio-builder";
 
 const headline = prop("headline", {
   type: "string",

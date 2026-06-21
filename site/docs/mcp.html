@@ -56,8 +56,8 @@
       <section class="content-section">
         <h2>Status</h2>
         <p>
-          The <code>@kavio/mcp</code> package is implemented. It calls
-          <code>@kavio/render</code> for real render work and keeps Playwright,
+          The <code>@kitsra/kavio-mcp</code> package is implemented. It calls
+          <code>@kitsra/kavio-render</code> for real render work and keeps Playwright,
           FFmpeg binaries, and process-spawning code out of MCP handlers.
         </p>
       </section>
@@ -66,23 +66,23 @@
         <h2>Architecture Boundary</h2>
         <dl class="definition-list">
           <div>
-            <dt>@kavio/mcp</dt>
+            <dt>@kitsra/kavio-mcp</dt>
             <dd>Agent-facing protocol layer that exposes tools and resources for Kavio workflows.</dd>
           </div>
           <div>
-            <dt>@kavio/render</dt>
+            <dt>@kitsra/kavio-render</dt>
             <dd>Execution layer for browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.</dd>
           </div>
           <div>
-            <dt>@kavio/schema</dt>
+            <dt>@kitsra/kavio-schema</dt>
             <dd>Composition validation and versioned data contract.</dd>
           </div>
           <div>
-            <dt>@kavio/core</dt>
+            <dt>@kitsra/kavio-core</dt>
             <dd>Pure timeline evaluation, prop resolution, export presets, dimensions, and resource limits.</dd>
           </div>
           <div>
-            <dt>@kavio/browser-renderer</dt>
+            <dt>@kitsra/kavio-browser-renderer</dt>
             <dd>Shared render harness and browser runtime used for preview and export parity.</dd>
           </div>
         </dl>
@@ -125,7 +125,7 @@
       <section class="content-section">
         <h2>Safety And Supply Chain</h2>
         <ul class="check-list">
-          <li>Keep binary execution quarantined in <code>@kavio/render</code>.</li>
+          <li>Keep binary execution quarantined in <code>@kitsra/kavio-render</code>.</li>
           <li>Do not let MCP handlers spawn FFmpeg, launch browsers, or download assets outside the approved render layer.</li>
           <li>Return structured validation errors before any render work begins.</li>
           <li>Thread cancellation through long-running preview and render operations.</li>
@@ -141,7 +141,7 @@
           <li>Validate the composition and collect all repairable errors.</li>
           <li>Inspect the document to confirm dimensions, duration, assets, layers, audio, and exports.</li>
           <li>Preview locally for layout and timing checks.</li>
-          <li>Render through <code>@kavio/render</code>.</li>
+          <li>Render through <code>@kitsra/kavio-render</code>.</li>
           <li>Return output metadata, checksums, and any structured errors to the agent.</li>
         </ol>
       </section>

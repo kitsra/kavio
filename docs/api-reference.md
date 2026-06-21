@@ -3,7 +3,7 @@
 This is a practical reference for the current TypeScript packages. The API is
 pre-release and may change before the first public package publish.
 
-## @kavio/schema
+## @kitsra/kavio-schema
 
 Use this package for the canonical document contract.
 
@@ -16,7 +16,7 @@ Key exports:
 Example:
 
 ```ts
-import { validateComposition, type KavioDocument } from "@kavio/schema";
+import { validateComposition, type KavioDocument } from "@kitsra/kavio-schema";
 
 const document: KavioDocument = loadDocument();
 const result = validateComposition(document);
@@ -28,7 +28,7 @@ if (!result.ok) {
 }
 ```
 
-## @kavio/core
+## @kitsra/kavio-core
 
 Use this package for pure timeline and layout evaluation.
 
@@ -45,7 +45,7 @@ Key capabilities:
 This package should stay deterministic and independent of browser, filesystem,
 network, and FFmpeg behavior.
 
-## @kavio/builder
+## @kitsra/kavio-builder
 
 Use this package to author Kavio JSON with TypeScript helpers.
 
@@ -94,7 +94,7 @@ Export helpers:
 - `exportPreset.custom(options)`
 - `socialMediaPresets`
 
-## @kavio/browser-renderer
+## @kitsra/kavio-browser-renderer
 
 Use this package for browser preview and future editor integrations.
 
@@ -125,7 +125,7 @@ Preview controller methods:
 - `setPreviewExport(selection)`
 - `destroy()`
 
-## @kavio/render-worker
+## @kitsra/kavio-render-worker
 
 Use this package for render orchestration contracts and helpers.
 
@@ -142,9 +142,9 @@ Key exports and concepts:
 - `RenderCleanupStack`
 - cleanup task helpers
 
-The concrete Playwright driver is exposed by `@kavio/render`.
+The concrete Playwright driver is exposed by `@kitsra/kavio-render`.
 
-## @kavio/ffmpeg
+## @kitsra/kavio-ffmpeg
 
 Use this package to construct inspectable FFmpeg plans.
 
@@ -165,7 +165,7 @@ Key exports:
 
 This package builds command plans. It does not execute FFmpeg.
 
-## @kavio/cli
+## @kitsra/kavio-cli
 
 The CLI package exposes the `kavio` binary when published. In the workspace, run:
 

@@ -1,5 +1,5 @@
 {
-  "name": "@kavio/core",
+  "name": "@kitsra/kavio-core",
   "version": "0.0.0",
   "description": "Pure timeline evaluation primitives for Kavio compositions.",
   "license": "Elastic-2.0",
@@ -9,7 +9,7 @@
     "access": "public"
   },
   "dependencies": {
-    "@kavio/schema": "workspace:*"
+    "@kitsra/kavio-schema": "workspace:*"
   },
   "exports": {
     ".": {

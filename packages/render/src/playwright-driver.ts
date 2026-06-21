@@ -7,8 +7,8 @@ import {
   type BrowserFrameCaptureOptions,
   type BrowserOpenOptions,
   type BrowserViewport
-} from "@kavio/render-worker";
-import type { KavioDocument } from "@kavio/schema";
+} from "@kitsra/kavio-render-worker";
+import type { KavioDocument } from "@kitsra/kavio-schema";
 import { renderError } from "./errors.js";
 import { createRenderHarnessServer, type RenderHarnessServer } from "./harness-server.js";
 

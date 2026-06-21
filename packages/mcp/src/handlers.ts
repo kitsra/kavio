@@ -5,11 +5,11 @@ import {
   collectResourceLimitViolations,
   compileTransitionOverlapWindows,
   resolveTemplateProps
-} from "@kavio/core";
-import { socialMediaPresets } from "@kavio/builder";
-import { assembleRenderCommand, renderBatch, type FfmpegRunner, type RenderBatchOptions } from "@kavio/render";
-import { expandRenderBatch, type BrowserDriver, type RenderBatchInput, type RenderBatchRow } from "@kavio/render-worker";
-import { schemaVersion, validateComposition as schemaValidate, type KavioDocument, type KavioError } from "@kavio/schema";
+} from "@kitsra/kavio-core";
+import { socialMediaPresets } from "@kitsra/kavio-builder";
+import { assembleRenderCommand, renderBatch, type FfmpegRunner, type RenderBatchOptions } from "@kitsra/kavio-render";
+import { expandRenderBatch, type BrowserDriver, type RenderBatchInput, type RenderBatchRow } from "@kitsra/kavio-render-worker";
+import { schemaVersion, validateComposition as schemaValidate, type KavioDocument, type KavioError } from "@kitsra/kavio-schema";
 import type { ToolResult } from "./types.js";
 
 export const STANDARD_PRESETS = socialMediaPresets;

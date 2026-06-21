@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
-import { resolveFfmpegPath } from "@kavio/render";
+import { resolveFfmpegPath } from "@kitsra/kavio-render";
 
 declare const process: {
   argv: string[];

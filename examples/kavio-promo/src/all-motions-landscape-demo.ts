@@ -19,8 +19,8 @@ import {
   type KeyframeMap,
   type LayerBuilder,
   type TransitionDefinition
-} from "@kavio/builder";
-import type { KavioDocument } from "@kavio/schema";
+} from "@kitsra/kavio-builder";
+import type { KavioDocument } from "@kitsra/kavio-schema";
 
 const width = 1920;
 const height = 1080;

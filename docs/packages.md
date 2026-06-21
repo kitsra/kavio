@@ -1,7 +1,51 @@
 # Package API Overview
 
-Kavio is organized as a TypeScript monorepo. Packages are scoped as `@kavio/*`.
-No packages have been published yet.
+Kavio is organized as a TypeScript monorepo. Packages are scoped as `@kitsra/kavio-*`
+and versioned in lockstep with [Changesets](https://github.com/changesets/changesets).
+
+## Release flow
+
+Releases are driven by Changesets:
+
+1. Contributors add a changeset with `corepack pnpm changeset` describing the
+   change and the bump type. CI fails a pull request that touches publishable
+   packages without one.
+2. On `main`, the **Release** workflow opens (or updates) a "Version Packages"
+   PR that applies the pending changesets and bumps every `@kitsra/kavio-*` package.
+3. Merging that PR publishes the packages to **npmjs.com** (with npm provenance)
+   and creates a GitHub Release.
+4. The GitHub Release triggers the **Publish GitHub Packages** workflow, which
+   mirrors the same versions to GitHub Packages.
+
+Required repository secrets:
+
+- `NPM_TOKEN` — automation token for the npmjs `@kitsra` scope (used by the
+  Release workflow). The `@kitsra` org/scope must exist on npmjs.com.
+- GitHub Packages uses the built-in `GITHUB_TOKEN` (no extra secret needed).
+
+## npmjs.com (public)
+
+Once published, install directly from the default registry:
+
+```bash
+corepack pnpm add @kitsra/kavio-cli
+corepack pnpm add @kitsra/kavio-mcp
+```
+
+### Render binaries for consumers
+
+`@kitsra/kavio-render` declares `ffmpeg-static` and `playwright` as optional
+dependencies. Consumers who render to MP4/MOV must provision those binaries
+after install:
+
+```bash
+# inside your project, after adding @kitsra/kavio-render
+corepack pnpm rebuild ffmpeg-static
+corepack pnpm exec playwright install chromium
+```
+
+Schema validation, inspection, preview wiring, and the builder SDK work without
+these binaries.
 
 ## GitHub Packages
 
@@ -13,31 +57,31 @@ packages to GitHub Packages:
 - registry: `https://npm.pkg.github.com`
 - packages: `packages/*`
 
-Consumers install from GitHub Packages by mapping the `@kavio` scope:
+Consumers install from GitHub Packages by mapping the `@kitsra` scope:
 
 ```ini
-@kavio:registry=https://npm.pkg.github.com
+@kitsra:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
 Then install normally:
 
 ```bash
-corepack pnpm add @kavio/cli
-corepack pnpm add @kavio/mcp
+corepack pnpm add @kitsra/kavio-cli
+corepack pnpm add @kitsra/kavio-mcp
 ```
 
 GitHub Packages requires authentication for package installs unless the package
 visibility and access settings allow public anonymous reads. Packages published
 from this repository are linked through their `repository` metadata.
 
-The current package names use the `@kavio` scope. If GitHub Packages rejects
-that namespace for this repository owner, create/use a `kavio` GitHub
-organization or intentionally rename the package scope before publishing. A
-scope rename is an API change because source imports and inter-package
-dependencies also use `@kavio/*`.
+Packages use the `@kitsra` scope, which matches the `kitsra` GitHub account that
+owns this repository, so GitHub Packages accepts the namespace directly. The
+`kavio` brand is preserved in each package name (`@kitsra/kavio-*`). Changing the
+scope later is an API change because source imports and inter-package
+dependencies also use `@kitsra/kavio-*`.
 
-## @kavio/schema
+## @kitsra/kavio-schema
 
 Owns the canonical data contract.
 
@@ -51,7 +95,7 @@ Exports include:
 Use this package when you need to validate raw JSON, type an integration, or
 generate editor/API repair feedback.
 
-## @kavio/core
+## @kitsra/kavio-core
 
 Owns pure timeline evaluation.
 
@@ -67,7 +111,7 @@ Capabilities include:
 
 This package has no browser, FFmpeg, network, or filesystem dependency.
 
-## @kavio/builder
+## @kitsra/kavio-builder
 
 Owns TypeScript authoring helpers.
 
@@ -85,7 +129,7 @@ Capabilities include:
 
 Use this package when JSON should be generated from code.
 
-## @kavio/browser-renderer
+## @kitsra/kavio-browser-renderer
 
 Owns the browser preview runtime.
 
@@ -100,7 +144,7 @@ Capabilities include:
 
 Use this package for local preview and future editor integrations.
 
-## @kavio/render-worker
+## @kitsra/kavio-render-worker
 
 Owns render orchestration contracts and helpers.
 
@@ -115,9 +159,9 @@ Capabilities include:
 - Cleanup stack utilities.
 
 This package does not provide a complete Playwright-to-FFmpeg render command;
-that concrete execution layer lives in `@kavio/render`.
+that concrete execution layer lives in `@kitsra/kavio-render`.
 
-## @kavio/ffmpeg
+## @kitsra/kavio-ffmpeg
 
 Owns inspectable FFmpeg planning.
 
@@ -131,7 +175,7 @@ Capabilities include:
 
 This package builds command plans. It does not execute FFmpeg by itself.
 
-## @kavio/render
+## @kitsra/kavio-render
 
 Owns concrete local render execution.
 
@@ -147,7 +191,7 @@ Capabilities include:
 This package is the only workspace package that should launch Chromium or spawn
 FFmpeg.
 
-## @kavio/cli
+## @kitsra/kavio-cli
 
 Owns local command-line workflows.
 
@@ -162,7 +206,7 @@ Implemented commands:
 
 See [cli.md](cli.md).
 
-## @kavio/mcp
+## @kitsra/kavio-mcp
 
 Owns agent-facing MCP and provider tool schemas.
 

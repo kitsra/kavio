@@ -22,6 +22,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -55,3 +57,7 @@ jobs:
 
       - name: Package dry run
         run: corepack pnpm run pack:dry
+
+      - name: Changeset status
+        if: github.event_name == 'pull_request'
+        run: corepack pnpm exec changeset status --since=origin/${{ github.base_ref }}

@@ -1,6 +1,6 @@
-import { validateComposition, type CompositionTiming, type KavioDocument, type ValidationResult } from "@kavio/schema";
+import { validateComposition, type CompositionTiming, type KavioDocument, type ValidationResult } from "@kitsra/kavio-schema";
 
-export type { KavioError, ValidationResult } from "@kavio/schema";
+export type { KavioError, ValidationResult } from "@kitsra/kavio-schema";
 
 export type JsonPrimitive = string | number | boolean | null;
 export type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };

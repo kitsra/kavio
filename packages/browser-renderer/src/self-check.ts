@@ -1,6 +1,6 @@
-import { schemaVersion } from "@kavio/schema";
+import { schemaVersion } from "@kitsra/kavio-schema";
 import { createBrowserPreviewController, createBrowserRenderer, createExportPreviewComposition, createRenderHarnessHtml, nextPreviewFrame } from "./index.js";
-import type { KavioDocument } from "@kavio/schema";
+import type { KavioDocument } from "@kitsra/kavio-schema";
 
 class FakeStyle {
   private readonly customProperties = new Map<string, string>();
@@ -670,7 +670,7 @@ assertEqual(controlsRoot.children.length, 0, "preview controller removes control
 
 const harnessHtml = createRenderHarnessHtml({ width: 1080, height: 1920, fps: 30, durationFrames: 30 });
 assert(harnessHtml.includes("importmap"), "harness html declares an importmap");
-assert(harnessHtml.includes("@kavio/core"), "harness maps the core module");
+assert(harnessHtml.includes("@kitsra/kavio-core"), "harness maps the core module");
 assert(harnessHtml.includes("/composition.json"), "harness fetches composition json");
 assert(harnessHtml.includes("installBrowserRendererRuntime"), "harness installs the runtime");
 assert(harnessHtml.includes("__kavioReady"), "harness signals readiness");

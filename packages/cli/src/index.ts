@@ -3,16 +3,16 @@
 import { readFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import { resolve } from "node:path";
-import { socialMediaPresets, type SocialMediaPresetDefinition } from "@kavio/builder";
-import { compileTransitionOverlapWindows } from "@kavio/core";
+import { socialMediaPresets, type SocialMediaPresetDefinition } from "@kitsra/kavio-builder";
+import { compileTransitionOverlapWindows } from "@kitsra/kavio-core";
 import {
   schemaVersion,
   validateComposition,
   type KavioDocument,
   type KavioError,
   type ValidationResult
-} from "@kavio/schema";
-import { renderBatch, type RenderBatchInput, type RenderBatchOptions, type RenderBatchRow } from "@kavio/render";
+} from "@kitsra/kavio-schema";
+import { renderBatch, type RenderBatchInput, type RenderBatchOptions, type RenderBatchRow } from "@kitsra/kavio-render";
 
 declare const process: {
   argv: string[];
@@ -1111,7 +1111,7 @@ function renderPreviewHtml(summary: InspectSummary, renderer: PreviewRendererSta
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Kavio Preview</title>
-  ${renderer.available ? `<script type="importmap">${escapeHtml(JSON.stringify({ imports: { "@kavio/core": "/vendor/core/index.js" } }))}</script>` : ""}
+  ${renderer.available ? `<script type="importmap">${escapeHtml(JSON.stringify({ imports: { "@kitsra/kavio-core": "/vendor/core/index.js" } }))}</script>` : ""}
   <style>
     :root {
       color-scheme: dark;

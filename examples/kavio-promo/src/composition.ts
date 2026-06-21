@@ -10,8 +10,8 @@ import {
   type AuthorValue,
   type KeyframeInput,
   type LayerBuilder
-} from "@kavio/builder";
-import type { KavioDocument } from "@kavio/schema";
+} from "@kitsra/kavio-builder";
+import type { KavioDocument } from "@kitsra/kavio-schema";
 import type { PromoCopy, PromoFeature } from "./copy.js";
 
 const width = 1080;

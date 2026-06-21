@@ -72,11 +72,11 @@ node packages/cli/dist/index.js preview examples/basic-json/composition.json</co
         <div class="example-detail" id="basic-builder">
           <h2>basic-builder</h2>
           <p>
-            A TypeScript authoring example using <code>@kavio/builder</code>. It emits
+            A TypeScript authoring example using <code>@kitsra/kavio-builder</code>. It emits
             JSON equivalent to the raw <code>basic-json</code> fixture.
           </p>
-          <pre><code>corepack pnpm --filter @kavio/example-basic-builder run build
-corepack pnpm --filter @kavio/example-basic-builder run emit</code></pre>
+          <pre><code>corepack pnpm --filter @kitsra/kavio-example-basic-builder run build
+corepack pnpm --filter @kitsra/kavio-example-basic-builder run emit</code></pre>
           <p>
             The root verification suite compares this output with the raw JSON
             fixture, which keeps builder behavior honest.
@@ -89,9 +89,9 @@ corepack pnpm --filter @kavio/example-basic-builder run emit</code></pre>
             A richer template expanded across five prop rows and three export presets,
             producing 15 jobs through the shared render pipeline.
           </p>
-          <pre><code>corepack pnpm --filter @kavio/example-mvp-demo run build
-corepack pnpm --filter @kavio/example-mvp-demo run validate
-corepack pnpm --filter @kavio/example-mvp-demo run render</code></pre>
+          <pre><code>corepack pnpm --filter @kitsra/kavio-example-mvp-demo run build
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run validate
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run render</code></pre>
           <p>
             The sample covers clips, logo, headline, CTA, captions, music, brand
             colors, and export-specific layer overrides.
@@ -197,11 +197,11 @@ text("hook", {
             playsinline
             preload="metadata"
           ></video>
-          <pre><code>corepack pnpm --filter @kavio/example-kavio-promo run capture-site
-corepack pnpm --filter @kavio/example-kavio-promo run emit-motion-demo
+          <pre><code>corepack pnpm --filter @kitsra/kavio-example-kavio-promo run capture-site
+corepack pnpm --filter @kitsra/kavio-example-kavio-promo run emit-motion-demo
 node packages/cli/dist/index.js render examples/kavio-promo/generated/all-motions-demo.json --export kavio-all-motions-demo --out renders/kavio-all-motions-demo
 
-corepack pnpm --filter @kavio/example-kavio-promo run emit-motion-demo:landscape
+corepack pnpm --filter @kitsra/kavio-example-kavio-promo run emit-motion-demo:landscape
 node packages/cli/dist/index.js render examples/kavio-promo/generated/all-motions-demo-landscape.json --export kavio-all-motions-landscape --out renders/kavio-all-motions-landscape</code></pre>
         </div>
 

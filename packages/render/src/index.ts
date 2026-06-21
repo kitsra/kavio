@@ -1,4 +1,4 @@
-export const KAVIO_RENDER_PACKAGE = "@kavio/render";
+export const KAVIO_RENDER_PACKAGE = "@kitsra/kavio-render";
 
 export { renderError, isRenderError, RENDER_ERROR_CODES, type RenderErrorCode, type RenderErrorOptions } from "./errors.js";
 export { assembleRenderCommand, type AssembleRenderCommandOptions } from "./assemble-command.js";
@@ -24,7 +24,7 @@ export {
   type RenderCompositionResult
 } from "./render-composition.js";
 export { renderBatch, type RenderBatchOptions, type RenderBatchItemResult } from "./render-batch.js";
-export type { RenderBatchInput, RenderBatchRow } from "@kavio/render-worker";
+export type { RenderBatchInput, RenderBatchRow } from "@kitsra/kavio-render-worker";
 export {
   FakeBrowserDriver,
   createFakeFfmpegRunner,

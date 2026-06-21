@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   publish:
-    name: Publish @kavio packages
+    name: Publish @kitsra packages
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -29,7 +29,7 @@ jobs:
         with:
           node-version: 22
           registry-url: https://npm.pkg.github.com
-          scope: "@kavio"
+          scope: "@kitsra"
 
       - name: Enable Corepack
         run: corepack enable
@@ -59,4 +59,4 @@ jobs:
       - name: Publish workspace packages
         run: corepack pnpm -r --filter './packages/*' publish --access public --no-git-checks --registry=https://npm.pkg.github.com
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

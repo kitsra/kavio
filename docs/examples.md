@@ -31,14 +31,14 @@ Path: `examples/basic-builder`
 
 Purpose:
 
-- Shows how to author Kavio JSON with `@kavio/builder`.
+- Shows how to author Kavio JSON with `@kitsra/kavio-builder`.
 - Emits JSON equivalent to `examples/basic-json/composition.json`.
 
 Commands:
 
 ```bash
-corepack pnpm --filter @kavio/example-basic-builder run build
-corepack pnpm --filter @kavio/example-basic-builder run emit
+corepack pnpm --filter @kitsra/kavio-example-basic-builder run build
+corepack pnpm --filter @kitsra/kavio-example-basic-builder run emit
 ```
 
 The root test suite compares this output with the raw JSON fixture.
@@ -59,12 +59,12 @@ Purpose:
 Commands:
 
 ```bash
-corepack pnpm --filter @kavio/example-mvp-demo run build
-corepack pnpm --filter @kavio/example-mvp-demo run emit
-corepack pnpm --filter @kavio/example-mvp-demo run emit:batch
-corepack pnpm --filter @kavio/example-mvp-demo run emit:expanded
-corepack pnpm --filter @kavio/example-mvp-demo run validate
-corepack pnpm --filter @kavio/example-mvp-demo run render
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run build
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run emit
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run emit:batch
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run emit:expanded
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run validate
+corepack pnpm --filter @kitsra/kavio-example-mvp-demo run render
 ```
 
 `render` prepares deterministic demo assets and produces all 15 local MP4

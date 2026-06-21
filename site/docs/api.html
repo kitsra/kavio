@@ -63,15 +63,15 @@
       <section class="content-section">
         <h2>Package Contracts</h2>
         <dl class="definition-list">
-          <div><dt>@kavio/schema</dt><dd>JSON Schema, shared types, validation, and migration scaffold.</dd></div>
-          <div><dt>@kavio/core</dt><dd>Timeline evaluation, transition-series overlap windows, timing, prop resolution, layout, captions, masks, and resource limits.</dd></div>
-          <div><dt>@kavio/builder</dt><dd>TypeScript authoring helpers for canonical JSON, native transitions, cinematic recipes, camera moves, and text motion.</dd></div>
-          <div><dt>@kavio/browser-renderer</dt><dd>Browser preview and DOM rendering runtime for layers, masks, text motion, and transition series.</dd></div>
-          <div><dt>@kavio/render-worker</dt><dd>Browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.</dd></div>
-          <div><dt>@kavio/ffmpeg</dt><dd>Inspectable FFmpeg plan construction.</dd></div>
-          <div><dt>@kavio/cli</dt><dd>Local commands for validation, inspection, migration, and preview.</dd></div>
-          <div><dt>@kavio/render</dt><dd>Render execution layer that owns real browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.</dd></div>
-          <div><dt>@kavio/mcp</dt><dd>MCP server and provider tool adapters for agent-facing Kavio workflows. It calls <code>@kavio/render</code> instead of spawning binaries itself.</dd></div>
+          <div><dt>@kitsra/kavio-schema</dt><dd>JSON Schema, shared types, validation, and migration scaffold.</dd></div>
+          <div><dt>@kitsra/kavio-core</dt><dd>Timeline evaluation, transition-series overlap windows, timing, prop resolution, layout, captions, masks, and resource limits.</dd></div>
+          <div><dt>@kitsra/kavio-builder</dt><dd>TypeScript authoring helpers for canonical JSON, native transitions, cinematic recipes, camera moves, and text motion.</dd></div>
+          <div><dt>@kitsra/kavio-browser-renderer</dt><dd>Browser preview and DOM rendering runtime for layers, masks, text motion, and transition series.</dd></div>
+          <div><dt>@kitsra/kavio-render-worker</dt><dd>Browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.</dd></div>
+          <div><dt>@kitsra/kavio-ffmpeg</dt><dd>Inspectable FFmpeg plan construction.</dd></div>
+          <div><dt>@kitsra/kavio-cli</dt><dd>Local commands for validation, inspection, migration, and preview.</dd></div>
+          <div><dt>@kitsra/kavio-render</dt><dd>Render execution layer that owns real browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.</dd></div>
+          <div><dt>@kitsra/kavio-mcp</dt><dd>MCP server and provider tool adapters for agent-facing Kavio workflows. It calls <code>@kitsra/kavio-render</code> instead of spawning binaries itself.</dd></div>
         </dl>
       </section>
 
@@ -87,13 +87,13 @@
   trackClip,
   transition,
   video
-} from "@kavio/builder";</code></pre>
+} from "@kitsra/kavio-builder";</code></pre>
       </section>
 
       <section class="content-section" id="builder-methods">
         <h2>Builder SDK Method Index</h2>
         <p>
-          The <code>@kavio/builder</code> package emits canonical Kavio JSON while
+          The <code>@kitsra/kavio-builder</code> package emits canonical Kavio JSON while
           giving TypeScript templates a fluent authoring surface. These are the
           public helpers and methods exposed by the current builder package.
         </p>

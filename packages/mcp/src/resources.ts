@@ -1,13 +1,13 @@
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { DEFAULT_RESOURCE_LIMITS } from "@kavio/core";
+import { DEFAULT_RESOURCE_LIMITS } from "@kitsra/kavio-core";
 import { STANDARD_PRESETS } from "./handlers.js";
 import type { ResourceDefinition } from "./types.js";
 
 const require = createRequire(import.meta.url);
 
 function readSchema(): string {
-  return readFileSync(require.resolve("@kavio/schema/schema"), "utf8");
+  return readFileSync(require.resolve("@kitsra/kavio-schema/schema"), "utf8");
 }
 
 const BASIC_EXAMPLE = {

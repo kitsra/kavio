@@ -1,5 +1,5 @@
 {
-  "name": "@kavio/example-kavio-promo",
+  "name": "@kitsra/kavio-example-kavio-promo",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -15,8 +15,8 @@
     "verify": "tsc -p tsconfig.json && node dist/verify-cli.js"
   },
   "dependencies": {
-    "@kavio/builder": "workspace:*",
-    "@kavio/render": "workspace:*",
-    "@kavio/schema": "workspace:*"
+    "@kitsra/kavio-builder": "workspace:*",
+    "@kitsra/kavio-render": "workspace:*",
+    "@kitsra/kavio-schema": "workspace:*"
   }
 }

@@ -1,6 +1,6 @@
 # MCP Server And Agent Tools
 
-`@kavio/mcp` exposes Kavio composition authoring, validation, planning, and
+`@kitsra/kavio-mcp` exposes Kavio composition authoring, validation, planning, and
 rendering to AI agents. It provides:
 
 - A Model Context Protocol server over stdio.
@@ -92,7 +92,7 @@ a single row of prop values.
 
 ### `list_export_presets`
 
-Returns the standard social export presets shared with `@kavio/builder`, such as
+Returns the standard social export presets shared with `@kitsra/kavio-builder`, such as
 Reels, TikTok, Shorts, square feed, and landscape feed presets.
 
 ### `plan_render`

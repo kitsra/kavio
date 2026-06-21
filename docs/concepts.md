@@ -63,9 +63,9 @@ fields hold text, asset ids, shape styling, captions, and fit behavior.
 ## Preview Versus Render
 
 Preview is available today through `kavio preview` and
-`@kavio/browser-renderer`.
+`@kitsra/kavio-browser-renderer`.
 
-Rendering is available through `kavio render` and `@kavio/render` for opaque
+Rendering is available through `kavio render` and `@kitsra/kavio-render` for opaque
 `mp4`, `webm`, and `mov` outputs. The current renderer captures browser frames
 and encodes them with FFmpeg. `gif`, `png-sequence`, and transparent final
 outputs are schema-valid but reserved for later render paths.
@@ -91,12 +91,12 @@ The MVP demo expands five rows times three export presets into 15 outputs.
 
 Kavio packages stay deliberately small:
 
-- `@kavio/schema`: data contract and validation.
-- `@kavio/core`: pure frame evaluation.
-- `@kavio/builder`: TypeScript authoring helpers.
-- `@kavio/browser-renderer`: browser preview runtime.
-- `@kavio/render-worker`: render orchestration contracts.
-- `@kavio/ffmpeg`: inspectable FFmpeg planning.
-- `@kavio/render`: concrete browser capture and FFmpeg execution.
-- `@kavio/cli`: local commands.
-- `@kavio/mcp`: MCP server and provider tool adapters.
+- `@kitsra/kavio-schema`: data contract and validation.
+- `@kitsra/kavio-core`: pure frame evaluation.
+- `@kitsra/kavio-builder`: TypeScript authoring helpers.
+- `@kitsra/kavio-browser-renderer`: browser preview runtime.
+- `@kitsra/kavio-render-worker`: render orchestration contracts.
+- `@kitsra/kavio-ffmpeg`: inspectable FFmpeg planning.
+- `@kitsra/kavio-render`: concrete browser capture and FFmpeg execution.
+- `@kitsra/kavio-cli`: local commands.
+- `@kitsra/kavio-mcp`: MCP server and provider tool adapters.

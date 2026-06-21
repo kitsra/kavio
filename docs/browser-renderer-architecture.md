@@ -21,7 +21,7 @@ would make text parity, hit testing, and future editor inspection harder.
 - `loadComposition` snapshots the JSON composition and returns deterministic
   composition dimensions and timing metadata.
 - `renderFrame` validates the explicit frame, evaluates active layers using
-  `@kavio/core`, clears the runtime root, and installs a fresh DOM stage for the
+  `@kitsra/kavio-core`, clears the runtime root, and installs a fresh DOM stage for the
   frame.
 - Each DOM layer carries `data-kavio-layer-id` and `data-kavio-layer-type` so
   worker tests and future preview tooling can inspect output without relying on

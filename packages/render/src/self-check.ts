@@ -1,4 +1,4 @@
-import type { KavioDocument } from "@kavio/schema";
+import type { KavioDocument } from "@kitsra/kavio-schema";
 import { assembleRenderCommand } from "./assemble-command.js";
 import { renderError, RENDER_ERROR_CODES } from "./errors.js";
 import { createRenderHarnessServer } from "./harness-server.js";

@@ -1,4 +1,4 @@
-import type { KavioError, KavioErrorStage } from "@kavio/schema";
+import type { KavioError, KavioErrorStage } from "@kitsra/kavio-schema";
 
 export const RENDER_ERROR_CODES = [
   "BINARY_MISSING",

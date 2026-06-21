@@ -1,5 +1,5 @@
-import { evaluateEasing, evaluateLayer, evaluateTransitionSeries, getCanvasDimensions, isLayerActive, resolvePoint } from "@kavio/core";
-import type { CanvasDimensions, EvaluatedCaptionState, EvaluatedLayer, EvaluatedTransitionOverlap, Size } from "@kavio/core";
+import { evaluateEasing, evaluateLayer, evaluateTransitionSeries, getCanvasDimensions, isLayerActive, resolvePoint } from "@kitsra/kavio-core";
+import type { CanvasDimensions, EvaluatedCaptionState, EvaluatedLayer, EvaluatedTransitionOverlap, Size } from "@kitsra/kavio-core";
 import type {
   KavioCaptionLayer,
   KavioCaptionStyle,
@@ -14,7 +14,7 @@ import type {
   KavioTextMotion,
   KavioTextStyle,
   KavioVideoCrop
-} from "@kavio/schema";
+} from "@kitsra/kavio-schema";
 
 export interface BrowserRenderer {
   readonly ready: Promise<void>;
@@ -201,13 +201,13 @@ export interface RenderHarnessHtmlOptions {
 
 /**
  * Pure render-harness HTML generator (no Node APIs). Produces a page that maps
- * `@kavio/core` and the browser renderer to server-vendored module URLs, fetches
+ * `@kitsra/kavio-core` and the browser renderer to server-vendored module URLs, fetches
  * `/composition.json`, installs the runtime on `window.__kavio`, and signals
  * `window.__kavioReady`. Shared by the CLI `preview` command and the render
  * worker's `PlaywrightDriver` so preview and export paint the identical page.
  */
 export function createRenderHarnessHtml(options: RenderHarnessHtmlOptions): string {
-  const importmap = JSON.stringify({ imports: { "@kavio/core": "/vendor/core/index.js" } });
+  const importmap = JSON.stringify({ imports: { "@kitsra/kavio-core": "/vendor/core/index.js" } });
   return `<!doctype html>
 <html lang="en">
 <head>
