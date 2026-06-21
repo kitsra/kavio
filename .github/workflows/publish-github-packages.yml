@@ -2,9 +2,12 @@ name: Publish GitHub Packages
 
 on:
   workflow_dispatch:
-  release:
-    types:
-      - published
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/*/package.json"
+      - "packages/*/CHANGELOG.md"
 
 permissions:
   contents: read
@@ -37,6 +40,7 @@ jobs:
         run: corepack pnpm run build
 
       - name: Publish workspace packages
-        run: corepack pnpm -r --filter './packages/*' publish --access public --no-git-checks --registry=https://npm.pkg.github.com
+        run: corepack pnpm exec changeset publish
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PACKAGES_TOKEN || secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_REGISTRY: https://npm.pkg.github.com
