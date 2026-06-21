@@ -1,5 +1,14 @@
 # @kitsra/kavio-builder
 
+## 0.1.2
+
+### Patch Changes
+
+- bb2410f: Publish package README metadata for npm package pages.
+- Updated dependencies [bb2410f]
+  - @kitsra/kavio-core@0.1.2
+  - @kitsra/kavio-schema@0.1.2
+
 ## 0.1.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@kitsra/kavio-mcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Model Context Protocol server and provider tool adapters for Kavio.",
   "license": "Elastic-2.0",
   "repository": {

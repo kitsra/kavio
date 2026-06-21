@@ -1,5 +1,11 @@
 # @kitsra/kavio-schema
 
+## 0.1.2
+
+### Patch Changes
+
+- bb2410f: Publish package README metadata for npm package pages.
+
 ## 0.1.1
 
 ### Patch Changes
