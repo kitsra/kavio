@@ -1,5 +1,16 @@
 # @kitsra/kavio-mcp
 
+## 0.1.3
+
+### Patch Changes
+
+- 6504e96: Ship the portable Kavio AI skill/plugin bundle and add `emit-skill` for installing the shared skill from the package.
+  - @kitsra/kavio-schema@0.1.3
+  - @kitsra/kavio-core@0.1.3
+  - @kitsra/kavio-render-worker@0.1.3
+  - @kitsra/kavio-render@0.1.3
+  - @kitsra/kavio-builder@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
