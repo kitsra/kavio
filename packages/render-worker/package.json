@@ -1,6 +1,6 @@
 {
   "name": "@kitsra/kavio-render-worker",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Browser automation and frame capture worker for Kavio.",
   "license": "Elastic-2.0",
   "type": "module",
