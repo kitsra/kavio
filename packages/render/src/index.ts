@@ -29,7 +29,8 @@ export {
   renderComposition,
   type RenderCompositionMode,
   type RenderCompositionOptions,
-  type RenderCompositionResult
+  type RenderCompositionResult,
+  type RenderStageTimings
 } from "./render-composition.js";
 export { renderBatch, type RenderBatchOptions, type RenderBatchItemResult } from "./render-batch.js";
 export type { RenderBatchInput, RenderBatchRow } from "@kitsra/kavio-render-worker";

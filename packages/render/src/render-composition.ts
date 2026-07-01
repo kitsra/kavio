@@ -45,8 +45,19 @@ export interface RenderCompositionOptions {
   chromiumRevision?: string;
 }
 
+export interface RenderStageTimings {
+  /** Browser launch + frame capture wall time; absent for ffmpeg-direct renders. */
+  captureMs?: number;
+  /** FFmpeg encode wall time. */
+  encodeMs: number;
+  /** Output checksum wall time. */
+  checksumMs: number;
+  /** Full renderComposition wall time, including validation and cleanup. */
+  totalMs: number;
+}
+
 export type RenderCompositionResult =
-  | { ok: true; outputPath: string; metadata: RenderOutputMetadata }
+  | { ok: true; outputPath: string; metadata: RenderOutputMetadata; timings: RenderStageTimings }
   | { ok: false; errors: KavioError[] };
 
 /** End-to-end render for one (composition × export): props → view → validate → capture → encode. */
@@ -54,6 +65,7 @@ export async function renderComposition(
   doc: KavioDocument,
   options: RenderCompositionOptions
 ): Promise<RenderCompositionResult> {
+  const totalStart = performance.now();
   const resolution = resolveTemplateProps(doc, options.propValues ?? {});
   if (!resolution.ok) {
     return { ok: false, errors: resolution.errors };
@@ -95,6 +107,10 @@ export async function renderComposition(
   const renderMode = options.renderMode ?? "browser-overlay";
 
   try {
+    let captureMs: number | undefined;
+    let encodeMs = 0;
+    let checksumMs = 0;
+
     const metadata = await withRenderCleanup(async (cleanup) => {
       await mkdir(dirname(outputPath), { recursive: true });
       let browserDriver: BrowserDriver | undefined;
@@ -102,8 +118,9 @@ export async function renderComposition(
         renderMode === "ffmpeg-direct"
           ? assembleDirectRenderCommand({ view, preset, outputPath })
           : await (async () => {
+              const captureStart = performance.now();
               browserDriver = options.driver ?? new PlaywrightDriver();
-              return assembleBrowserOverlayRenderCommand({
+              const assembled = await assembleBrowserOverlayRenderCommand({
                 view,
                 preset,
                 outputPath,
@@ -111,12 +128,18 @@ export async function renderComposition(
                 continueOnFrameError: options.continueOnFrameError === true,
                 deferCleanup: (task) => cleanup.defer(task)
               });
+              captureMs = performance.now() - captureStart;
+              return assembled;
             })();
 
       const ffmpegRunner = options.ffmpegRunner ?? createFfmpegRunner();
+      const encodeStart = performance.now();
       await ffmpegRunner.run(args, options.signal === undefined ? {} : { signal: options.signal });
+      encodeMs = performance.now() - encodeStart;
 
+      const checksumStart = performance.now();
       const checksum = await sha256File(outputPath);
+      checksumMs = performance.now() - checksumStart;
       return createRenderMetadata({
         composition: view.composition,
         preset: metadataPreset,
@@ -128,7 +151,13 @@ export async function renderComposition(
       });
     });
 
-    return { ok: true, outputPath, metadata };
+    const timings: RenderStageTimings = {
+      ...(captureMs !== undefined && { captureMs }),
+      encodeMs,
+      checksumMs,
+      totalMs: performance.now() - totalStart
+    };
+    return { ok: true, outputPath, metadata, timings };
   } catch (error) {
     return { ok: false, errors: [toKavioError(error)] };
   }

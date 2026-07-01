@@ -244,6 +244,10 @@ if (successResult.ok) {
   assert(successResult.metadata.checksums.length === 1, "records an output checksum");
   assertEqual(successResult.metadata.codecs.video, "h264", "mp4 metadata records the effective video codec");
   assertEqual(successResult.metadata.codecs.audio, "aac", "mp4 metadata records the effective audio codec");
+  assert(successResult.timings.captureMs !== undefined && successResult.timings.captureMs >= 0, "browser render reports capture timing");
+  assert(successResult.timings.encodeMs >= 0, "render reports encode timing");
+  assert(successResult.timings.checksumMs >= 0, "render reports checksum timing");
+  assert(successResult.timings.totalMs >= successResult.timings.encodeMs, "total timing covers encode stage");
 }
 assertEqual(successDriver.renderedFrames.length, 6, "captures every frame");
 assertEqual(successDriver.closes, 1, "closes the browser driver on success");
@@ -265,6 +269,8 @@ assertEqual(directRunner.calls.length, 1, "ffmpeg-direct render invokes ffmpeg o
 assert(!directRunner.calls[0]?.join(" ").includes("overlay-%05d.png"), "ffmpeg-direct render call skips overlay PNG input");
 if (directRenderResult.ok) {
   assertEqual(directRenderResult.metadata.tools.chromium.revision, "not-used", "ffmpeg-direct metadata records no Chromium use");
+  assertEqual(directRenderResult.timings.captureMs, undefined, "ffmpeg-direct render reports no capture timing");
+  assert(directRenderResult.timings.encodeMs >= 0, "ffmpeg-direct render reports encode timing");
 }
 
 const webmRenderDoc: KavioDocument = {
