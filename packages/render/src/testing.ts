@@ -40,7 +40,8 @@ export class FakeBrowserDriver implements BrowserDriver {
       frame,
       bytes: FAKE_PNG,
       viewport: this.viewport,
-      omitBackground: options.omitBackground ?? true
+      omitBackground: options.omitBackground ?? true,
+      timing: { evaluateMs: 0, screenshotMs: 0 }
     });
   }
 

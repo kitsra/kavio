@@ -130,10 +130,19 @@ export class PlaywrightDriver implements BrowserDriver {
     }
 
     const omitBackground = options.omitBackground ?? true;
+    const evaluateStart = performance.now();
     await this.page.evaluate(`window.__kavio.renderFrame(${frame})`);
+    const screenshotStart = performance.now();
     const bytes = await this.page.screenshot({ type: "png", omitBackground });
+    const screenshotEnd = performance.now();
 
-    return createPngFrameCapture({ frame, bytes, viewport: this.viewport, omitBackground });
+    return createPngFrameCapture({
+      frame,
+      bytes,
+      viewport: this.viewport,
+      omitBackground,
+      timing: { evaluateMs: screenshotStart - evaluateStart, screenshotMs: screenshotEnd - screenshotStart }
+    });
   }
 
   async close(): Promise<void> {

@@ -368,6 +368,9 @@ if (successResult.ok) {
   assertEqual(successResult.metadata.codecs.video, "h264", "mp4 metadata records the effective video codec");
   assertEqual(successResult.metadata.codecs.audio, "aac", "mp4 metadata records the effective audio codec");
   assert(successResult.timings.captureMs !== undefined && successResult.timings.captureMs >= 0, "browser render reports capture timing");
+  assert(successResult.timings.browserOpenMs !== undefined && successResult.timings.browserOpenMs >= 0, "browser render reports driver open timing");
+  assert(successResult.timings.captureEvaluateMs !== undefined && successResult.timings.captureEvaluateMs >= 0, "browser render reports summed evaluate timing");
+  assert(successResult.timings.captureScreenshotMs !== undefined && successResult.timings.captureScreenshotMs >= 0, "browser render reports summed screenshot timing");
   assert(successResult.timings.encodeMs >= 0, "render reports encode timing");
   assert(successResult.timings.checksumMs >= 0, "render reports checksum timing");
   assert(successResult.timings.totalMs >= successResult.timings.encodeMs, "total timing covers encode stage");

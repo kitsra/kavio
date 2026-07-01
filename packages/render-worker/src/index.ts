@@ -43,6 +43,13 @@ export interface BrowserFrameCaptureOptions {
   omitBackground?: boolean;
 }
 
+export interface BrowserFrameCaptureTiming {
+  /** Wall time spent seeking the composition to the frame in the page. */
+  evaluateMs: number;
+  /** Wall time spent producing the screenshot bytes. */
+  screenshotMs: number;
+}
+
 export interface BrowserFrameCapture {
   frame: number;
   bytes: Uint8Array;
@@ -51,6 +58,8 @@ export interface BrowserFrameCapture {
   width: number;
   height: number;
   omitBackground: boolean;
+  /** Per-frame timing when the driver measures it. */
+  timing?: BrowserFrameCaptureTiming;
 }
 
 export interface DeterministicChromiumLaunchOptions {
@@ -147,6 +156,7 @@ export function createPngFrameCapture(options: {
   bytes: Uint8Array;
   viewport: BrowserViewport;
   omitBackground?: boolean;
+  timing?: BrowserFrameCaptureTiming;
 }): BrowserFrameCapture {
   assertNonNegativeInteger(options.frame, "frame");
   assertPositiveInteger(options.viewport.width, "viewport.width");
@@ -159,7 +169,8 @@ export function createPngFrameCapture(options: {
     mimeType: DEFAULT_BROWSER_SCREENSHOT_MIME_TYPE,
     width: options.viewport.width,
     height: options.viewport.height,
-    omitBackground: options.omitBackground ?? true
+    omitBackground: options.omitBackground ?? true,
+    ...(options.timing !== undefined && { timing: options.timing })
   };
 }
 
@@ -304,6 +315,12 @@ export interface CaptureFramesResult {
   capturedFrames: number;
   failedFrames: number;
   bytesCaptured: number;
+  /** Wall time spent in driver.open() (browser launch + harness ready). */
+  openMs: number;
+  /** Sum of per-frame evaluate timings, when the driver reports them. */
+  evaluateMs?: number;
+  /** Sum of per-frame screenshot timings, when the driver reports them. */
+  screenshotMs?: number;
 }
 
 export interface RenderBatchInput {
@@ -487,8 +504,11 @@ export async function captureFrames(options: CaptureFramesOptions): Promise<Capt
   let capturedFrames = 0;
   let failedFrames = 0;
   let bytesCaptured = 0;
+  let openMs = 0;
+  let evaluateMs: number | undefined;
+  let screenshotMs: number | undefined;
 
-  const createProgress = (phase: FrameCaptureProgressPhase, frame?: number, error?: unknown): FrameCaptureProgress => {
+  const createProgress =(phase: FrameCaptureProgressPhase, frame?: number, error?: unknown): FrameCaptureProgress => {
     const progress: FrameCaptureProgress = {
       phase,
       totalFrames: range.totalFrames,
@@ -509,10 +529,12 @@ export async function captureFrames(options: CaptureFramesOptions): Promise<Capt
   await withRenderCleanup(async (cleanup) => {
     cleanup.defer(createBrowserContextCleanupTask(options.driver));
     await emitCaptureProgress(options.onProgress, createProgress("open"));
+    const openStart = performance.now();
     await options.driver.open(options.composition, {
       viewport: createBrowserViewport(options.composition),
       ...options.openOptions
     });
+    openMs = performance.now() - openStart;
 
     for (let frame = range.startFrame; frame < range.endFrame; frame += 1) {
       let capture: BrowserFrameCapture;
@@ -537,6 +559,10 @@ export async function captureFrames(options: CaptureFramesOptions): Promise<Capt
       if (retainCaptures) {
         captures.push(capture);
       }
+      if (capture.timing !== undefined) {
+        evaluateMs = (evaluateMs ?? 0) + capture.timing.evaluateMs;
+        screenshotMs = (screenshotMs ?? 0) + capture.timing.screenshotMs;
+      }
       capturedFrames += 1;
       completedFrames += 1;
       bytesCaptured += capture.bytes.byteLength;
@@ -555,7 +581,10 @@ export async function captureFrames(options: CaptureFramesOptions): Promise<Capt
     completedFrames,
     capturedFrames,
     failedFrames,
-    bytesCaptured
+    bytesCaptured,
+    openMs,
+    ...(evaluateMs !== undefined && { evaluateMs }),
+    ...(screenshotMs !== undefined && { screenshotMs })
   };
 }
 

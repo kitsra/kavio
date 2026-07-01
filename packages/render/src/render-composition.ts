@@ -46,6 +46,12 @@ export interface RenderCompositionOptions {
 export interface RenderStageTimings {
   /** Browser launch + frame capture wall time; absent for ffmpeg-direct renders. */
   captureMs?: number;
+  /** Driver open wall time (browser launch + harness ready) within captureMs. */
+  browserOpenMs?: number;
+  /** Summed per-frame seek/evaluate time, when the driver reports it. */
+  captureEvaluateMs?: number;
+  /** Summed per-frame screenshot time, when the driver reports it. */
+  captureScreenshotMs?: number;
   /** FFmpeg encode wall time. */
   encodeMs: number;
   /** Output checksum wall time. */
@@ -106,6 +112,9 @@ export async function renderComposition(
 
   try {
     let captureMs: number | undefined;
+    let browserOpenMs: number | undefined;
+    let captureEvaluateMs: number | undefined;
+    let captureScreenshotMs: number | undefined;
     let encodeMs = 0;
 
     await mkdir(dirname(outputPath), { recursive: true });
@@ -135,8 +144,11 @@ export async function renderComposition(
           await frames.push(capture.bytes);
         }
       }).then(
-        () => {
+        (captureResult) => {
           captureMs = performance.now() - captureStart;
+          browserOpenMs = captureResult.openMs;
+          captureEvaluateMs = captureResult.evaluateMs;
+          captureScreenshotMs = captureResult.screenshotMs;
           frames.end();
         },
         (error: unknown) => {
@@ -187,6 +199,9 @@ export async function renderComposition(
 
     const timings: RenderStageTimings = {
       ...(captureMs !== undefined && { captureMs }),
+      ...(browserOpenMs !== undefined && { browserOpenMs }),
+      ...(captureEvaluateMs !== undefined && { captureEvaluateMs }),
+      ...(captureScreenshotMs !== undefined && { captureScreenshotMs }),
       encodeMs,
       checksumMs,
       totalMs: performance.now() - totalStart

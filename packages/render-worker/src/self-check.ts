@@ -140,6 +140,17 @@ const captured = await driver.renderFrame(3);
 await driver.close();
 assertEqual(captured.bytes[0], 3, "BrowserDriver returns PNG byte captures");
 
+const timedCapture = createPngFrameCapture({
+  frame: 0,
+  bytes: new Uint8Array([1]),
+  viewport,
+  timing: { evaluateMs: 2.5, screenshotMs: 4.5 }
+});
+assertEqual(timedCapture.timing?.evaluateMs, 2.5, "frame captures carry evaluate timing when provided");
+assertEqual(timedCapture.timing?.screenshotMs, 4.5, "frame captures carry screenshot timing when provided");
+const untimedCapture = createPngFrameCapture({ frame: 0, bytes: new Uint8Array([1]), viewport });
+assertEqual(untimedCapture.timing, undefined, "frame capture timing stays absent when not measured");
+
 class RecordingBrowserDriver implements BrowserDriver {
   opened = 0;
   closed = 0;
@@ -164,7 +175,8 @@ class RecordingBrowserDriver implements BrowserDriver {
     const captureOptions = {
       frame,
       bytes: new Uint8Array([frame, frame + 1]),
-      viewport
+      viewport,
+      timing: { evaluateMs: 1, screenshotMs: 2 }
     };
     return options?.omitBackground === undefined
       ? createPngFrameCapture(captureOptions)
@@ -201,6 +213,9 @@ assertEqual(frameLoopResult.captures.length, 0, "frame capture loop does not ret
 assertEqual(frameLoopResult.capturedFrames, 4, "frame capture loop counts streamed captures");
 assertEqual(frameLoopResult.errors.length, 0, "successful frame capture loop has no frame errors");
 assertEqual(frameLoopResult.bytesCaptured, 8, "frame capture loop reports captured byte totals");
+assert(frameLoopResult.openMs >= 0, "frame capture loop measures driver open time");
+assertEqual(frameLoopResult.evaluateMs, 4, "frame capture loop sums per-frame evaluate timings");
+assertEqual(frameLoopResult.screenshotMs, 8, "frame capture loop sums per-frame screenshot timings");
 assertEqual(
   progressEvents.join("|"),
   "open:none:0|frame:0:1|capture:0:1|frame:1:2|capture:1:2|frame:2:3|capture:2:3|frame:3:4|capture:3:4|complete:none:4",
