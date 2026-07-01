@@ -36,12 +36,19 @@ The render pipeline works like this:
 2. Resolve props for one row.
 3. Apply one export preset and layer overrides.
 4. Validate the expanded document.
-5. Open the browser renderer at the export dimensions.
-6. Capture transparent overlay frames.
-7. Build an inspectable FFmpeg plan.
+5. Assemble the FFmpeg command from an inspectable plan and start FFmpeg.
+6. Open the browser renderer at the export dimensions.
+7. Capture transparent overlay frames and stream them into FFmpeg stdin as an
+   `image2pipe` PNG stream, so capture and encode overlap.
 8. Compose base video, overlays, and audio.
-9. Write output and render metadata.
-10. Clean up temporary files on success or failure.
+9. Write output, per-stage timings, and render metadata.
+10. Clean up browser contexts on success or failure.
+
+Captured frames are never written to a temporary directory: a bounded byte
+queue between capture and FFmpeg applies backpressure, so a slow encode slows
+capture instead of buffering the whole render in memory or on disk. Successful
+render results include `timings` (capture, encode, checksum, and total wall
+time) for performance measurement.
 
 ## Why FFmpeg Planning Is Separate
 
@@ -57,8 +64,7 @@ rendering safer to test and debug:
 
 The MVP demo uses the shared render pipeline. It prepares deterministic
 synthetic assets, reads the MVP batch jobs, captures browser-rendered frames,
-encodes MP4 files with FFmpeg, and removes temporary frame files after each
-render.
+and encodes MP4 files with FFmpeg directly from the streamed frames.
 
 Commands:
 
@@ -88,9 +94,8 @@ successful outputs:
 
 Render code should:
 
-- Use a cleanup stack for browser contexts and temporary files.
-- Remove temporary frames and layer files after success.
-- Remove temporary files after failures where possible.
+- Use a cleanup stack for browser contexts and any temporary files.
+- Avoid temporary frame files entirely; frames stream to FFmpeg stdin.
 - Keep final outputs and metadata only.
 - Preserve enough error detail to debug validation, browser, or FFmpeg failures.
 

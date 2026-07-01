@@ -25,8 +25,12 @@ export interface AssembleRenderCommandOptions {
   /** Composition with props resolved and the export preset already applied. */
   view: KavioDocument;
   preset: KavioExportPreset;
-  /** printf-style path to the captured transparent overlay frames, e.g. work/overlay-%05d.png */
-  framePattern: string;
+  /**
+   * printf-style path to the captured transparent overlay frames, e.g.
+   * work/overlay-%05d.png. When omitted, the command reads overlay frames from
+   * stdin as an image2pipe PNG stream so capture and encode can overlap.
+   */
+  framePattern?: string;
   /** Output file path. Defaults to `<preset.name>.<ext>`. */
   outputPath?: string;
 }
@@ -91,14 +95,18 @@ export function assembleRenderCommand(options: AssembleRenderCommandOptions): st
     inputIndex += 1;
   }
 
-  // --- Transparent overlay frame sequence ---------------------------------
+  // --- Transparent overlay frame sequence (files or stdin pipe) -----------
   const overlayPlan = planOverlayCompositing({
     baseLabel,
-    frames: { framePattern, fps, inputIndex, startNumber: 0, outputLabel: "overlay_frames" },
+    frames: { framePattern: framePattern ?? "-", fps, inputIndex, startNumber: 0, outputLabel: "overlay_frames" },
     outputLabel: VIDEO_OUT_LABEL,
     shortest: true
   });
-  inputArgs.push(...planInputArgs(overlayPlan));
+  if (framePattern === undefined) {
+    inputArgs.push("-f", "image2pipe", "-framerate", String(fps), "-i", "-");
+  } else {
+    inputArgs.push(...planInputArgs(overlayPlan));
+  }
   chains.push(...planFilterChains(overlayPlan));
   inputIndex += 1;
 

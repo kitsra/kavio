@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { applyExportPreset, collectCompositionResourceLimitInputs, collectResourceLimitViolations, resolveTemplateProps } from "@kitsra/kavio-core";
 import {
@@ -13,14 +12,13 @@ import {
 import {
   captureFrames,
   createRenderMetadata,
-  createTemporaryFramesCleanupTask,
-  withRenderCleanup,
   type BrowserDriver,
   type RenderChecksum,
   type RenderOutputMetadata
 } from "@kitsra/kavio-render-worker";
 import { assembleDirectRenderCommand, assembleRenderCommand } from "./assemble-command.js";
 import { createFfmpegRunner, type FfmpegRunner } from "./ffmpeg-runner.js";
+import { createFrameByteQueue } from "./frame-stream.js";
 import { isRenderError, renderError } from "./errors.js";
 import { PlaywrightDriver } from "./playwright-driver.js";
 import { withEffectiveCodecs } from "./encoding.js";
@@ -109,46 +107,82 @@ export async function renderComposition(
   try {
     let captureMs: number | undefined;
     let encodeMs = 0;
-    let checksumMs = 0;
 
-    const metadata = await withRenderCleanup(async (cleanup) => {
-      await mkdir(dirname(outputPath), { recursive: true });
-      let browserDriver: BrowserDriver | undefined;
-      const args =
-        renderMode === "ffmpeg-direct"
-          ? assembleDirectRenderCommand({ view, preset, outputPath })
-          : await (async () => {
-              const captureStart = performance.now();
-              browserDriver = options.driver ?? new PlaywrightDriver();
-              const assembled = await assembleBrowserOverlayRenderCommand({
-                view,
-                preset,
-                outputPath,
-                driver: browserDriver,
-                continueOnFrameError: options.continueOnFrameError === true,
-                deferCleanup: (task) => cleanup.defer(task)
-              });
-              captureMs = performance.now() - captureStart;
-              return assembled;
-            })();
+    await mkdir(dirname(outputPath), { recursive: true });
+    const ffmpegRunner = options.ffmpegRunner ?? createFfmpegRunner();
+    let browserDriver: BrowserDriver | undefined;
 
-      const ffmpegRunner = options.ffmpegRunner ?? createFfmpegRunner();
+    if (renderMode === "ffmpeg-direct") {
+      const args = assembleDirectRenderCommand({ view, preset, outputPath });
       const encodeStart = performance.now();
       await ffmpegRunner.run(args, options.signal === undefined ? {} : { signal: options.signal });
       encodeMs = performance.now() - encodeStart;
+    } else {
+      // Overlay frames stream straight into ffmpeg stdin so capture and encode
+      // overlap; the bounded queue applies backpressure instead of buffering
+      // the render or round-tripping PNG files through a temp directory.
+      const args = assembleRenderCommand({ view, preset, outputPath });
+      browserDriver = options.driver ?? new PlaywrightDriver();
+      const frames = createFrameByteQueue();
 
-      const checksumStart = performance.now();
-      const checksum = await sha256File(outputPath);
-      checksumMs = performance.now() - checksumStart;
-      return createRenderMetadata({
-        composition: view.composition,
-        preset: metadataPreset,
-        outputName,
-        outputPath,
-        checksums: checksum,
-        ffmpegVersion: options.ffmpegVersion ?? "ffmpeg-static",
-        chromiumRevision: options.chromiumRevision ?? (renderMode === "ffmpeg-direct" ? "not-used" : chromiumRevisionOf(browserDriver))
-      });
+      const captureStart = performance.now();
+      // captureFrames manages browser-context cleanup (open → capture → close).
+      const capturePromise = captureFrames({
+        driver: browserDriver,
+        composition: view,
+        continueOnFrameError: options.continueOnFrameError === true,
+        onFrame: async (capture) => {
+          await frames.push(capture.bytes);
+        }
+      }).then(
+        () => {
+          captureMs = performance.now() - captureStart;
+          frames.end();
+        },
+        (error: unknown) => {
+          frames.fail(error);
+          throw error;
+        }
+      );
+
+      const encodeStart = performance.now();
+      const ffmpegPromise = ffmpegRunner
+        .run(args, options.signal === undefined ? { stdin: frames } : { stdin: frames, signal: options.signal })
+        .then(
+          (result) => {
+            encodeMs = performance.now() - encodeStart;
+            return result;
+          },
+          (error: unknown) => {
+            // Stop capture instead of letting it fill the queue for a dead consumer.
+            frames.fail(error);
+            throw error;
+          }
+        );
+
+      const [captureSettled, ffmpegSettled] = await Promise.allSettled([capturePromise, ffmpegPromise]);
+      // A genuine capture failure poisons the queue and surfaces through the
+      // ffmpeg rejection too, so prefer the ffmpeg outcome, then capture.
+      if (ffmpegSettled.status === "rejected") {
+        throw ffmpegSettled.reason;
+      }
+      if (captureSettled.status === "rejected") {
+        throw captureSettled.reason;
+      }
+    }
+
+    const checksumStart = performance.now();
+    const checksum = await sha256File(outputPath);
+    const checksumMs = performance.now() - checksumStart;
+
+    const metadata = createRenderMetadata({
+      composition: view.composition,
+      preset: metadataPreset,
+      outputName,
+      outputPath,
+      checksums: checksum,
+      ffmpegVersion: options.ffmpegVersion ?? "ffmpeg-static",
+      chromiumRevision: options.chromiumRevision ?? (renderMode === "ffmpeg-direct" ? "not-used" : chromiumRevisionOf(browserDriver))
     });
 
     const timings: RenderStageTimings = {
@@ -161,42 +195,6 @@ export async function renderComposition(
   } catch (error) {
     return { ok: false, errors: [toKavioError(error)] };
   }
-}
-
-async function assembleBrowserOverlayRenderCommand(options: {
-  view: KavioDocument;
-  preset: KavioExportPreset;
-  outputPath: string;
-  driver: BrowserDriver;
-  continueOnFrameError: boolean;
-  deferCleanup(task: ReturnType<typeof createTemporaryFramesCleanupTask>): void;
-}): Promise<string[]> {
-  const workDir = await mkdtemp(join(tmpdir(), "kavio-render-"));
-  options.deferCleanup(
-    createTemporaryFramesCleanupTask(async () => {
-      await rm(workDir, { recursive: true, force: true });
-    }, "workdir")
-  );
-
-  const framePattern = join(workDir, "overlay-%05d.png");
-
-  // captureFrames manages browser-context cleanup (open → capture → close).
-  await captureFrames({
-    driver: options.driver,
-    composition: options.view,
-    continueOnFrameError: options.continueOnFrameError,
-    onFrame: async (capture) => {
-      const name = `overlay-${String(capture.frame).padStart(5, "0")}.png`;
-      await writeFile(join(workDir, name), capture.bytes);
-    }
-  });
-
-  return assembleRenderCommand({
-    view: options.view,
-    preset: options.preset,
-    framePattern,
-    outputPath: options.outputPath
-  });
 }
 
 function chromiumRevisionOf(driver: BrowserDriver | undefined): string {

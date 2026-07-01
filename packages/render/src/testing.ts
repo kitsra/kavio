@@ -53,6 +53,8 @@ export class FakeBrowserDriver implements BrowserDriver {
 export interface FakeFfmpegRunner extends FfmpegRunner {
   /** Argument lists captured from each run() call. */
   readonly calls: string[][];
+  /** Chunks consumed from the stdin stream across all run() calls. */
+  readonly stdinChunks: Uint8Array[];
 }
 
 export interface CreateFakeFfmpegRunnerOptions {
@@ -63,13 +65,21 @@ export interface CreateFakeFfmpegRunnerOptions {
 /** FfmpegRunner that records args and writes a placeholder output file. */
 export function createFakeFfmpegRunner(options: CreateFakeFfmpegRunnerOptions = {}): FakeFfmpegRunner {
   const calls: string[][] = [];
+  const stdinChunks: Uint8Array[] = [];
   return {
     calls,
-    async run(args: readonly string[], _runOptions?: FfmpegRunOptions): Promise<FfmpegRunResult> {
+    stdinChunks,
+    async run(args: readonly string[], runOptions?: FfmpegRunOptions): Promise<FfmpegRunResult> {
       calls.push([...args]);
 
       if (options.fail === true) {
         throw renderError({ code: "FFMPEG_FAILED", stage: "ffmpeg", message: "Fake ffmpeg failure." });
+      }
+
+      if (runOptions?.stdin !== undefined) {
+        for await (const chunk of runOptions.stdin) {
+          stdinChunks.push(chunk);
+        }
       }
 
       const outputPath = args[args.length - 1];

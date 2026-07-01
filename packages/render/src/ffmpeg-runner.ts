@@ -5,7 +5,15 @@ export interface FfmpegChildStream {
   on(event: "data", listener: (chunk: unknown) => void): void;
 }
 
+export interface FfmpegChildWritable {
+  write(chunk: Uint8Array): boolean;
+  end(): void;
+  on(event: "error", listener: (error: Error) => void): void;
+  once(event: "drain" | "error" | "close", listener: () => void): void;
+}
+
 export interface FfmpegChildProcess {
+  stdin?: FfmpegChildWritable | null;
   stdout: FfmpegChildStream | null;
   stderr: FfmpegChildStream | null;
   on(event: "error", listener: (error: Error) => void): void;
@@ -18,6 +26,12 @@ export type FfmpegSpawn = (command: string, args: readonly string[]) => FfmpegCh
 export interface FfmpegRunOptions {
   onProgress?: (chunk: string) => void;
   signal?: AbortSignal;
+  /**
+   * Byte chunks piped to ffmpeg's stdin (e.g. an image2pipe PNG frame stream).
+   * The runner applies write backpressure and ends stdin when the source
+   * completes; a source failure kills ffmpeg and rejects with that error.
+   */
+  stdin?: AsyncIterable<Uint8Array>;
 }
 
 export interface FfmpegRunResult {
@@ -52,6 +66,7 @@ export function createFfmpegRunner(options: CreateFfmpegRunnerOptions = {}): Ffm
         const child = spawn(binary, args);
         let stderr = "";
         let settled = false;
+        let closed = false;
 
         const settle = (action: () => void): void => {
           if (settled) {
@@ -71,6 +86,30 @@ export function createFfmpegRunner(options: CreateFfmpegRunnerOptions = {}): Ffm
 
         if (signal !== undefined) {
           signal.addEventListener("abort", onAbort);
+        }
+
+        if (runOptions.stdin !== undefined) {
+          const stdin = child.stdin;
+          if (stdin === undefined || stdin === null) {
+            child.kill("SIGKILL");
+            settle(() =>
+              reject(
+                renderError({
+                  code: "FFMPEG_FAILED",
+                  stage: "ffmpeg",
+                  message: "ffmpeg child process exposes no stdin to pipe frames into."
+                })
+              )
+            );
+            return;
+          }
+          // EPIPE from an early ffmpeg exit is expected; the close handler
+          // reports the real failure with stderr context.
+          stdin.on("error", () => {});
+          pumpStdin(stdin, runOptions.stdin, () => closed).catch((error: unknown) => {
+            child.kill("SIGKILL");
+            settle(() => reject(error));
+          });
         }
 
         child.stderr?.on("data", (chunk) => {
@@ -95,6 +134,7 @@ export function createFfmpegRunner(options: CreateFfmpegRunnerOptions = {}): Ffm
         });
 
         child.on("close", (code) => {
+          closed = true;
           settle(() => {
             if (code === 0) {
               resolve({ code: 0, stderr });
@@ -111,6 +151,28 @@ export function createFfmpegRunner(options: CreateFfmpegRunnerOptions = {}): Ffm
       });
     }
   };
+}
+
+async function pumpStdin(
+  stdin: FfmpegChildWritable,
+  source: AsyncIterable<Uint8Array>,
+  isClosed: () => boolean
+): Promise<void> {
+  for await (const chunk of source) {
+    if (isClosed()) {
+      return;
+    }
+    if (!stdin.write(chunk)) {
+      await new Promise<void>((resolve) => {
+        stdin.once("drain", resolve);
+        stdin.once("error", resolve);
+        stdin.once("close", resolve);
+      });
+    }
+  }
+  if (!isClosed()) {
+    stdin.end();
+  }
 }
 
 function cancelledError(): ReturnType<typeof renderError> {

@@ -17,8 +17,10 @@ export {
   type FfmpegRunResult,
   type FfmpegSpawn,
   type FfmpegChildProcess,
+  type FfmpegChildWritable,
   type CreateFfmpegRunnerOptions
 } from "./ffmpeg-runner.js";
+export { createFrameByteQueue, type FrameByteQueue, type CreateFrameByteQueueOptions } from "./frame-stream.js";
 export {
   createRenderHarnessServer,
   type RenderHarnessServer,
