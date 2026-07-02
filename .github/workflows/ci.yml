@@ -2,6 +2,11 @@ name: CI
 
 on:
   pull_request:
+  # Verify main after merges too: the Release workflow publishes from main, so
+  # a bad merge resolution or direct push must not reach it unverified.
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -38,5 +43,6 @@ jobs:
         run: corepack pnpm run pack:dry
 
       - name: Changeset status
-        if: ${{ !startsWith(github.head_ref, 'changeset-release/') }}
+        # head_ref/base_ref only exist on pull_request events.
+        if: ${{ github.event_name == 'pull_request' && !startsWith(github.head_ref, 'changeset-release/') }}
         run: corepack pnpm exec changeset status --since=origin/${{ github.base_ref }}

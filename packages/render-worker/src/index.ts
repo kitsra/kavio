@@ -43,6 +43,13 @@ export interface BrowserFrameCaptureOptions {
   omitBackground?: boolean;
 }
 
+export interface BrowserFrameCaptureTiming {
+  /** Wall time spent seeking the composition to the frame in the page. */
+  evaluateMs: number;
+  /** Wall time spent producing the screenshot bytes. */
+  screenshotMs: number;
+}
+
 export interface BrowserFrameCapture {
   frame: number;
   bytes: Uint8Array;
@@ -51,6 +58,8 @@ export interface BrowserFrameCapture {
   width: number;
   height: number;
   omitBackground: boolean;
+  /** Per-frame timing when the driver measures it. */
+  timing?: BrowserFrameCaptureTiming;
 }
 
 export interface DeterministicChromiumLaunchOptions {
@@ -97,6 +106,13 @@ export interface BrowserDriver {
   open(composition: KavioDocument, options?: BrowserOpenOptions): Promise<void>;
   renderFrame(frame: number, options?: BrowserFrameCaptureOptions): Promise<BrowserFrameCapture>;
   close(): Promise<void>;
+  /**
+   * Optional capability: create an independent frame renderer sharing this
+   * driver's browser session (e.g. another page on the same Chromium). Only
+   * valid after open(); the fork is already open for the same composition and
+   * its close() must tear down only the fork's own resources.
+   */
+  fork?(): Promise<BrowserDriver>;
 }
 
 export function createBrowserViewport(composition: KavioDocument, deviceScaleFactor = DEFAULT_BROWSER_DEVICE_SCALE_FACTOR): BrowserViewport {
@@ -147,6 +163,7 @@ export function createPngFrameCapture(options: {
   bytes: Uint8Array;
   viewport: BrowserViewport;
   omitBackground?: boolean;
+  timing?: BrowserFrameCaptureTiming;
 }): BrowserFrameCapture {
   assertNonNegativeInteger(options.frame, "frame");
   assertPositiveInteger(options.viewport.width, "viewport.width");
@@ -159,7 +176,8 @@ export function createPngFrameCapture(options: {
     mimeType: DEFAULT_BROWSER_SCREENSHOT_MIME_TYPE,
     width: options.viewport.width,
     height: options.viewport.height,
-    omitBackground: options.omitBackground ?? true
+    omitBackground: options.omitBackground ?? true,
+    ...(options.timing !== undefined && { timing: options.timing })
   };
 }
 
@@ -285,6 +303,20 @@ export interface CaptureFramesOptions {
   startFrame?: number;
   frameCount?: number;
   continueOnFrameError?: boolean;
+  /**
+   * Number of concurrent frame renderers. Values above 1 fork the driver
+   * (parallelism-1 times) and shard frames across the forks while onFrame,
+   * progress, and retention still observe strict frame order. Falls back to
+   * serial capture when the driver does not implement fork(). Deterministic:
+   * the same frames produce the same bytes in the same order.
+   */
+  parallelism?: number;
+  /**
+   * Keep every capture's bytes in the result `captures` array. Defaults to
+   * true only when no `onFrame` sink is provided; streaming consumers should
+   * not pay O(frames) memory for bytes they already handled.
+   */
+  retainCaptures?: boolean;
   onProgress?: (progress: FrameCaptureProgress) => void | Promise<void>;
   onFrame?: (capture: BrowserFrameCapture, progress: FrameCaptureProgress) => void | Promise<void>;
   onFrameError?: (failure: FrameCaptureFrameError, progress: FrameCaptureProgress) => void | Promise<void>;
@@ -298,6 +330,12 @@ export interface CaptureFramesResult {
   capturedFrames: number;
   failedFrames: number;
   bytesCaptured: number;
+  /** Wall time spent in driver.open() (browser launch + harness ready). */
+  openMs: number;
+  /** Sum of per-frame evaluate timings, when the driver reports them. */
+  evaluateMs?: number;
+  /** Sum of per-frame screenshot timings, when the driver reports them. */
+  screenshotMs?: number;
 }
 
 export interface RenderBatchInput {
@@ -474,14 +512,18 @@ export async function captureFrames(options: CaptureFramesOptions): Promise<Capt
     ...DEFAULT_BROWSER_FRAME_CAPTURE_OPTIONS,
     ...options.captureOptions
   };
+  const retainCaptures = options.retainCaptures ?? options.onFrame === undefined;
   const captures: BrowserFrameCapture[] = [];
   const errors: FrameCaptureFrameError[] = [];
   let completedFrames = 0;
   let capturedFrames = 0;
   let failedFrames = 0;
   let bytesCaptured = 0;
+  let openMs = 0;
+  let evaluateMs: number | undefined;
+  let screenshotMs: number | undefined;
 
-  const createProgress = (phase: FrameCaptureProgressPhase, frame?: number, error?: unknown): FrameCaptureProgress => {
+  const createProgress =(phase: FrameCaptureProgressPhase, frame?: number, error?: unknown): FrameCaptureProgress => {
     const progress: FrameCaptureProgress = {
       phase,
       totalFrames: range.totalFrames,
@@ -502,38 +544,68 @@ export async function captureFrames(options: CaptureFramesOptions): Promise<Capt
   await withRenderCleanup(async (cleanup) => {
     cleanup.defer(createBrowserContextCleanupTask(options.driver));
     await emitCaptureProgress(options.onProgress, createProgress("open"));
+    const openStart = performance.now();
     await options.driver.open(options.composition, {
       viewport: createBrowserViewport(options.composition),
       ...options.openOptions
     });
+    openMs = performance.now() - openStart;
 
-    for (let frame = range.startFrame; frame < range.endFrame; frame += 1) {
-      let capture: BrowserFrameCapture;
-      try {
-        capture = await options.driver.renderFrame(frame, captureOptions);
-      } catch (error) {
-        const failure = { frame, error };
-        errors.push(failure);
-        failedFrames += 1;
-        completedFrames += 1;
-        const progress = createProgress("frame-error", frame, error);
-        await emitCaptureFrameError(options.onFrameError, failure, progress);
-        await emitCaptureProgress(options.onProgress, progress);
-
-        if (options.continueOnFrameError !== true) {
-          throw createFrameCaptureError(failure);
-        }
-
-        continue;
+    const emitSuccess = async (capture: BrowserFrameCapture): Promise<void> => {
+      if (retainCaptures) {
+        captures.push(capture);
       }
-
-      captures.push(capture);
+      if (capture.timing !== undefined) {
+        evaluateMs = (evaluateMs ?? 0) + capture.timing.evaluateMs;
+        screenshotMs = (screenshotMs ?? 0) + capture.timing.screenshotMs;
+      }
       capturedFrames += 1;
       completedFrames += 1;
       bytesCaptured += capture.bytes.byteLength;
-      const progress = createProgress("capture", frame);
+      const progress = createProgress("capture", capture.frame);
       await emitCapturedFrame(options.onFrame, capture, progress);
       await emitCaptureProgress(options.onProgress, progress);
+    };
+
+    const emitFailure = async (frame: number, error: unknown): Promise<void> => {
+      const failure = { frame, error };
+      errors.push(failure);
+      failedFrames += 1;
+      completedFrames += 1;
+      const progress = createProgress("frame-error", frame, error);
+      await emitCaptureFrameError(options.onFrameError, failure, progress);
+      await emitCaptureProgress(options.onProgress, progress);
+
+      if (options.continueOnFrameError !== true) {
+        throw createFrameCaptureError(failure);
+      }
+    };
+
+    const requestedParallelism = Math.max(1, Math.trunc(options.parallelism ?? 1));
+    const forkDriver = options.driver.fork?.bind(options.driver);
+    const workerCount =
+      forkDriver === undefined ? 1 : Math.max(1, Math.min(requestedParallelism, range.totalFrames));
+
+    if (workerCount === 1 || forkDriver === undefined) {
+      for (let frame = range.startFrame; frame < range.endFrame; frame += 1) {
+        let capture: BrowserFrameCapture;
+        try {
+          capture = await options.driver.renderFrame(frame, captureOptions);
+        } catch (error) {
+          await emitFailure(frame, error);
+          continue;
+        }
+        await emitSuccess(capture);
+      }
+    } else {
+      await captureFramesInParallel({
+        drivers: await forkParallelDrivers(options.driver, forkDriver, workerCount, cleanup),
+        startFrame: range.startFrame,
+        endFrame: range.endFrame,
+        captureOptions,
+        emitSuccess,
+        emitFailure
+      });
     }
 
     await emitCaptureProgress(options.onProgress, createProgress("complete"));
@@ -546,8 +618,130 @@ export async function captureFrames(options: CaptureFramesOptions): Promise<Capt
     completedFrames,
     capturedFrames,
     failedFrames,
-    bytesCaptured
+    bytesCaptured,
+    openMs,
+    ...(evaluateMs !== undefined && { evaluateMs }),
+    ...(screenshotMs !== undefined && { screenshotMs })
   };
+}
+
+async function forkParallelDrivers(
+  driver: BrowserDriver,
+  forkDriver: () => Promise<BrowserDriver>,
+  workerCount: number,
+  cleanup: RenderCleanupStack
+): Promise<BrowserDriver[]> {
+  // Forks launch concurrently; each registers cleanup as soon as it exists so
+  // partial failures still tear down the forks that did launch.
+  const forks = await Promise.allSettled(
+    Array.from({ length: workerCount - 1 }, async (_unused, index) => {
+      const fork = await forkDriver();
+      cleanup.defer(createBrowserContextCleanupTask(fork, `browser-context-fork-${index + 1}`));
+      return fork;
+    })
+  );
+  const rejected = forks.find((outcome): outcome is PromiseRejectedResult => outcome.status === "rejected");
+  if (rejected !== undefined) {
+    throw rejected.reason;
+  }
+  return [
+    driver,
+    ...forks.map((outcome) => (outcome as PromiseFulfilledResult<BrowserDriver>).value)
+  ];
+}
+
+type ParallelCaptureEntry = { ok: true; capture: BrowserFrameCapture } | { ok: false; error: unknown };
+
+/**
+ * Shard frames across drivers with a work-stealing counter while emitting
+ * results in strict frame order through a bounded reorder buffer. Workers
+ * pause when the buffer is full, so a slow downstream consumer applies
+ * backpressure to every page instead of buffering the render.
+ */
+async function captureFramesInParallel(options: {
+  drivers: readonly BrowserDriver[];
+  startFrame: number;
+  endFrame: number;
+  captureOptions: BrowserFrameCaptureOptions;
+  emitSuccess: (capture: BrowserFrameCapture) => Promise<void>;
+  emitFailure: (frame: number, error: unknown) => Promise<void>;
+}): Promise<void> {
+  const pending = new Map<number, ParallelCaptureEntry>();
+  const maxPending = options.drivers.length * 2;
+  let nextFrame = options.startFrame;
+  let nextEmit = options.startFrame;
+  let stopped = false;
+
+  let emitterWaiter: (() => void) | null = null;
+  const wakeEmitter = (): void => {
+    const waiter = emitterWaiter;
+    emitterWaiter = null;
+    waiter?.();
+  };
+  let workerWaiters: (() => void)[] = [];
+  const wakeWorkers = (): void => {
+    const waiters = workerWaiters;
+    workerWaiters = [];
+    for (const waiter of waiters) {
+      waiter();
+    }
+  };
+
+  const emitter = async (): Promise<void> => {
+    try {
+      while (nextEmit < options.endFrame) {
+        const entry = pending.get(nextEmit);
+        if (entry === undefined) {
+          await new Promise<void>((resolve) => {
+            emitterWaiter = resolve;
+          });
+          continue;
+        }
+        pending.delete(nextEmit);
+        const frame = nextEmit;
+        nextEmit += 1;
+        wakeWorkers();
+        if (entry.ok) {
+          await options.emitSuccess(entry.capture);
+        } else {
+          await options.emitFailure(frame, entry.error);
+        }
+      }
+    } finally {
+      stopped = true;
+      wakeWorkers();
+    }
+  };
+
+  const worker = async (driver: BrowserDriver): Promise<void> => {
+    while (!stopped) {
+      if (pending.size >= maxPending) {
+        await new Promise<void>((resolve) => {
+          workerWaiters.push(resolve);
+        });
+        continue;
+      }
+      const frame = nextFrame;
+      if (frame >= options.endFrame) {
+        return;
+      }
+      nextFrame += 1;
+      let entry: ParallelCaptureEntry;
+      try {
+        entry = { ok: true, capture: await driver.renderFrame(frame, options.captureOptions) };
+      } catch (error) {
+        entry = { ok: false, error };
+      }
+      pending.set(frame, entry);
+      wakeEmitter();
+    }
+  };
+
+  const settled = await Promise.allSettled([emitter(), ...options.drivers.map((driver) => worker(driver))]);
+  const rejected = settled.find((outcome): outcome is PromiseRejectedResult => outcome.status === "rejected");
+  if (rejected !== undefined) {
+    throw rejected.reason;
+  }
 }
 
 export function expandRenderBatch(input: RenderBatchInput): RenderBatchJob[] {

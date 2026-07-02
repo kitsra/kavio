@@ -1,7 +1,14 @@
 export const KAVIO_RENDER_PACKAGE = "@kitsra/kavio-render";
 
 export { renderError, isRenderError, RENDER_ERROR_CODES, type RenderErrorCode, type RenderErrorOptions } from "./errors.js";
-export { assembleRenderCommand, type AssembleRenderCommandOptions } from "./assemble-command.js";
+export {
+  assembleDirectRenderCommand,
+  assembleRenderCommand,
+  getDirectRenderSupport,
+  type AssembleDirectRenderCommandOptions,
+  type AssembleRenderCommandOptions,
+  type DirectRenderSupport
+} from "./assemble-command.js";
 export { resolveFfmpegPath } from "./binaries.js";
 export {
   createFfmpegRunner,
@@ -10,8 +17,10 @@ export {
   type FfmpegRunResult,
   type FfmpegSpawn,
   type FfmpegChildProcess,
+  type FfmpegChildWritable,
   type CreateFfmpegRunnerOptions
 } from "./ffmpeg-runner.js";
+export { createFrameByteQueue, type FrameByteQueue, type CreateFrameByteQueueOptions } from "./frame-stream.js";
 export {
   createRenderHarnessServer,
   type RenderHarnessServer,
@@ -20,8 +29,10 @@ export {
 export { PlaywrightDriver, type PlaywrightDriverOptions } from "./playwright-driver.js";
 export {
   renderComposition,
+  type RenderCompositionMode,
   type RenderCompositionOptions,
-  type RenderCompositionResult
+  type RenderCompositionResult,
+  type RenderStageTimings
 } from "./render-composition.js";
 export { renderBatch, type RenderBatchOptions, type RenderBatchItemResult } from "./render-batch.js";
 export type { RenderBatchInput, RenderBatchRow } from "@kitsra/kavio-render-worker";

@@ -2,6 +2,17 @@ name: Render E2E
 
 on:
   pull_request:
+    paths-ignore:
+      - "docs/**"
+      - "site/**"
+      - "**.md"
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "docs/**"
+      - "site/**"
+      - "**.md"
 
 permissions:
   contents: read
@@ -32,8 +43,21 @@ jobs:
       - name: Verify render optional packages
         run: corepack pnpm run verify:render-optional-deps
 
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('packages/render/package.json') }}
+
       - name: Install Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: corepack pnpm --filter @kitsra/kavio-render exec playwright install --with-deps chromium
+
+      # Browsers came from the cache; only the OS packages need installing.
+      - name: Install Chromium system dependencies
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: corepack pnpm --filter @kitsra/kavio-render exec playwright install-deps chromium
 
       - name: Build
         run: corepack pnpm run build

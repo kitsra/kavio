@@ -140,6 +140,17 @@ const captured = await driver.renderFrame(3);
 await driver.close();
 assertEqual(captured.bytes[0], 3, "BrowserDriver returns PNG byte captures");
 
+const timedCapture = createPngFrameCapture({
+  frame: 0,
+  bytes: new Uint8Array([1]),
+  viewport,
+  timing: { evaluateMs: 2.5, screenshotMs: 4.5 }
+});
+assertEqual(timedCapture.timing?.evaluateMs, 2.5, "frame captures carry evaluate timing when provided");
+assertEqual(timedCapture.timing?.screenshotMs, 4.5, "frame captures carry screenshot timing when provided");
+const untimedCapture = createPngFrameCapture({ frame: 0, bytes: new Uint8Array([1]), viewport });
+assertEqual(untimedCapture.timing, undefined, "frame capture timing stays absent when not measured");
+
 class RecordingBrowserDriver implements BrowserDriver {
   opened = 0;
   closed = 0;
@@ -164,7 +175,8 @@ class RecordingBrowserDriver implements BrowserDriver {
     const captureOptions = {
       frame,
       bytes: new Uint8Array([frame, frame + 1]),
-      viewport
+      viewport,
+      timing: { evaluateMs: 1, screenshotMs: 2 }
     };
     return options?.omitBackground === undefined
       ? createPngFrameCapture(captureOptions)
@@ -197,14 +209,36 @@ assertEqual(successDriver.closed, 1, "frame capture loop closes the browser driv
 assertEqual(successDriver.viewportWidth, 1920, "frame capture loop passes a composition viewport to the driver");
 assertEqual(successDriver.frames.join(","), "0,1,2,3", "frame capture loop renders each requested frame in order");
 assertEqual(successDriver.captureOptions.every(Boolean), true, "frame capture loop defaults to transparent captures");
-assertEqual(frameLoopResult.captures.length, 4, "frame capture loop returns successful frame captures");
+assertEqual(frameLoopResult.captures.length, 0, "frame capture loop does not retain captures streamed via onFrame");
+assertEqual(frameLoopResult.capturedFrames, 4, "frame capture loop counts streamed captures");
 assertEqual(frameLoopResult.errors.length, 0, "successful frame capture loop has no frame errors");
 assertEqual(frameLoopResult.bytesCaptured, 8, "frame capture loop reports captured byte totals");
+assert(frameLoopResult.openMs >= 0, "frame capture loop measures driver open time");
+assertEqual(frameLoopResult.evaluateMs, 4, "frame capture loop sums per-frame evaluate timings");
+assertEqual(frameLoopResult.screenshotMs, 8, "frame capture loop sums per-frame screenshot timings");
 assertEqual(
   progressEvents.join("|"),
   "open:none:0|frame:0:1|capture:0:1|frame:1:2|capture:1:2|frame:2:3|capture:2:3|frame:3:4|capture:3:4|complete:none:4",
   "frame capture loop reports open, frame, capture, and completion progress"
 );
+
+const retainDriver = new RecordingBrowserDriver();
+const retainedResult = await captureFrames({
+  driver: retainDriver,
+  composition: browserComposition,
+  frameCount: 2,
+  retainCaptures: true,
+  onFrame: () => {}
+});
+assertEqual(retainedResult.captures.length, 2, "retainCaptures keeps streamed captures when requested");
+
+const noSinkDriver = new RecordingBrowserDriver();
+const noSinkResult = await captureFrames({
+  driver: noSinkDriver,
+  composition: browserComposition,
+  frameCount: 2
+});
+assertEqual(noSinkResult.captures.length, 2, "captures are retained by default when no onFrame sink is provided");
 
 const failFastDriver = new RecordingBrowserDriver(new Set([1]));
 try {
@@ -241,6 +275,106 @@ assertEqual(continuedResult.errors.length, 1, "continue-on-frame-error records f
 assertEqual(continuedResult.failedFrames, 1, "continue-on-frame-error reports failed frame count");
 assertEqual(continuedResult.completedFrames, 3, "continue-on-frame-error counts failed frames as completed attempts");
 assertEqual(frameErrors.join(","), "1", "continue-on-frame-error calls frame error callbacks");
+
+class ForkingBrowserDriver implements BrowserDriver {
+  opened = 0;
+  closed = 0;
+  forkCloses = 0;
+  forksCreated = 0;
+  framesByWorker = new Map<number, number[]>();
+
+  constructor(
+    private readonly workerId = 0,
+    private readonly root: ForkingBrowserDriver | null = null,
+    private readonly failingFrames = new Set<number>()
+  ) {}
+
+  private get shared(): ForkingBrowserDriver {
+    return this.root ?? this;
+  }
+
+  async open(): Promise<void> {
+    this.shared.opened += 1;
+  }
+
+  async fork(): Promise<BrowserDriver> {
+    const shared = this.shared;
+    shared.forksCreated += 1;
+    return new ForkingBrowserDriver(shared.forksCreated, shared, this.failingFrames);
+  }
+
+  async renderFrame(frame: number): Promise<BrowserFrameCapture> {
+    const shared = this.shared;
+    const recorded = shared.framesByWorker.get(this.workerId) ?? [];
+    recorded.push(frame);
+    shared.framesByWorker.set(this.workerId, recorded);
+    // Stagger completion so later frames finish before earlier ones.
+    await new Promise((resolve) => setTimeout(resolve, frame % 3 === 0 ? 4 : 0));
+    if (this.failingFrames.has(frame)) {
+      throw new Error(`boom-${frame}`);
+    }
+    return createPngFrameCapture({ frame, bytes: new Uint8Array([frame]), viewport });
+  }
+
+  async close(): Promise<void> {
+    if (this.root === null) {
+      this.shared.closed += 1;
+    } else {
+      this.shared.forkCloses += 1;
+    }
+  }
+}
+
+const parallelDriver = new ForkingBrowserDriver();
+const parallelEmitted: number[] = [];
+const parallelResult = await captureFrames({
+  driver: parallelDriver,
+  composition: browserComposition,
+  frameCount: 8,
+  parallelism: 3,
+  onFrame: (frameCapture) => {
+    parallelEmitted.push(frameCapture.frame);
+  }
+});
+assertEqual(parallelEmitted.join(","), "0,1,2,3,4,5,6,7", "parallel capture emits frames to onFrame in strict order");
+assertEqual(parallelResult.capturedFrames, 8, "parallel capture counts every frame");
+assertEqual(parallelDriver.opened, 1, "parallel capture opens the root driver once");
+assertEqual(parallelDriver.forksCreated, 2, "parallel capture forks parallelism-1 sibling drivers");
+assertEqual(parallelDriver.forkCloses, 2, "parallel capture closes every forked driver");
+assertEqual(parallelDriver.closed, 1, "parallel capture closes the root driver");
+const workerFrameCounts = [...parallelDriver.framesByWorker.values()].map((frames) => frames.length);
+assertEqual(
+  workerFrameCounts.reduce((sum, count) => sum + count, 0),
+  8,
+  "parallel capture renders each frame exactly once across workers"
+);
+assert(workerFrameCounts.length > 1, "parallel capture actually distributes frames across workers");
+
+const parallelFailDriver = new ForkingBrowserDriver(0, null, new Set([2]));
+let parallelFailed = false;
+try {
+  await captureFrames({
+    driver: parallelFailDriver,
+    composition: browserComposition,
+    frameCount: 6,
+    parallelism: 2
+  });
+} catch (error) {
+  parallelFailed = error instanceof Error && error.message.includes("Failed to capture frame 2");
+}
+assert(parallelFailed, "parallel capture fails fast with the failing frame number");
+assertEqual(parallelFailDriver.closed, 1, "parallel capture closes the root driver on failure");
+assertEqual(parallelFailDriver.forkCloses, 1, "parallel capture closes forked drivers on failure");
+
+const noForkDriver = new RecordingBrowserDriver();
+const noForkResult = await captureFrames({
+  driver: noForkDriver,
+  composition: browserComposition,
+  frameCount: 3,
+  parallelism: 4
+});
+assertEqual(noForkResult.capturedFrames, 3, "parallelism falls back to serial capture for drivers without fork");
+assertEqual(noForkDriver.frames.join(","), "0,1,2", "serial fallback renders frames in order on the sole driver");
 
 const metadata = createRenderMetadata({
   composition: template.composition,

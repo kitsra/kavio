@@ -1,3 +1,4 @@
+import { Buffer } from "node:buffer";
 import {
   createBrowserViewport,
   createPngFrameCapture,
@@ -20,10 +21,16 @@ interface PlaywrightPage {
   evaluate(expression: string): Promise<unknown>;
   waitForFunction(expression: string, arg?: unknown, options?: { timeout?: number }): Promise<unknown>;
   screenshot(options?: { type?: "png"; omitBackground?: boolean }): Promise<Uint8Array>;
+  close(): Promise<void>;
+}
+
+interface PlaywrightCdpSession {
+  send(method: string, params?: Record<string, unknown>): Promise<unknown>;
 }
 
 interface PlaywrightContext {
   newPage(): Promise<PlaywrightPage>;
+  newCDPSession(page: PlaywrightPage): Promise<PlaywrightCdpSession>;
 }
 
 interface PlaywrightBrowser {
@@ -69,6 +76,7 @@ export class PlaywrightDriver implements BrowserDriver {
   private browser: PlaywrightBrowser | null = null;
   private context: PlaywrightContext | null = null;
   private page: PlaywrightPage | null = null;
+  private cdp: PlaywrightCdpSession | null = null;
   private server: RenderHarnessServer | null = null;
   private viewport: BrowserViewport | null = null;
   private readonly deviceScaleFactor: number;
@@ -118,6 +126,7 @@ export class PlaywrightDriver implements BrowserDriver {
     this.server = await createRenderHarnessServer({ composition });
     await this.page.goto(this.server.url);
     await this.page.waitForFunction("window.__kavioReady === true", undefined, { timeout: this.readyTimeoutMs });
+    this.cdp = await createFastScreenshotSession(this.context, this.page);
   }
 
   async renderFrame(frame: number, options: BrowserFrameCaptureOptions = {}): Promise<BrowserFrameCapture> {
@@ -129,11 +138,43 @@ export class PlaywrightDriver implements BrowserDriver {
       });
     }
 
-    const omitBackground = options.omitBackground ?? true;
-    await this.page.evaluate(`window.__kavio.renderFrame(${frame})`);
-    const bytes = await this.page.screenshot({ type: "png", omitBackground });
+    return renderFrameOnPage(this.page, this.cdp, this.viewport, frame, options);
+  }
 
-    return createPngFrameCapture({ frame, bytes, viewport: this.viewport, omitBackground });
+  /**
+   * Launch a sibling Chromium process against this driver's harness server,
+   * ready to render frames for the same composition. Chromium serializes
+   * screenshot capture inside one browser process, so true capture
+   * parallelism needs one process per worker; the harness server and its
+   * composition stay owned by this driver.
+   */
+  async fork(): Promise<BrowserDriver> {
+    if (this.server === null || this.viewport === null) {
+      throw renderError({
+        code: "RENDER_FAILED",
+        stage: "render",
+        message: "PlaywrightDriver.fork called before open()."
+      });
+    }
+    const chromium = await loadChromium();
+    const browser = await chromium.launch({
+      headless: DEFAULT_CHROMIUM_LAUNCH_OPTIONS.headless,
+      args: DEFAULT_CHROMIUM_LAUNCH_OPTIONS.args
+    });
+    try {
+      const context = await browser.newContext({
+        viewport: { width: this.viewport.width, height: this.viewport.height },
+        deviceScaleFactor: this.viewport.deviceScaleFactor
+      });
+      const page = await context.newPage();
+      await page.goto(this.server.url);
+      await page.waitForFunction("window.__kavioReady === true", undefined, { timeout: this.readyTimeoutMs });
+      const cdp = await createFastScreenshotSession(context, page);
+      return new PlaywrightForkDriver(browser, page, cdp, this.viewport);
+    } catch (error) {
+      await browser.close();
+      throw error;
+    }
   }
 
   async close(): Promise<void> {
@@ -148,6 +189,86 @@ export class PlaywrightDriver implements BrowserDriver {
     this.server = null;
     this.viewport = null;
   }
+}
+
+/** Fork of a PlaywrightDriver: its own Chromium process on the shared harness server. */
+class PlaywrightForkDriver implements BrowserDriver {
+  constructor(
+    private readonly browser: PlaywrightBrowser,
+    private readonly page: PlaywrightPage,
+    private readonly cdp: PlaywrightCdpSession | null,
+    private readonly viewport: BrowserViewport
+  ) {}
+
+  async open(): Promise<void> {
+    throw renderError({
+      code: "RENDER_FAILED",
+      stage: "render",
+      message: "Forked Playwright drivers are already open."
+    });
+  }
+
+  async renderFrame(frame: number, options: BrowserFrameCaptureOptions = {}): Promise<BrowserFrameCapture> {
+    return renderFrameOnPage(this.page, this.cdp, this.viewport, frame, options);
+  }
+
+  async close(): Promise<void> {
+    await this.browser.close();
+  }
+}
+
+/**
+ * Prepare a raw CDP screenshot session: the transparent-background override is
+ * applied once here instead of per page.screenshot() call, and captures use
+ * Page.captureScreenshot with optimizeForSpeed (fastest PNG compression level;
+ * identical decoded pixels, so encoded outputs stay deterministic). Returns
+ * null when CDP is unavailable so capture falls back to page.screenshot().
+ */
+async function createFastScreenshotSession(
+  context: PlaywrightContext,
+  page: PlaywrightPage
+): Promise<PlaywrightCdpSession | null> {
+  try {
+    const session = await context.newCDPSession(page);
+    await session.send("Emulation.setDefaultBackgroundColorOverride", {
+      color: { r: 0, g: 0, b: 0, a: 0 }
+    });
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+async function renderFrameOnPage(
+  page: PlaywrightPage,
+  cdp: PlaywrightCdpSession | null,
+  viewport: BrowserViewport,
+  frame: number,
+  options: BrowserFrameCaptureOptions
+): Promise<BrowserFrameCapture> {
+  const omitBackground = options.omitBackground ?? true;
+  const evaluateStart = performance.now();
+  await page.evaluate(`window.__kavio.renderFrame(${frame})`);
+  const screenshotStart = performance.now();
+  let bytes: Uint8Array;
+  if (cdp !== null && omitBackground) {
+    const result = (await cdp.send("Page.captureScreenshot", {
+      format: "png",
+      optimizeForSpeed: true
+    })) as { data: string };
+    bytes = Buffer.from(result.data, "base64");
+  } else {
+    bytes = await page.screenshot({ type: "png", omitBackground });
+  }
+  const screenshotEnd = performance.now();
+
+  return createPngFrameCapture({
+    frame,
+    bytes,
+    viewport,
+    omitBackground,
+    timing: { evaluateMs: screenshotStart - evaluateStart, screenshotMs: screenshotEnd - screenshotStart }
+  });
 }
 
 function missingBrowserExecutable(message: string): boolean {

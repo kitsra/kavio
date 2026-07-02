@@ -39,6 +39,7 @@ declare module "node:path" {
 
 declare module "node:os" {
   export function tmpdir(): string;
+  export function availableParallelism(): number;
 }
 
 declare module "node:child_process" {
@@ -49,6 +50,12 @@ declare module "node:child_process" {
 declare module "ffmpeg-static" {
   const ffmpegPath: string | null;
   export default ffmpegPath;
+}
+
+declare module "node:buffer" {
+  export const Buffer: {
+    from(data: string, encoding: "base64"): Uint8Array;
+  };
 }
 
 declare module "node:crypto" {

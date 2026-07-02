@@ -1,8 +1,9 @@
 import type { KavioDocument } from "@kitsra/kavio-schema";
-import { assembleRenderCommand } from "./assemble-command.js";
+import { assembleDirectRenderCommand, assembleRenderCommand, getDirectRenderSupport } from "./assemble-command.js";
 import { renderError, RENDER_ERROR_CODES } from "./errors.js";
 import { createRenderHarnessServer } from "./harness-server.js";
 import { createFfmpegRunner, type FfmpegChildProcess, type FfmpegSpawn } from "./ffmpeg-runner.js";
+import { createFrameByteQueue } from "./frame-stream.js";
 import { renderComposition } from "./render-composition.js";
 import { renderBatch } from "./render-batch.js";
 import { FakeBrowserDriver, createFakeFfmpegRunner } from "./testing.js";
@@ -89,6 +90,17 @@ assert(graphics.includes("+faststart"), "adds faststart for mp4");
 assert(graphicsArgs.at(-1)?.endsWith(".mp4") ?? false, "last arg is the output path");
 assertEqual(graphicsArgs.filter((arg) => arg === "-filter_complex").length, 1, "emits a single -filter_complex");
 
+const pipedArgs = assembleRenderCommand({
+  view: graphicsOnlyView,
+  preset: graphicsOnlyView.exports[0]!
+});
+const piped = pipedArgs.join(" ");
+assert(piped.includes("-f image2pipe"), "omitting framePattern reads overlay frames from an image2pipe stream");
+assert(pipedArgs.some((arg, index) => arg === "-i" && pipedArgs[index + 1] === "-"), "piped overlay input reads from stdin");
+assert(!piped.includes("overlay-%05d.png"), "piped render does not reference a frame pattern");
+assert(piped.includes("[video_out]"), "piped render still maps the composited video stream");
+assertEqual(pipedArgs.filter((arg) => arg === "-filter_complex").length, 1, "piped render emits a single -filter_complex");
+
 const unsafeBackgroundView: KavioDocument = {
   ...graphicsOnlyView,
   composition: {
@@ -129,6 +141,42 @@ const webmArgs = assembleRenderCommand({
 assert(webmArgs.includes("-c:v libvpx-vp9"), "webm defaults to VP9 video");
 assert(webmArgs.includes("-c:a libopus"), "webm defaults to Opus audio");
 assert(!webmArgs.includes("+faststart"), "webm does not use mp4/mov faststart flags");
+
+const directShapeView: KavioDocument = {
+  version: "0.1",
+  composition: { width: 640, height: 360, fps: 30, durationFrames: 45, background: "#000000" },
+  assets: {},
+  layers: [
+    {
+      id: "panel",
+      type: "shape",
+      shape: "rect",
+      fill: "#ff3366",
+      stroke: { color: "#ffffff", width: 4 },
+      opacity: 0.75,
+      startFrame: 5,
+      durationFrames: 20,
+      position: { x: 32, y: 48 },
+      size: { width: 200, height: 96 }
+    }
+  ],
+  audio: [],
+  exports: [{ name: "direct", format: "mp4", codec: "h264", width: 640, height: 360 }]
+};
+const directSupport = getDirectRenderSupport(directShapeView);
+assert(directSupport.ok, "shape-only composition is eligible for FFmpeg-direct render");
+const directArgs = assembleDirectRenderCommand({
+  view: directShapeView,
+  preset: directShapeView.exports[0]!,
+  outputPath: "/tmp/direct.mp4"
+}).join(" ");
+assert(!directArgs.includes("overlay-%05d.png"), "direct render does not read overlay PNG frames");
+assert(!directArgs.includes("overlay="), "direct render does not composite a PNG overlay stream");
+assert(directArgs.includes("drawbox=x=32:y=48:w=200:h=96:color=0xff3366@0.75:t=fill:enable='between(n,5,24)'"), "direct render compiles shape fill to drawbox");
+assert(directArgs.includes("drawbox=x=32:y=48:w=200:h=96:color=0xffffff@0.75:t=4:enable='between(n,5,24)'"), "direct render compiles shape stroke to drawbox");
+
+const directTextSupport = getDirectRenderSupport(graphicsOnlyView);
+assert(!directTextSupport.ok, "text composition is not eligible for FFmpeg-direct render yet");
 
 // --- harness-server.ts -----------------------------------------------------
 
@@ -176,6 +224,180 @@ try {
 }
 assert(ffmpegFailed, "ffmpeg runner rejects with FFMPEG_FAILED on non-zero exit");
 
+const stdinWrites: Uint8Array[] = [];
+let stdinEnded = false;
+const stdinSpawn: FfmpegSpawn = () =>
+  ({
+    stdin: {
+      write(chunk: Uint8Array) {
+        stdinWrites.push(chunk);
+        return true;
+      },
+      end() {
+        stdinEnded = true;
+      },
+      on() {},
+      once() {}
+    },
+    stdout: { on() {} },
+    stderr: { on() {} },
+    on(event: string, listener: (value: number | null) => void) {
+      if (event === "close") {
+        // Close only after stdin has been ended, like real ffmpeg draining its input.
+        const poll = (): void => {
+          if (stdinEnded) {
+            listener(0);
+            return;
+          }
+          setTimeout(poll, 0);
+        };
+        setTimeout(poll, 0);
+      }
+    },
+    kill() {}
+  }) as unknown as FfmpegChildProcess;
+
+async function* twoChunks(): AsyncGenerator<Uint8Array> {
+  yield new Uint8Array([1, 2]);
+  yield new Uint8Array([3]);
+}
+const stdinRun = await createFfmpegRunner({ spawn: stdinSpawn, resolveBinary: () => "ffmpeg" }).run(["-i", "-"], {
+  stdin: twoChunks()
+});
+assertEqual(stdinRun.code, 0, "ffmpeg runner resolves after piping stdin");
+assertEqual(stdinWrites.length, 2, "ffmpeg runner writes every stdin chunk");
+assertEqual(stdinWrites[0]?.join(","), "1,2", "ffmpeg runner preserves stdin chunk bytes");
+assert(stdinEnded, "ffmpeg runner ends stdin after the source completes");
+
+{
+  // Backpressure on every chunk must not accumulate stream listeners.
+  const listenerAdds = new Map<string, number>();
+  const countListener = (event: string): void => {
+    listenerAdds.set(event, (listenerAdds.get(event) ?? 0) + 1);
+  };
+  let drainListener: (() => void) | null = null;
+  let slowEnded = false;
+  const slowSpawn: FfmpegSpawn = () =>
+    ({
+      stdin: {
+        write() {
+          setTimeout(() => drainListener?.(), 0);
+          return false;
+        },
+        end() {
+          slowEnded = true;
+        },
+        on(event: string, listener: () => void) {
+          countListener(event);
+          if (event === "drain") {
+            drainListener = listener;
+          }
+        },
+        once(event: string, listener: () => void) {
+          countListener(event);
+          if (event === "drain") {
+            drainListener = listener;
+          }
+        }
+      },
+      stdout: { on() {} },
+      stderr: { on() {} },
+      on(event: string, listener: (value: number | null) => void) {
+        if (event === "close") {
+          const poll = (): void => {
+            if (slowEnded) {
+              listener(0);
+              return;
+            }
+            setTimeout(poll, 0);
+          };
+          setTimeout(poll, 0);
+        }
+      },
+      kill() {}
+    }) as unknown as FfmpegChildProcess;
+
+  async function* manyChunks(): AsyncGenerator<Uint8Array> {
+    for (let i = 0; i < 50; i += 1) {
+      yield new Uint8Array([i]);
+    }
+  }
+  await createFfmpegRunner({ spawn: slowSpawn, resolveBinary: () => "ffmpeg" }).run(["-i", "-"], {
+    stdin: manyChunks()
+  });
+  const totalListenerAdds = [...listenerAdds.values()].reduce((sum, count) => sum + count, 0);
+  assert(
+    totalListenerAdds <= 6,
+    `stdin pump must attach a bounded number of stream listeners, got ${totalListenerAdds} (${JSON.stringify([...listenerAdds])})`
+  );
+}
+
+let stdinSourceFailed = false;
+async function* failingChunks(): AsyncGenerator<Uint8Array> {
+  yield new Uint8Array([1]);
+  throw new Error("capture exploded");
+}
+try {
+  await createFfmpegRunner({ spawn: stdinSpawn, resolveBinary: () => "ffmpeg" }).run(["-i", "-"], {
+    stdin: failingChunks()
+  });
+} catch (error) {
+  stdinSourceFailed = error instanceof Error && error.message.includes("capture exploded");
+}
+assert(stdinSourceFailed, "ffmpeg runner surfaces stdin source failures");
+
+// --- frame-stream.ts ---------------------------------------------------------
+
+{
+  const queue = createFrameByteQueue();
+  await queue.push(new Uint8Array([1]));
+  await queue.push(new Uint8Array([2, 3]));
+  queue.end();
+  const drained: number[] = [];
+  for await (const chunk of queue) {
+    drained.push(...chunk);
+  }
+  assertEqual(drained.join(","), "1,2,3", "frame byte queue yields pushed chunks in order");
+}
+
+{
+  const queue = createFrameByteQueue({ maxBufferedBytes: 1 });
+  let secondPushResolved = false;
+  await queue.push(new Uint8Array([1]));
+  const secondPush = queue.push(new Uint8Array([2])).then(() => {
+    secondPushResolved = true;
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assertEqual(secondPushResolved, false, "frame byte queue applies backpressure past the byte cap");
+  const iterator = queue[Symbol.asyncIterator]();
+  await iterator.next();
+  await secondPush;
+  assertEqual(secondPushResolved, true, "frame byte queue releases pushes once the consumer drains");
+  queue.end();
+}
+
+{
+  const queue = createFrameByteQueue();
+  await queue.push(new Uint8Array([1]));
+  queue.fail(new Error("downstream died"));
+  let pushRejected = false;
+  try {
+    await queue.push(new Uint8Array([2]));
+  } catch (error) {
+    pushRejected = error instanceof Error && error.message === "downstream died";
+  }
+  assert(pushRejected, "frame byte queue rejects pushes after fail()");
+  let iterationRejected = false;
+  try {
+    for await (const _chunk of queue) {
+      // drain
+    }
+  } catch (error) {
+    iterationRejected = error instanceof Error && error.message === "downstream died";
+  }
+  assert(iterationRejected, "frame byte queue rejects iteration after fail()");
+}
+
 // --- render-composition.ts -------------------------------------------------
 
 const templateDoc: KavioDocument = {
@@ -208,10 +430,56 @@ if (successResult.ok) {
   assert(successResult.metadata.checksums.length === 1, "records an output checksum");
   assertEqual(successResult.metadata.codecs.video, "h264", "mp4 metadata records the effective video codec");
   assertEqual(successResult.metadata.codecs.audio, "aac", "mp4 metadata records the effective audio codec");
+  assert(successResult.timings.captureMs !== undefined && successResult.timings.captureMs >= 0, "browser render reports capture timing");
+  assert(successResult.timings.browserOpenMs !== undefined && successResult.timings.browserOpenMs >= 0, "browser render reports driver open timing");
+  assert(successResult.timings.captureEvaluateMs !== undefined && successResult.timings.captureEvaluateMs >= 0, "browser render reports summed evaluate timing");
+  assert(successResult.timings.captureScreenshotMs !== undefined && successResult.timings.captureScreenshotMs >= 0, "browser render reports summed screenshot timing");
+  assert(successResult.timings.encodeMs >= 0, "render reports encode timing");
+  assert(successResult.timings.checksumMs >= 0, "render reports checksum timing");
+  assert(successResult.timings.totalMs >= successResult.timings.encodeMs, "total timing covers encode stage");
 }
 assertEqual(successDriver.renderedFrames.length, 6, "captures every frame");
 assertEqual(successDriver.closes, 1, "closes the browser driver on success");
 assertEqual(successRunner.calls.length, 1, "invokes ffmpeg once");
+assert(successRunner.calls[0]?.includes("image2pipe") === true, "browser render reads overlay frames from an image2pipe stream");
+assert(!(successRunner.calls[0]?.join(" ").includes("overlay-%05d.png") ?? false), "browser render no longer references a PNG frame directory");
+assertEqual(successRunner.stdinChunks.length, 6, "browser render streams every captured frame to ffmpeg stdin");
+
+const directDriver = new FakeBrowserDriver();
+const directRunner = createFakeFfmpegRunner();
+const directRenderResult = await renderComposition(directShapeView, {
+  preset: "direct",
+  outDir,
+  renderMode: "ffmpeg-direct",
+  driver: directDriver,
+  ffmpegRunner: directRunner
+});
+assert(directRenderResult.ok === true, "ffmpeg-direct render succeeds with fakes");
+assertEqual(directDriver.opens, 0, "ffmpeg-direct render does not open the browser driver");
+assertEqual(directDriver.renderedFrames.length, 0, "ffmpeg-direct render does not capture browser frames");
+assertEqual(directRunner.calls.length, 1, "ffmpeg-direct render invokes ffmpeg once");
+assert(!directRunner.calls[0]?.join(" ").includes("overlay-%05d.png"), "ffmpeg-direct render call skips overlay PNG input");
+if (directRenderResult.ok) {
+  assertEqual(directRenderResult.metadata.tools.chromium.revision, "not-used", "ffmpeg-direct metadata records no Chromium use");
+  assertEqual(directRenderResult.timings.captureMs, undefined, "ffmpeg-direct render reports no capture timing");
+  assert(directRenderResult.timings.encodeMs >= 0, "ffmpeg-direct render reports encode timing");
+}
+
+const parallelRenderDriver = new FakeBrowserDriver();
+const parallelRenderRunner = createFakeFfmpegRunner();
+const parallelRenderResult = await renderComposition(templateDoc, {
+  preset: "reels",
+  propValues: { headline: "Hi" },
+  outDir,
+  driver: parallelRenderDriver,
+  ffmpegRunner: parallelRenderRunner,
+  captureParallelism: 3
+});
+assert(parallelRenderResult.ok === true, "parallel capture render succeeds with fakes");
+assertEqual(parallelRenderDriver.renderedFrames.length, 6, "parallel capture renders every frame across forks");
+assertEqual(parallelRenderRunner.stdinChunks.length, 6, "parallel capture still streams every frame to ffmpeg in order");
+assert(parallelRenderDriver.forks >= 1, "parallel capture forks the browser driver");
+assertEqual(parallelRenderDriver.forkCloses, parallelRenderDriver.forks, "parallel capture closes every fork");
 
 const webmRenderDoc: KavioDocument = {
   ...templateDoc,
