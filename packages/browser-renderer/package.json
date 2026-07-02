@@ -1,6 +1,6 @@
 {
   "name": "@kitsra/kavio-browser-renderer",
-  "version": "0.1.3",
+  "version": "0.2.0",
   "description": "Browser runtime for previewing and rendering Kavio frames.",
   "license": "Elastic-2.0",
   "repository": {

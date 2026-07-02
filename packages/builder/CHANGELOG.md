@@ -1,5 +1,12 @@
 # @kitsra/kavio-builder
 
+## 0.2.0
+
+### Patch Changes
+
+- @kitsra/kavio-schema@0.2.0
+- @kitsra/kavio-core@0.2.0
+
 ## 0.1.3
 
 ### Patch Changes
