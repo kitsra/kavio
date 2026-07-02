@@ -269,6 +269,69 @@ assertEqual(stdinWrites.length, 2, "ffmpeg runner writes every stdin chunk");
 assertEqual(stdinWrites[0]?.join(","), "1,2", "ffmpeg runner preserves stdin chunk bytes");
 assert(stdinEnded, "ffmpeg runner ends stdin after the source completes");
 
+{
+  // Backpressure on every chunk must not accumulate stream listeners.
+  const listenerAdds = new Map<string, number>();
+  const countListener = (event: string): void => {
+    listenerAdds.set(event, (listenerAdds.get(event) ?? 0) + 1);
+  };
+  let drainListener: (() => void) | null = null;
+  let slowEnded = false;
+  const slowSpawn: FfmpegSpawn = () =>
+    ({
+      stdin: {
+        write() {
+          setTimeout(() => drainListener?.(), 0);
+          return false;
+        },
+        end() {
+          slowEnded = true;
+        },
+        on(event: string, listener: () => void) {
+          countListener(event);
+          if (event === "drain") {
+            drainListener = listener;
+          }
+        },
+        once(event: string, listener: () => void) {
+          countListener(event);
+          if (event === "drain") {
+            drainListener = listener;
+          }
+        }
+      },
+      stdout: { on() {} },
+      stderr: { on() {} },
+      on(event: string, listener: (value: number | null) => void) {
+        if (event === "close") {
+          const poll = (): void => {
+            if (slowEnded) {
+              listener(0);
+              return;
+            }
+            setTimeout(poll, 0);
+          };
+          setTimeout(poll, 0);
+        }
+      },
+      kill() {}
+    }) as unknown as FfmpegChildProcess;
+
+  async function* manyChunks(): AsyncGenerator<Uint8Array> {
+    for (let i = 0; i < 50; i += 1) {
+      yield new Uint8Array([i]);
+    }
+  }
+  await createFfmpegRunner({ spawn: slowSpawn, resolveBinary: () => "ffmpeg" }).run(["-i", "-"], {
+    stdin: manyChunks()
+  });
+  const totalListenerAdds = [...listenerAdds.values()].reduce((sum, count) => sum + count, 0);
+  assert(
+    totalListenerAdds <= 6,
+    `stdin pump must attach a bounded number of stream listeners, got ${totalListenerAdds} (${JSON.stringify([...listenerAdds])})`
+  );
+}
+
 let stdinSourceFailed = false;
 async function* failingChunks(): AsyncGenerator<Uint8Array> {
   yield new Uint8Array([1]);

@@ -8,8 +8,8 @@ export interface FfmpegChildStream {
 export interface FfmpegChildWritable {
   write(chunk: Uint8Array): boolean;
   end(): void;
-  on(event: "error", listener: (error: Error) => void): void;
-  once(event: "drain" | "error" | "close", listener: () => void): void;
+  on(event: "drain" | "error", listener: (...args: unknown[]) => void): void;
+  once(event: "close", listener: () => void): void;
 }
 
 export interface FfmpegChildProcess {
@@ -103,9 +103,6 @@ export function createFfmpegRunner(options: CreateFfmpegRunnerOptions = {}): Ffm
             );
             return;
           }
-          // EPIPE from an early ffmpeg exit is expected; the close handler
-          // reports the real failure with stderr context.
-          stdin.on("error", () => {});
           pumpStdin(stdin, runOptions.stdin, () => closed).catch((error: unknown) => {
             child.kill("SIGKILL");
             settle(() => reject(error));
@@ -158,15 +155,27 @@ async function pumpStdin(
   source: AsyncIterable<Uint8Array>,
   isClosed: () => boolean
 ): Promise<void> {
+  // One permanent listener per event; each backpressure pause parks a single
+  // waiter that any of drain/error/close wakes. EPIPE from an early ffmpeg
+  // exit is swallowed here — the child close handler reports the real failure
+  // with stderr context.
+  let waiter: (() => void) | null = null;
+  const wake = (): void => {
+    const parked = waiter;
+    waiter = null;
+    parked?.();
+  };
+  stdin.on("drain", wake);
+  stdin.on("error", wake);
+  stdin.once("close", wake);
+
   for await (const chunk of source) {
     if (isClosed()) {
       return;
     }
     if (!stdin.write(chunk)) {
       await new Promise<void>((resolve) => {
-        stdin.once("drain", resolve);
-        stdin.once("error", resolve);
-        stdin.once("close", resolve);
+        waiter = resolve;
       });
     }
   }
