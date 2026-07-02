@@ -276,6 +276,106 @@ assertEqual(continuedResult.failedFrames, 1, "continue-on-frame-error reports fa
 assertEqual(continuedResult.completedFrames, 3, "continue-on-frame-error counts failed frames as completed attempts");
 assertEqual(frameErrors.join(","), "1", "continue-on-frame-error calls frame error callbacks");
 
+class ForkingBrowserDriver implements BrowserDriver {
+  opened = 0;
+  closed = 0;
+  forkCloses = 0;
+  forksCreated = 0;
+  framesByWorker = new Map<number, number[]>();
+
+  constructor(
+    private readonly workerId = 0,
+    private readonly root: ForkingBrowserDriver | null = null,
+    private readonly failingFrames = new Set<number>()
+  ) {}
+
+  private get shared(): ForkingBrowserDriver {
+    return this.root ?? this;
+  }
+
+  async open(): Promise<void> {
+    this.shared.opened += 1;
+  }
+
+  async fork(): Promise<BrowserDriver> {
+    const shared = this.shared;
+    shared.forksCreated += 1;
+    return new ForkingBrowserDriver(shared.forksCreated, shared, this.failingFrames);
+  }
+
+  async renderFrame(frame: number): Promise<BrowserFrameCapture> {
+    const shared = this.shared;
+    const recorded = shared.framesByWorker.get(this.workerId) ?? [];
+    recorded.push(frame);
+    shared.framesByWorker.set(this.workerId, recorded);
+    // Stagger completion so later frames finish before earlier ones.
+    await new Promise((resolve) => setTimeout(resolve, frame % 3 === 0 ? 4 : 0));
+    if (this.failingFrames.has(frame)) {
+      throw new Error(`boom-${frame}`);
+    }
+    return createPngFrameCapture({ frame, bytes: new Uint8Array([frame]), viewport });
+  }
+
+  async close(): Promise<void> {
+    if (this.root === null) {
+      this.shared.closed += 1;
+    } else {
+      this.shared.forkCloses += 1;
+    }
+  }
+}
+
+const parallelDriver = new ForkingBrowserDriver();
+const parallelEmitted: number[] = [];
+const parallelResult = await captureFrames({
+  driver: parallelDriver,
+  composition: browserComposition,
+  frameCount: 8,
+  parallelism: 3,
+  onFrame: (frameCapture) => {
+    parallelEmitted.push(frameCapture.frame);
+  }
+});
+assertEqual(parallelEmitted.join(","), "0,1,2,3,4,5,6,7", "parallel capture emits frames to onFrame in strict order");
+assertEqual(parallelResult.capturedFrames, 8, "parallel capture counts every frame");
+assertEqual(parallelDriver.opened, 1, "parallel capture opens the root driver once");
+assertEqual(parallelDriver.forksCreated, 2, "parallel capture forks parallelism-1 sibling drivers");
+assertEqual(parallelDriver.forkCloses, 2, "parallel capture closes every forked driver");
+assertEqual(parallelDriver.closed, 1, "parallel capture closes the root driver");
+const workerFrameCounts = [...parallelDriver.framesByWorker.values()].map((frames) => frames.length);
+assertEqual(
+  workerFrameCounts.reduce((sum, count) => sum + count, 0),
+  8,
+  "parallel capture renders each frame exactly once across workers"
+);
+assert(workerFrameCounts.length > 1, "parallel capture actually distributes frames across workers");
+
+const parallelFailDriver = new ForkingBrowserDriver(0, null, new Set([2]));
+let parallelFailed = false;
+try {
+  await captureFrames({
+    driver: parallelFailDriver,
+    composition: browserComposition,
+    frameCount: 6,
+    parallelism: 2
+  });
+} catch (error) {
+  parallelFailed = error instanceof Error && error.message.includes("Failed to capture frame 2");
+}
+assert(parallelFailed, "parallel capture fails fast with the failing frame number");
+assertEqual(parallelFailDriver.closed, 1, "parallel capture closes the root driver on failure");
+assertEqual(parallelFailDriver.forkCloses, 1, "parallel capture closes forked drivers on failure");
+
+const noForkDriver = new RecordingBrowserDriver();
+const noForkResult = await captureFrames({
+  driver: noForkDriver,
+  composition: browserComposition,
+  frameCount: 3,
+  parallelism: 4
+});
+assertEqual(noForkResult.capturedFrames, 3, "parallelism falls back to serial capture for drivers without fork");
+assertEqual(noForkDriver.frames.join(","), "0,1,2", "serial fallback renders frames in order on the sole driver");
+
 const metadata = createRenderMetadata({
   composition: template.composition,
   preset: squarePreset,

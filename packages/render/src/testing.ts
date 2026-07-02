@@ -19,12 +19,34 @@ const FAKE_PNG = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
 export class FakeBrowserDriver implements BrowserDriver {
   opens = 0;
   closes = 0;
+  /** Forks created across this driver and its descendants. */
+  forks = 0;
+  /** Fork close() calls, aggregated on the root driver. */
+  forkCloses = 0;
+  /** Frames rendered across this driver and all forks, in completion order. */
   renderedFrames: number[] = [];
   private viewport: BrowserViewport | null = null;
+  private root: FakeBrowserDriver | null = null;
 
   async open(composition: KavioDocument, options: BrowserOpenOptions = {}): Promise<void> {
     this.opens += 1;
     this.viewport = options.viewport ?? createBrowserViewport(composition);
+  }
+
+  async fork(): Promise<BrowserDriver> {
+    if (this.viewport === null) {
+      throw renderError({
+        code: "RENDER_FRAME_FAILED",
+        stage: "render",
+        message: "FakeBrowserDriver.fork called before open()."
+      });
+    }
+    const root = this.root ?? this;
+    root.forks += 1;
+    const child = new FakeBrowserDriver();
+    child.root = root;
+    child.viewport = this.viewport;
+    return child;
   }
 
   async renderFrame(frame: number, options: BrowserFrameCaptureOptions = {}): Promise<BrowserFrameCapture> {
@@ -35,7 +57,7 @@ export class FakeBrowserDriver implements BrowserDriver {
         message: "FakeBrowserDriver.renderFrame called before open()."
       });
     }
-    this.renderedFrames.push(frame);
+    (this.root ?? this).renderedFrames.push(frame);
     return createPngFrameCapture({
       frame,
       bytes: FAKE_PNG,
@@ -46,7 +68,11 @@ export class FakeBrowserDriver implements BrowserDriver {
   }
 
   async close(): Promise<void> {
-    this.closes += 1;
+    if (this.root !== null) {
+      this.root.forkCloses += 1;
+    } else {
+      this.closes += 1;
+    }
     this.viewport = null;
   }
 }

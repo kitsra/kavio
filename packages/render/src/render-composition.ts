@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile } from "node:fs/promises";
+import { availableParallelism } from "node:os";
 import { dirname, join } from "node:path";
 import { applyExportPreset, collectCompositionResourceLimitInputs, collectResourceLimitViolations, resolveTemplateProps } from "@kitsra/kavio-core";
 import {
@@ -35,6 +36,11 @@ export interface RenderCompositionOptions {
    * that can be compiled directly into FFmpeg filters.
    */
   renderMode?: RenderCompositionMode;
+  /**
+   * Concurrent capture pages for browser-overlay renders. Defaults to
+   * min(4, cores - 1). Deterministic: output bytes match serial capture.
+   */
+  captureParallelism?: number;
   driver?: BrowserDriver;
   ffmpegRunner?: FfmpegRunner;
   signal?: AbortSignal;
@@ -139,6 +145,7 @@ export async function renderComposition(
       const capturePromise = captureFrames({
         driver: browserDriver,
         composition: view,
+        parallelism: options.captureParallelism ?? defaultCaptureParallelism(),
         continueOnFrameError: options.continueOnFrameError === true,
         onFrame: async (capture) => {
           await frames.push(capture.bytes);
@@ -210,6 +217,10 @@ export async function renderComposition(
   } catch (error) {
     return { ok: false, errors: [toKavioError(error)] };
   }
+}
+
+function defaultCaptureParallelism(): number {
+  return Math.max(1, Math.min(4, availableParallelism() - 1));
 }
 
 function chromiumRevisionOf(driver: BrowserDriver | undefined): string {

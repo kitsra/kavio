@@ -20,6 +20,7 @@ interface PlaywrightPage {
   evaluate(expression: string): Promise<unknown>;
   waitForFunction(expression: string, arg?: unknown, options?: { timeout?: number }): Promise<unknown>;
   screenshot(options?: { type?: "png"; omitBackground?: boolean }): Promise<Uint8Array>;
+  close(): Promise<void>;
 }
 
 interface PlaywrightContext {
@@ -129,20 +130,42 @@ export class PlaywrightDriver implements BrowserDriver {
       });
     }
 
-    const omitBackground = options.omitBackground ?? true;
-    const evaluateStart = performance.now();
-    await this.page.evaluate(`window.__kavio.renderFrame(${frame})`);
-    const screenshotStart = performance.now();
-    const bytes = await this.page.screenshot({ type: "png", omitBackground });
-    const screenshotEnd = performance.now();
+    return renderFrameOnPage(this.page, this.viewport, frame, options);
+  }
 
-    return createPngFrameCapture({
-      frame,
-      bytes,
-      viewport: this.viewport,
-      omitBackground,
-      timing: { evaluateMs: screenshotStart - evaluateStart, screenshotMs: screenshotEnd - screenshotStart }
+  /**
+   * Launch a sibling Chromium process against this driver's harness server,
+   * ready to render frames for the same composition. Chromium serializes
+   * screenshot capture inside one browser process, so true capture
+   * parallelism needs one process per worker; the harness server and its
+   * composition stay owned by this driver.
+   */
+  async fork(): Promise<BrowserDriver> {
+    if (this.server === null || this.viewport === null) {
+      throw renderError({
+        code: "RENDER_FAILED",
+        stage: "render",
+        message: "PlaywrightDriver.fork called before open()."
+      });
+    }
+    const chromium = await loadChromium();
+    const browser = await chromium.launch({
+      headless: DEFAULT_CHROMIUM_LAUNCH_OPTIONS.headless,
+      args: DEFAULT_CHROMIUM_LAUNCH_OPTIONS.args
     });
+    try {
+      const context = await browser.newContext({
+        viewport: { width: this.viewport.width, height: this.viewport.height },
+        deviceScaleFactor: this.viewport.deviceScaleFactor
+      });
+      const page = await context.newPage();
+      await page.goto(this.server.url);
+      await page.waitForFunction("window.__kavioReady === true", undefined, { timeout: this.readyTimeoutMs });
+      return new PlaywrightForkDriver(browser, page, this.viewport);
+    } catch (error) {
+      await browser.close();
+      throw error;
+    }
   }
 
   async close(): Promise<void> {
@@ -157,6 +180,53 @@ export class PlaywrightDriver implements BrowserDriver {
     this.server = null;
     this.viewport = null;
   }
+}
+
+/** Fork of a PlaywrightDriver: its own Chromium process on the shared harness server. */
+class PlaywrightForkDriver implements BrowserDriver {
+  constructor(
+    private readonly browser: PlaywrightBrowser,
+    private readonly page: PlaywrightPage,
+    private readonly viewport: BrowserViewport
+  ) {}
+
+  async open(): Promise<void> {
+    throw renderError({
+      code: "RENDER_FAILED",
+      stage: "render",
+      message: "Forked Playwright drivers are already open."
+    });
+  }
+
+  async renderFrame(frame: number, options: BrowserFrameCaptureOptions = {}): Promise<BrowserFrameCapture> {
+    return renderFrameOnPage(this.page, this.viewport, frame, options);
+  }
+
+  async close(): Promise<void> {
+    await this.browser.close();
+  }
+}
+
+async function renderFrameOnPage(
+  page: PlaywrightPage,
+  viewport: BrowserViewport,
+  frame: number,
+  options: BrowserFrameCaptureOptions
+): Promise<BrowserFrameCapture> {
+  const omitBackground = options.omitBackground ?? true;
+  const evaluateStart = performance.now();
+  await page.evaluate(`window.__kavio.renderFrame(${frame})`);
+  const screenshotStart = performance.now();
+  const bytes = await page.screenshot({ type: "png", omitBackground });
+  const screenshotEnd = performance.now();
+
+  return createPngFrameCapture({
+    frame,
+    bytes,
+    viewport,
+    omitBackground,
+    timing: { evaluateMs: screenshotStart - evaluateStart, screenshotMs: screenshotEnd - screenshotStart }
+  });
 }
 
 function missingBrowserExecutable(message: string): boolean {

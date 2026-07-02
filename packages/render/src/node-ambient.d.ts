@@ -39,6 +39,7 @@ declare module "node:path" {
 
 declare module "node:os" {
   export function tmpdir(): string;
+  export function availableParallelism(): number;
 }
 
 declare module "node:child_process" {

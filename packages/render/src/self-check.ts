@@ -402,6 +402,22 @@ if (directRenderResult.ok) {
   assert(directRenderResult.timings.encodeMs >= 0, "ffmpeg-direct render reports encode timing");
 }
 
+const parallelRenderDriver = new FakeBrowserDriver();
+const parallelRenderRunner = createFakeFfmpegRunner();
+const parallelRenderResult = await renderComposition(templateDoc, {
+  preset: "reels",
+  propValues: { headline: "Hi" },
+  outDir,
+  driver: parallelRenderDriver,
+  ffmpegRunner: parallelRenderRunner,
+  captureParallelism: 3
+});
+assert(parallelRenderResult.ok === true, "parallel capture render succeeds with fakes");
+assertEqual(parallelRenderDriver.renderedFrames.length, 6, "parallel capture renders every frame across forks");
+assertEqual(parallelRenderRunner.stdinChunks.length, 6, "parallel capture still streams every frame to ffmpeg in order");
+assert(parallelRenderDriver.forks >= 1, "parallel capture forks the browser driver");
+assertEqual(parallelRenderDriver.forkCloses, parallelRenderDriver.forks, "parallel capture closes every fork");
+
 const webmRenderDoc: KavioDocument = {
   ...templateDoc,
   exports: [{ name: "web", format: "webm", width: 1080, height: 1920 }]
