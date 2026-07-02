@@ -50,9 +50,19 @@ jobs:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('packages/render/package.json') }}
 
+      # The Playwright CDN occasionally stalls after the download completes;
+      # bound each attempt and retry once instead of eating the job timeout.
       - name: Install Chromium
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: corepack pnpm --filter @kitsra/kavio-render exec playwright install --with-deps chromium
+        timeout-minutes: 10
+        run: |
+          for attempt in 1 2; do
+            if timeout 240 corepack pnpm --filter @kitsra/kavio-render exec playwright install --with-deps chromium; then
+              exit 0
+            fi
+            echo "playwright install attempt ${attempt} failed or stalled; retrying"
+          done
+          exit 1
 
       # Browsers came from the cache; only the OS packages need installing.
       - name: Install Chromium system dependencies
