@@ -1,5 +1,18 @@
 # @kitsra/kavio-mcp
 
+## 0.2.0
+
+### Patch Changes
+
+- Updated dependencies [9bcc8cb]
+- Updated dependencies [9bcc8cb]
+- Updated dependencies [9bcc8cb]
+  - @kitsra/kavio-render@0.2.0
+  - @kitsra/kavio-render-worker@0.2.0
+  - @kitsra/kavio-schema@0.2.0
+  - @kitsra/kavio-core@0.2.0
+  - @kitsra/kavio-builder@0.2.0
+
 ## 0.1.3
 
 ### Patch Changes
