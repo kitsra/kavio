@@ -1,5 +1,17 @@
 # @kitsra/kavio-cli
 
+## 0.3.0
+
+### Patch Changes
+
+- Updated dependencies [d2c8586]
+- Updated dependencies [d2c8586]
+- Updated dependencies [d2c8586]
+  - @kitsra/kavio-schema@0.3.0
+  - @kitsra/kavio-render@0.3.0
+  - @kitsra/kavio-builder@0.3.0
+  - @kitsra/kavio-core@0.3.0
+
 ## 0.2.0
 
 ### Patch Changes
