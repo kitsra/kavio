@@ -52,6 +52,29 @@
       </section>
 
       <section class="content-section">
+        <div class="example-detail" id="quote-card">
+          <h2>quote-card</h2>
+          <p>
+            A still-image template: one frame, three <code>png</code> export
+            presets (square, story, and transparent alpha), with props for the
+            quote text, author, and accent color. Demonstrates image generation
+            with no FFmpeg step and prop defaults.
+          </p>
+          <pre><code>node packages/cli/dist/index.js validate examples/quote-card/composition.json
+node packages/cli/dist/index.js render examples/quote-card/composition.json --export square-card --props my-quote.json --out renders/quote-card</code></pre>
+        </div>
+
+        <div class="example-detail" id="video-pip">
+          <h2>video-pip</h2>
+          <p>
+            Video-in-video: two time-overlapping video layers (a full-frame base
+            and a picture-in-picture inset) with a text caption composited over
+            both, straight from JSON.
+          </p>
+          <pre><code>node packages/cli/dist/index.js validate examples/video-pip/composition.json
+node packages/cli/dist/index.js render examples/video-pip/composition.json --export pip-landscape --out renders/video-pip</code></pre>
+        </div>
+
         <div class="example-detail" id="basic-json">
           <h2>basic-json</h2>
           <p>

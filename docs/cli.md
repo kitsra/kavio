@@ -137,8 +137,11 @@ Useful options:
 - `--out <dir>` changes the output directory.
 - `--concurrency <n>` renders multiple jobs in parallel.
 
-Schema-valid `gif`, `png-sequence`, and transparent final outputs are reserved
-for later render paths and fail clearly in the current renderer.
+Schema-valid `png-sequence` outputs are reserved for a later archive render path
+and fail clearly in the current renderer. GIF and transparent `webm`/`mov`
+exports render through the browser-backed FFmpeg path. Still-image `png`
+exports (opaque or transparent, with an optional `frame` selector) capture one
+browser frame and skip FFmpeg entirely.
 
 ## JSON Mode
 

@@ -1,0 +1,87 @@
+{
+  "version": "0.1",
+  "props": {
+    "caption": {
+      "type": "string",
+      "default": "Picture-in-picture, straight from JSON"
+    }
+  },
+  "composition": {
+    "width": 1280,
+    "height": 720,
+    "fps": 30,
+    "durationFrames": 150,
+    "background": "#101820"
+  },
+  "assets": {
+    "main": {
+      "type": "video",
+      "src": "examples/kavio-promo/generated/kavio-instagram-reel-source.mp4"
+    },
+    "inset": {
+      "type": "video",
+      "src": "examples/kavio-promo/generated/kavio-instagram-reel-source.mp4",
+      "trimStartFrames": 150
+    }
+  },
+  "layers": [
+    {
+      "id": "main",
+      "type": "video",
+      "asset": "main",
+      "fit": "cover",
+      "startFrame": 0,
+      "durationFrames": 150
+    },
+    {
+      "id": "inset",
+      "type": "video",
+      "asset": "inset",
+      "fit": "cover",
+      "startFrame": 30,
+      "durationFrames": 90,
+      "position": {
+        "x": 880,
+        "y": 40
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "width": 360,
+        "height": 640
+      }
+    },
+    {
+      "id": "caption",
+      "type": "text",
+      "text": "{{caption}}",
+      "startFrame": 0,
+      "durationFrames": 150,
+      "position": {
+        "x": 48,
+        "y": 600
+      },
+      "anchor": {
+        "x": 0,
+        "y": 0
+      },
+      "style": {
+        "fontSize": 40,
+        "fontWeight": 700,
+        "color": "#f5f2ea"
+      }
+    }
+  ],
+  "audio": [],
+  "exports": [
+    {
+      "name": "pip-landscape",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 1280,
+      "height": 720
+    }
+  ]
+}

@@ -17,7 +17,13 @@ import type {
   FfmpegFilterChain,
   FfmpegPlan
 } from "@kitsra/kavio-ffmpeg";
-import { buildFilterComplexArgs, planAudioMix, planBaseVideoSequence, planOverlayCompositing } from "@kitsra/kavio-ffmpeg";
+import {
+  buildFilterComplexArgs,
+  planAudioMix,
+  planBaseVideoSequence,
+  planOverlayCompositing,
+  planVideoPipOverlay
+} from "@kitsra/kavio-ffmpeg";
 import { renderError } from "./errors.js";
 import { audioEncoder, defaultAudioCodec, defaultVideoCodec, pixelFormat, videoEncoder } from "./encoding.js";
 
@@ -66,53 +72,100 @@ export function assembleRenderCommand(options: AssembleRenderCommandOptions): st
   const background = preset.background ?? view.composition.background ?? "black";
   const outputPath = options.outputPath ?? `${preset.name}.${extensionForFormat(preset.format)}`;
   const durationSeconds = view.composition.durationFrames / fps;
+  const transparentOutput = background === "transparent";
+  const audioOutput = preset.format !== "gif" && preset.format !== "png-sequence";
 
   const inputArgs: string[] = [];
   const chains: FfmpegFilterChain[] = [];
   let inputIndex = 0;
 
-  // --- Base video: source clips, or a synthesized color background --------
-  const videoLayers = view.layers.filter((layer): layer is KavioVideoLayer => layer.type === "video");
-  let baseLabel: string;
-
-  if (videoLayers.length > 0) {
-    const segments = videoLayers.map((layer, index) =>
-      baseSegment(view, layer, { width, height }, fps, inputIndex + index, background)
-    );
-    const basePlan = planBaseVideoSequence({ segments, outputLabel: BASE_LABEL });
-    inputArgs.push(...planInputArgs(basePlan));
-    chains.push(...planFilterChains(basePlan));
-    inputIndex += segments.length;
-    baseLabel = BASE_LABEL;
+  if (transparentOutput) {
+    if (framePattern === undefined) {
+      inputArgs.push("-f", "image2pipe", "-framerate", String(fps), "-i", "-");
+    } else {
+      inputArgs.push("-framerate", String(fps), "-start_number", "0", "-i", framePattern);
+    }
+    chains.push({
+      inputLabels: [`${inputIndex}:v`],
+      filters: ["format=rgba"],
+      outputLabel: VIDEO_OUT_LABEL,
+      expression: `[${inputIndex}:v]format=rgba[${VIDEO_OUT_LABEL}]`
+    });
+    inputIndex += 1;
   } else {
-    inputArgs.push(
-      "-f",
-      "lavfi",
-      "-i",
-      `color=c=${escapeLavfi(background)}:s=${width}x${height}:r=${fps}:d=${formatSeconds(durationSeconds)}`
-    );
-    baseLabel = `${inputIndex}:v`;
+    // --- Base video: source clips, or a synthesized color background --------
+    // Video layers that don't overlap in time form the sequential base
+    // timeline; layers overlapping the base become picture-in-picture planes
+    // stacked over it in document order, under the graphics overlay.
+    const videoLayers = view.layers.filter((layer): layer is KavioVideoLayer => layer.type === "video");
+    const { baseVideoLayers, pipVideoLayers } = partitionVideoLayers(videoLayers);
+    let baseLabel: string;
+
+    if (baseVideoLayers.length > 0) {
+      const segments = baseVideoLayers.map((layer, index) =>
+        baseSegment(view, layer, { width, height }, fps, inputIndex + index, background)
+      );
+      const basePlan = planBaseVideoSequence({ segments, outputLabel: BASE_LABEL });
+      inputArgs.push(...planInputArgs(basePlan));
+      chains.push(...planFilterChains(basePlan));
+      inputIndex += segments.length;
+      baseLabel = BASE_LABEL;
+    } else {
+      inputArgs.push(
+        "-f",
+        "lavfi",
+        "-i",
+        `color=c=${escapeLavfi(background)}:s=${width}x${height}:r=${fps}:d=${formatSeconds(durationSeconds)}`
+      );
+      baseLabel = `${inputIndex}:v`;
+      inputIndex += 1;
+    }
+
+    pipVideoLayers.forEach((layer, pipIndex) => {
+      // Evaluate layout mid-window so transition offsets at the edges don't
+      // skew the static pip position; animated pip position is not supported.
+      const midFrame = layer.startFrame + Math.floor(layer.durationFrames / 2);
+      const layout = evaluateLayer(layer, midFrame, getCanvasDimensions(view.composition));
+      const pipWidth = Math.max(1, Math.round(layout.size.width ?? width));
+      const pipHeight = Math.max(1, Math.round(layout.size.height ?? height));
+      const outputLabel = `pip_stage_${pipIndex}`;
+      const pipPlan = planVideoPipOverlay({
+        segment: baseSegment(view, layer, { width: pipWidth, height: pipHeight }, fps, inputIndex, background),
+        baseLabel,
+        x: Math.round(layout.topLeft.x ?? 0),
+        y: Math.round(layout.topLeft.y ?? 0),
+        startFrame: layer.startFrame,
+        durationFrames: layer.durationFrames,
+        fps,
+        outputLabel
+      });
+      inputArgs.push(...planInputArgs(pipPlan));
+      chains.push(...planFilterChains(pipPlan));
+      inputIndex += 1;
+      baseLabel = outputLabel;
+    });
+
+    // --- Transparent overlay frame sequence (files or stdin pipe) -----------
+    const overlayPlan = planOverlayCompositing({
+      baseLabel,
+      frames: { framePattern: framePattern ?? "-", fps, inputIndex, startNumber: 0, outputLabel: "overlay_frames" },
+      outputLabel: VIDEO_OUT_LABEL,
+      shortest: true
+    });
+    if (framePattern === undefined) {
+      inputArgs.push("-f", "image2pipe", "-framerate", String(fps), "-i", "-");
+    } else {
+      inputArgs.push(...planInputArgs(overlayPlan));
+    }
+    chains.push(...planFilterChains(overlayPlan));
     inputIndex += 1;
   }
 
-  // --- Transparent overlay frame sequence (files or stdin pipe) -----------
-  const overlayPlan = planOverlayCompositing({
-    baseLabel,
-    frames: { framePattern: framePattern ?? "-", fps, inputIndex, startNumber: 0, outputLabel: "overlay_frames" },
-    outputLabel: VIDEO_OUT_LABEL,
-    shortest: true
-  });
-  if (framePattern === undefined) {
-    inputArgs.push("-f", "image2pipe", "-framerate", String(fps), "-i", "-");
-  } else {
-    inputArgs.push(...planInputArgs(overlayPlan));
-  }
-  chains.push(...planFilterChains(overlayPlan));
-  inputIndex += 1;
-
   // --- Audio: mix declared tracks, or synthesize silence ------------------
   const audioTracks = view.audio ?? [];
-  if (audioTracks.length > 0) {
+  if (!audioOutput) {
+    // Static image outputs carry video frames only.
+  } else if (audioTracks.length > 0) {
     const trackOptions = audioTracks.map((track, index) => audioOption(view, track, inputIndex + index));
     const audioPlan = planAudioMix({ tracks: trackOptions, fps, outputLabel: AUDIO_OUT_LABEL, normalizeLoudness: true });
     inputArgs.push(...planInputArgs(audioPlan));
@@ -130,9 +183,8 @@ export function assembleRenderCommand(options: AssembleRenderCommandOptions): st
     ...buildFilterComplexArgs(chains),
     "-map",
     `[${VIDEO_OUT_LABEL}]`,
-    "-map",
-    `[${AUDIO_OUT_LABEL}]`,
-    ...encodeArgs(preset, fps),
+    ...(audioOutput ? ["-map", `[${AUDIO_OUT_LABEL}]`] : []),
+    ...encodeArgs(preset, fps, transparentOutput),
     "-t",
     formatSeconds(durationSeconds),
     outputPath
@@ -237,6 +289,29 @@ export function getDirectRenderSupport(view: KavioDocument): DirectRenderSupport
   }
 
   return { ok: true };
+}
+
+function framesOverlap(
+  a: Pick<KavioLayer, "startFrame" | "durationFrames">,
+  b: Pick<KavioLayer, "startFrame" | "durationFrames">
+): boolean {
+  return a.startFrame < b.startFrame + b.durationFrames && b.startFrame < a.startFrame + a.durationFrames;
+}
+
+function partitionVideoLayers(videoLayers: readonly KavioVideoLayer[]): {
+  baseVideoLayers: KavioVideoLayer[];
+  pipVideoLayers: KavioVideoLayer[];
+} {
+  const baseVideoLayers: KavioVideoLayer[] = [];
+  const pipVideoLayers: KavioVideoLayer[] = [];
+  for (const layer of videoLayers) {
+    if (baseVideoLayers.some((existing) => framesOverlap(existing, layer))) {
+      pipVideoLayers.push(layer);
+    } else {
+      baseVideoLayers.push(layer);
+    }
+  }
+  return { baseVideoLayers, pipVideoLayers };
 }
 
 function baseSegment(
@@ -381,7 +456,10 @@ function silentAudioChain(inputIndex: number): FfmpegFilterChain {
   };
 }
 
-function encodeArgs(preset: KavioExportPreset, fps: number): string[] {
+function encodeArgs(preset: KavioExportPreset, fps: number, alpha = false): string[] {
+  if (preset.format === "gif") {
+    return ["-r", String(fps), "-f", "gif"];
+  }
   const codec = preset.codec ?? defaultVideoCodec(preset.format);
   const args = [
     "-c:v",
@@ -389,7 +467,7 @@ function encodeArgs(preset: KavioExportPreset, fps: number): string[] {
     "-crf",
     String(preset.crf ?? 18),
     "-pix_fmt",
-    pixelFormat(codec),
+    pixelFormat(codec, alpha),
     "-r",
     String(fps),
     "-c:a",

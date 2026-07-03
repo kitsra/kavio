@@ -22,6 +22,8 @@ export function defaultVideoCodec(format: KavioExportFormat): KavioExportCodec {
     case "mp4":
     case "gif":
     case "png-sequence":
+    // Still images never reach the encoder; value is unused.
+    case "png":
       return "h264";
   }
 }
@@ -34,6 +36,7 @@ export function defaultAudioCodec(format: KavioExportFormat): KavioAudioCodec {
     case "mov":
     case "gif":
     case "png-sequence":
+    case "png":
       return "aac";
   }
 }
@@ -64,11 +67,12 @@ export function audioEncoder(codec: KavioAudioCodec): string {
   }
 }
 
-export function pixelFormat(codec: KavioExportCodec): string {
+export function pixelFormat(codec: KavioExportCodec, alpha = false): string {
   switch (codec) {
     case "prores":
-      return "yuv422p10le";
+      return alpha ? "yuva444p10le" : "yuv422p10le";
     case "vp9":
+      return alpha ? "yuva420p" : "yuv420p";
     case "hevc":
     case "h264":
       return "yuv420p";
