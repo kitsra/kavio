@@ -1,6 +1,6 @@
 # Rendering Status
 
-Kavio ships an early end-to-end render path for opaque video exports. The CLI
+Kavio ships an early end-to-end render path for browser-backed exports. The CLI
 captures browser-rendered overlay frames with Playwright, composites them with
 FFmpeg, writes the output file, and records render metadata.
 
@@ -8,9 +8,10 @@ FFmpeg, writes the output file, and records render metadata.
 node packages/cli/dist/index.js render examples/basic-json/composition.json
 ```
 
-Supported final formats in the current render pipeline are `mp4`, `webm`, and
-`mov`. Schema-valid `gif`, `png-sequence`, and transparent final outputs are
-reserved for later render paths and fail with a clear render error today.
+Supported final formats in the current render pipeline are opaque `mp4`,
+`webm`, `mov`, `gif`, and transparent `webm`/`mov`. Schema-valid `png-sequence`
+outputs are reserved for a later archive render path and fail with a clear
+render error today.
 
 ## What Exists Now
 

@@ -123,8 +123,8 @@ const CURRENT_TRANSITION_SUPPORT = Object.fromEntries(
       browserPreview: "stable",
       stillFrameRender: "stable",
       opaqueVideoRender: "stable",
-      transparentVideoRender: "unsupported",
-      gifRender: "unsupported",
+      transparentVideoRender: "stable",
+      gifRender: "stable",
       pngSequenceRender: "unsupported",
       nativeRender: "unsupported"
     }
@@ -155,8 +155,8 @@ const MASK_SOURCE_SUPPORT = {
     browserPreview: "stable",
     stillFrameRender: "stable",
     opaqueVideoRender: "stable",
-    transparentVideoRender: "unsupported",
-    gifRender: "unsupported",
+    transparentVideoRender: "stable",
+    gifRender: "stable",
     pngSequenceRender: "unsupported",
     nativeRender: "unsupported"
   },
@@ -167,8 +167,8 @@ const MASK_SOURCE_SUPPORT = {
     browserPreview: "stable",
     stillFrameRender: "stable",
     opaqueVideoRender: "stable",
-    transparentVideoRender: "unsupported",
-    gifRender: "unsupported",
+    transparentVideoRender: "stable",
+    gifRender: "stable",
     pngSequenceRender: "unsupported",
     nativeRender: "unsupported",
     note: "Stable asset masks reference declared image assets and use alpha sampling only."
@@ -180,8 +180,8 @@ const MASK_SOURCE_SUPPORT = {
     browserPreview: "stable",
     stillFrameRender: "stable",
     opaqueVideoRender: "stable",
-    transparentVideoRender: "unsupported",
-    gifRender: "unsupported",
+    transparentVideoRender: "stable",
+    gifRender: "stable",
     pngSequenceRender: "unsupported",
     nativeRender: "unsupported",
     note: "Stable procedural masks require an integer seed even when the current CSS rendering is simple."
@@ -221,8 +221,8 @@ const MOTION_SUPPORT = {
     browserPreview: "stable",
     stillFrameRender: "stable",
     opaqueVideoRender: "stable",
-    transparentVideoRender: "unsupported",
-    gifRender: "unsupported",
+    transparentVideoRender: "stable",
+    gifRender: "stable",
     pngSequenceRender: "unsupported",
     nativeRender: "unsupported",
     note: "Tracks compile to explicit overlap windows for outgoing and incoming clip evaluation; browser-backed preview and render paths share the same frame evaluator."

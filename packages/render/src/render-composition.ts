@@ -106,7 +106,7 @@ export async function renderComposition(
     return { ok: false, errors: violations };
   }
 
-  const renderabilityError = validateRenderablePreset(preset);
+  const renderabilityError = validateRenderablePreset(preset, view.composition.background);
   if (renderabilityError !== null) {
     return { ok: false, errors: [renderabilityError] };
   }
@@ -236,24 +236,25 @@ async function sha256File(path: string): Promise<RenderChecksum> {
   return { algorithm: "sha256", value, bytes: bytes.length };
 }
 
-function validateRenderablePreset(preset: KavioExportPreset): KavioError | null {
-  if (preset.format === "gif" || preset.format === "png-sequence") {
+function validateRenderablePreset(preset: KavioExportPreset, compositionBackground: string | undefined): KavioError | null {
+  if (preset.format === "png-sequence") {
     return renderError({
       code: "RENDER_FAILED",
       stage: "render",
       path: "exports.0.format",
       message: `kavio render does not yet support ${preset.format} exports.`,
-      hint: "Use mp4, webm, or mov for the current render pipeline."
+      hint: "Use gif, mp4, webm, or mov for the current render pipeline."
     });
   }
 
-  if (preset.background === "transparent") {
+  const background = preset.background ?? compositionBackground;
+  if (background === "transparent" && preset.format !== "webm" && preset.format !== "mov") {
     return renderError({
       code: "RENDER_FAILED",
       stage: "render",
       path: "exports.0.background",
-      message: "kavio render does not yet support transparent final outputs.",
-      hint: "Use an opaque export background until alpha-capable encoding lands."
+      message: `kavio render does not support transparent ${preset.format} outputs.`,
+      hint: "Use transparent webm or mov exports for alpha output."
     });
   }
 

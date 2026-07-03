@@ -68,8 +68,8 @@ For targeted repair, `install:render-ffmpeg` rebuilds the allowlisted
 `ffmpeg-static` package and `install:render-browsers` installs Playwright
 Chromium.
 
-`gif`, `png-sequence`, and transparent final outputs are not implemented in the
-current render path. Use opaque `mp4`, `webm`, or `mov` exports for now.
+`png-sequence` outputs are not implemented in the current render path. Use
+opaque `mp4`, `webm`, `mov`, `gif`, or transparent `webm`/`mov` exports for now.
 
 ## FFmpeg Has No `drawtext`
 

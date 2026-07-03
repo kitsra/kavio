@@ -25,9 +25,9 @@ preview runtime, render-worker contracts, FFmpeg planning helpers, render
 execution, CLI commands, MCP server, provider adapters, portable skill/plugin
 bundle, and MVP demo fixtures.
 
-`kavio render` supports opaque `mp4`, `webm`, and `mov` outputs. Schema-valid
-`gif`, `png-sequence`, and transparent final outputs are reserved for later
-render paths.
+`kavio render` supports opaque `mp4`, `webm`, `mov`, `gif`, and transparent
+`webm`/`mov` outputs. Schema-valid `png-sequence` outputs are reserved for a
+later archive render path.
 
 ## Website Pages
 
