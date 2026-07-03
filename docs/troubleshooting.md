@@ -69,7 +69,8 @@ For targeted repair, `install:render-ffmpeg` rebuilds the allowlisted
 Chromium.
 
 `png-sequence` outputs are not implemented in the current render path. Use
-opaque `mp4`, `webm`, `mov`, `gif`, or transparent `webm`/`mov` exports for now.
+opaque `mp4`, `webm`, `mov`, `gif`, transparent `webm`/`mov`, or still-image
+`png` exports for now.
 
 ## FFmpeg Has No `drawtext`
 

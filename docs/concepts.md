@@ -66,10 +66,10 @@ Preview is available today through `kavio preview` and
 `@kitsra/kavio-browser-renderer`.
 
 Rendering is available through `kavio render` and `@kitsra/kavio-render` for
-opaque `mp4`, `webm`, `mov`, `gif`, and transparent `webm`/`mov` outputs. The
-current renderer captures browser frames and encodes them with FFmpeg.
-`png-sequence` outputs are schema-valid but reserved for a later archive render
-path.
+opaque `mp4`, `webm`, `mov`, `gif`, transparent `webm`/`mov`, and still-image
+`png` outputs. Video renders capture browser frames and encode them with
+FFmpeg; still images write the captured frame directly. `png-sequence` outputs
+are schema-valid but reserved for a later archive render path.
 
 ## Exports
 

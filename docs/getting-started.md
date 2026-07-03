@@ -102,6 +102,7 @@ binary to be available.
 
 ## Current Rendering Limit
 
-`kavio render` supports opaque `mp4`, `webm`, `mov`, `gif`, and transparent
-`webm`/`mov` exports today. Schema-valid `png-sequence` outputs are reserved
-for a later archive render path and fail clearly if rendered now.
+`kavio render` supports opaque `mp4`, `webm`, `mov`, `gif`, transparent
+`webm`/`mov`, and still-image `png` exports today. Schema-valid `png-sequence`
+outputs are reserved for a later archive render path and fail clearly if
+rendered now.

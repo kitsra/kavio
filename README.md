@@ -23,9 +23,10 @@ server, provider tool adapters, and MVP demo fixtures.
 
 The general `kavio render` command is implemented for opaque `mp4`, `webm`,
 `mov`, `gif`, and transparent `webm`/`mov` outputs through browser frame capture
-and FFmpeg. Schema-valid `png-sequence` outputs are reserved for a later archive
-render path. The remaining MVP render work is performance measurement and
-hardening, not initial command wiring.
+and FFmpeg, plus still-image `png` exports (opaque or transparent) captured
+directly from the browser without FFmpeg. Time-overlapping video layers
+composite as picture-in-picture planes under the graphics overlay. Schema-valid
+`png-sequence` outputs are reserved for a later archive render path.
 
 ## Quick Start
 

@@ -22,6 +22,8 @@ export function defaultVideoCodec(format: KavioExportFormat): KavioExportCodec {
     case "mp4":
     case "gif":
     case "png-sequence":
+    // Still images never reach the encoder; value is unused.
+    case "png":
       return "h264";
   }
 }
@@ -34,6 +36,7 @@ export function defaultAudioCodec(format: KavioExportFormat): KavioAudioCodec {
     case "mov":
     case "gif":
     case "png-sequence":
+    case "png":
       return "aac";
   }
 }

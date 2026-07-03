@@ -151,3 +151,30 @@ assert.equal(
   invalidResult.errors.every((error) => error.stage === "validation" && error.retryable === false),
   true
 );
+
+// --- png image exports -------------------------------------------------------
+
+const pngComposition = structuredClone(validComposition);
+pngComposition.exports = [
+  { name: "card", format: "png", width: 1080, height: 1080, frame: 12 },
+  { name: "sticker", format: "png", width: 512, height: 512, background: "transparent" }
+];
+assert.deepEqual(validateComposition(pngComposition), { ok: true, errors: [] }, "png exports validate");
+
+const pngBadFrame = structuredClone(pngComposition);
+pngBadFrame.exports[0].frame = -1;
+assert.equal(validateComposition(pngBadFrame).ok, false, "negative export frame is rejected");
+
+const pngFrameOutOfRange = structuredClone(pngComposition);
+pngFrameOutOfRange.exports[0].frame = 60;
+assert.equal(validateComposition(pngFrameOutOfRange).ok, false, "export frame beyond duration is rejected");
+
+const pngWithCodec = structuredClone(pngComposition);
+pngWithCodec.exports[0].codec = "h264";
+assert.equal(validateComposition(pngWithCodec).ok, false, "png exports reject video codecs");
+
+const frameOnVideoExport = structuredClone(validComposition);
+frameOnVideoExport.exports = [{ name: "reel", format: "mp4", codec: "h264", width: 1080, height: 1920, frame: 3 }];
+assert.equal(validateComposition(frameOnVideoExport).ok, false, "frame field is only valid for png exports");
+
+console.log("Schema png export self-checks passed.");

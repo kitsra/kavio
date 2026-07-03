@@ -84,9 +84,11 @@
         <h2>Current Limits</h2>
         <p>
           The current render path supports opaque <code>mp4</code>,
-          <code>webm</code>, <code>mov</code>, <code>gif</code>, and transparent
-          <code>webm</code>/<code>mov</code> outputs. <code>png-sequence</code>
-          archives, golden-frame comparison, and performance measurements remain
+          <code>webm</code>, <code>mov</code>, <code>gif</code>, transparent
+          <code>webm</code>/<code>mov</code>, and still-image <code>png</code>
+          outputs (opaque or with a real alpha channel, no FFmpeg step).
+          Video-in-video composites as picture-in-picture planes.
+          <code>png-sequence</code> archives and golden-frame comparison remain
           future work.
         </p>
       </section>

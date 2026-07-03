@@ -533,7 +533,7 @@ export interface KavioAudioTrack {
   duck?: KavioAudioDuck;
 }
 
-export type KavioExportFormat = "mp4" | "webm" | "mov" | "gif" | "png-sequence";
+export type KavioExportFormat = "mp4" | "webm" | "mov" | "gif" | "png-sequence" | "png";
 export type KavioExportCodec = "h264" | "hevc" | "vp9" | "prores";
 export type KavioAudioCodec = "aac" | "opus" | "mp3" | "pcm";
 
@@ -555,6 +555,8 @@ export interface KavioExportPreset {
   width: number;
   height: number;
   fps?: number;
+  /** For still-image formats (png): the composition frame to capture. Default 0. */
+  frame?: KavioFrame;
   bitrate?: string;
   crf?: number;
   audioCodec?: KavioAudioCodec;
@@ -612,7 +614,7 @@ export function migrateComposition(document: KavioDocument, options: MigrateComp
 type AssetType = "video" | "image" | "audio" | "font";
 type LayerType = "video" | "image" | "text" | "shape" | "caption";
 type PropType = "string" | "number" | "boolean" | "color" | "url" | "enum" | "asset";
-type ExportFormat = "mp4" | "webm" | "mov" | "gif" | "png-sequence";
+type ExportFormat = "mp4" | "webm" | "mov" | "gif" | "png-sequence" | "png";
 type AnimatableProperty = "opacity" | "x" | "y" | "scale" | "rotation";
 
 interface AssetInfo {
@@ -650,7 +652,7 @@ interface CompositionInfo {
 const ASSET_TYPES = new Set<AssetType>(["video", "image", "audio", "font"]);
 const LAYER_TYPES = new Set<LayerType>(["video", "image", "text", "shape", "caption"]);
 const PROP_TYPES = new Set<PropType>(["string", "number", "boolean", "color", "url", "enum", "asset"]);
-const EXPORT_FORMATS = new Set<ExportFormat>(["mp4", "webm", "mov", "gif", "png-sequence"]);
+const EXPORT_FORMATS = new Set<ExportFormat>(["mp4", "webm", "mov", "gif", "png-sequence", "png"]);
 const FIT_VALUES = new Set(["cover", "contain", "fill", "none"]);
 const TEXT_ALIGN_VALUES = new Set(["left", "center", "right"]);
 const TEXT_MOTION_TYPES = new Set<KavioTextMotionType>([
@@ -1755,6 +1757,32 @@ function validateExports(
     requireInteger(exportPreset, "width", propertyPath(path, "width"), 1, 7680, errors);
     requireInteger(exportPreset, "height", propertyPath(path, "height"), 1, 7680, errors);
     optionalInteger(exportPreset, "fps", propertyPath(path, "fps"), 1, 120, errors);
+    optionalInteger(exportPreset, "frame", propertyPath(path, "frame"), 0, undefined, errors);
+    if (exportPreset.frame !== undefined) {
+      if (format !== undefined && isExportFormat(format) && format !== "png") {
+        errors.push(
+          validationError(
+            "SCHEMA_INVALID_FIELD",
+            propertyPath(path, "frame"),
+            `frame is only supported for still-image exports, not ${format}.`,
+            "Remove frame, or use the png export format."
+          )
+        );
+      } else if (
+        typeof exportPreset.frame === "number" &&
+        composition.durationFrames !== undefined &&
+        exportPreset.frame >= composition.durationFrames
+      ) {
+        errors.push(
+          validationError(
+            "SCHEMA_INVALID_FIELD",
+            propertyPath(path, "frame"),
+            `frame ${exportPreset.frame} is outside the composition duration of ${composition.durationFrames} frames.`,
+            "Choose a frame between 0 and durationFrames - 1."
+          )
+        );
+      }
+    }
     optionalString(exportPreset, "bitrate", propertyPath(path, "bitrate"), errors);
     optionalInteger(exportPreset, "crf", propertyPath(path, "crf"), 0, 63, errors);
     optionalString(exportPreset, "audioCodec", propertyPath(path, "audioCodec"), errors);
@@ -1768,7 +1796,7 @@ function validateExports(
           "SCHEMA_INVALID_FIELD",
           propertyPath(path, "format"),
           `export format "${format}" is not supported.`,
-          "Use mp4, webm, mov, gif, or png-sequence."
+          "Use mp4, webm, mov, gif, png-sequence, or png."
         )
       );
     }
@@ -1804,7 +1832,8 @@ function validateExportCodec(
     webm: ["vp9"],
     mov: ["prores"],
     gif: [],
-    "png-sequence": []
+    "png-sequence": [],
+    png: []
   };
   const allowed = allowedCodecsByFormat[format];
   if (!allowed.includes(codec)) {
@@ -1829,13 +1858,13 @@ function validateExportBackground(
     return;
   }
 
-  if (format !== "webm" && format !== "mov" && format !== "png-sequence") {
+  if (format !== "webm" && format !== "mov" && format !== "png-sequence" && format !== "png") {
     errors.push(
       validationError(
         "SCHEMA_UNSUPPORTED_EXPORT_BACKGROUND",
         propertyPath(path, "background"),
         `transparent background is not supported for ${format} exports.`,
-        "Use webm, mov, or png-sequence for alpha output."
+        "Use webm, mov, png-sequence, or png for alpha output."
       )
     );
   }

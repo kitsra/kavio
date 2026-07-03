@@ -112,7 +112,7 @@ const ENUMS = {
   ],
   cameraMotion: ["kenBurns", "pushIn", "pullBack", "pan", "tilt"],
   audioRole: ["music", "voiceover", "sfx", "source"],
-  exportFormat: ["mp4", "webm", "mov", "gif", "png-sequence"],
+  exportFormat: ["mp4", "webm", "mov", "gif", "png-sequence", "png"],
   propType: ["string", "number", "boolean", "color", "url", "enum", "asset"]
 };
 

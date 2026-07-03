@@ -558,6 +558,56 @@ if (webmRenderResult.ok) {
   assertEqual(webmRenderResult.metadata.codecs.audio, "opus", "webm metadata records Opus default");
 }
 
+const defaultPropDoc: KavioDocument = {
+  ...templateDoc,
+  props: { headline: { type: "string", default: "Fallback headline" } }
+};
+const defaultPropResult = await renderComposition(defaultPropDoc, {
+  preset: "reels",
+  outDir,
+  driver: new FakeBrowserDriver(),
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(defaultPropResult.ok === true, "render resolves declared prop defaults when values are omitted");
+
+const pngDoc: KavioDocument = {
+  ...templateDoc,
+  exports: [
+    { name: "card", format: "png", width: 1080, height: 1920, frame: 3 },
+    { name: "sticker", format: "png", width: 1080, height: 1920, background: "transparent" }
+  ]
+};
+const pngDriver = new FakeBrowserDriver();
+const pngRunner = createFakeFfmpegRunner();
+const pngResult = await renderComposition(pngDoc, {
+  preset: "card",
+  propValues: { headline: "Still" },
+  outDir,
+  driver: pngDriver,
+  ffmpegRunner: pngRunner
+});
+assert(pngResult.ok === true, "png export renders with fakes");
+if (pngResult.ok) {
+  assert(pngResult.outputPath.endsWith(".png"), "png export writes a .png output path");
+  assertEqual(pngResult.metadata.codecs.video, null, "png metadata records no video codec");
+  assertEqual(pngResult.metadata.codecs.audio, null, "png metadata records no audio codec");
+  assert(pngResult.metadata.checksums[0]!.bytes! > 0, "png export writes the captured bytes");
+  assert(pngResult.timings.captureMs !== undefined, "png export reports capture timing");
+  assertEqual(pngResult.timings.encodeMs, 0, "png export skips encoding");
+}
+assertEqual(pngRunner.calls.length, 0, "png export never invokes ffmpeg");
+assertEqual(pngDriver.renderedFrames.join(","), "3", "png export captures exactly the requested frame");
+assertEqual(pngDriver.closes, 1, "png export closes the browser driver");
+
+const transparentPngResult = await renderComposition(pngDoc, {
+  preset: "sticker",
+  propValues: { headline: "Alpha" },
+  outDir,
+  driver: new FakeBrowserDriver(),
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(transparentPngResult.ok === true, "transparent png export is supported");
+
 const invalidDoc: KavioDocument = {
   ...templateDoc,
   composition: { ...templateDoc.composition, durationFrames: 0 }

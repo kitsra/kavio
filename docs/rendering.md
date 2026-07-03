@@ -9,9 +9,18 @@ node packages/cli/dist/index.js render examples/basic-json/composition.json
 ```
 
 Supported final formats in the current render pipeline are opaque `mp4`,
-`webm`, `mov`, `gif`, and transparent `webm`/`mov`. Schema-valid `png-sequence`
-outputs are reserved for a later archive render path and fail with a clear
-render error today.
+`webm`, `mov`, `gif`, transparent `webm`/`mov`, and still-image `png` (opaque
+or transparent). Still images capture one browser frame (the preset's `frame`,
+default 0) and write the PNG directly with no FFmpeg step, so alpha output
+works out of the box. Schema-valid `png-sequence` outputs are reserved for a
+later archive render path and fail with a clear render error today.
+
+Video layers compose in two ways: layers that do not overlap in time
+concatenate into the sequential base timeline, and layers overlapping the base
+become picture-in-picture planes — scaled to the layer `size`, positioned at
+its resolved top-left, visible only within their frame window, stacked in
+document order under the browser graphics overlay. Pip position is static per
+layer today.
 
 ## What Exists Now
 

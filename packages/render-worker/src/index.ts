@@ -963,6 +963,7 @@ function defaultVideoCodec(format: KavioExportFormat): KavioExportCodec | null {
       return "prores";
     case "gif":
     case "png-sequence":
+    case "png":
       return null;
   }
 }
