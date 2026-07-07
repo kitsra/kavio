@@ -484,7 +484,7 @@ const composition: KavioDocument = {
           durationFrames: 16,
           transitionFromPrevious: {
             presentation: { type: "push", direction: "left" },
-            timing: { type: "tween", durationFrames: 6, easing: "outCubic" }
+            timing: { type: "tween", durationFrames: 6 }
           }
         }
       ]
@@ -604,6 +604,12 @@ assertEqual(seriesPrevious.dataset.kavioTransitionType, "push", "transition seri
 assertEqual(seriesNext.dataset.kavioTransitionSeries, "true", "transition series renders the incoming clip through the overlap evaluator");
 assertEqual(seriesNext.dataset.kavioTransitionRole, "next", "transition series labels the incoming clip role");
 assert(styleValue(seriesNext, "left") !== "260px", "incoming transition-series clip uses evaluated transition position");
+
+const seriesLinearFrame = await renderer.renderFrame(25);
+const seriesLinearPrevious = renderedElement(seriesLinearFrame.layers.find((entry) => entry.id === "seriesA")?.element);
+const seriesLinearNext = renderedElement(seriesLinearFrame.layers.find((entry) => entry.id === "seriesB")?.element);
+assertEqual(styleValue(seriesLinearPrevious, "left"), "-100px", "outgoing transition-series DOM uses linear default timing");
+assertEqual(styleValue(seriesLinearNext, "left"), "1060px", "incoming transition-series DOM uses linear default timing");
 
 const verticalPreview = createExportPreviewComposition(composition, "vertical");
 assertEqual(verticalPreview.exportIndex, 1, "export preview resolves selected export by name");
