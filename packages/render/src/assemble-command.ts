@@ -5,6 +5,8 @@ import type {
   KavioAudioTrack,
   KavioDocument,
   KavioExportPreset,
+  KavioImageAsset,
+  KavioImageLayer,
   KavioLayer,
   KavioShapeLayer,
   KavioVideoAsset,
@@ -17,7 +19,14 @@ import type {
   FfmpegFilterChain,
   FfmpegPlan
 } from "@kitsra/kavio-ffmpeg";
-import { buildFilterComplexArgs, planAudioMix, planBaseVideoSequence, planOverlayCompositing } from "@kitsra/kavio-ffmpeg";
+import {
+  buildConcatFilterChain,
+  buildFilterComplexArgs,
+  buildFitVideoFilters,
+  planAudioMix,
+  planBaseVideoSequence,
+  planOverlayCompositing
+} from "@kitsra/kavio-ffmpeg";
 import { renderError } from "./errors.js";
 import { audioEncoder, defaultAudioCodec, defaultVideoCodec, pixelFormat, videoEncoder } from "./encoding.js";
 
@@ -100,7 +109,7 @@ export function assembleRenderCommand(options: AssembleRenderCommandOptions): st
     baseLabel,
     frames: { framePattern: framePattern ?? "-", fps, inputIndex, startNumber: 0, outputLabel: "overlay_frames" },
     outputLabel: VIDEO_OUT_LABEL,
-    shortest: true
+    shortest: false
   });
   if (framePattern === undefined) {
     inputArgs.push("-f", "image2pipe", "-framerate", String(fps), "-i", "-");
@@ -141,8 +150,8 @@ export function assembleRenderCommand(options: AssembleRenderCommandOptions): st
 
 /**
  * Experimental FFmpeg-direct renderer for filtergraph-safe templates. This path
- * deliberately avoids the browser/PNG overlay loop and compiles supported shape
- * layers into drawbox filters over the normal base video/audio plan.
+ * deliberately avoids the browser/PNG overlay loop and compiles supported image
+ * slideshows or shape layers into FFmpeg filters.
  */
 export function assembleDirectRenderCommand(options: AssembleDirectRenderCommandOptions): string[] {
   const support = getDirectRenderSupport(options.view);
@@ -168,9 +177,16 @@ export function assembleDirectRenderCommand(options: AssembleDirectRenderCommand
   let inputIndex = 0;
 
   const videoLayers = view.layers.filter((layer): layer is KavioVideoLayer => layer.type === "video");
+  const imageLayers = view.layers.filter((layer): layer is KavioImageLayer => layer.type === "image");
   let baseLabel: string;
 
-  if (videoLayers.length > 0) {
+  if (imageLayers.length > 0) {
+    const imageSequence = directImageSequence(view, imageLayers, { width, height }, fps, inputIndex, background, VIDEO_OUT_LABEL);
+    inputArgs.push(...imageSequence.inputArgs);
+    chains.push(...imageSequence.chains);
+    inputIndex += imageLayers.length;
+    baseLabel = VIDEO_OUT_LABEL;
+  } else if (videoLayers.length > 0) {
     const segments = videoLayers.map((layer, index) =>
       baseSegment(view, layer, { width, height }, fps, inputIndex + index, background)
     );
@@ -190,7 +206,9 @@ export function assembleDirectRenderCommand(options: AssembleDirectRenderCommand
     inputIndex += 1;
   }
 
-  chains.push(buildDirectShapeFilterChain(view, baseLabel, VIDEO_OUT_LABEL));
+  if (imageLayers.length === 0) {
+    chains.push(buildDirectShapeFilterChain(view, baseLabel, VIDEO_OUT_LABEL));
+  }
 
   const audioTracks = view.audio ?? [];
   if (audioTracks.length > 0) {
@@ -221,6 +239,11 @@ export function assembleDirectRenderCommand(options: AssembleDirectRenderCommand
 }
 
 export function getDirectRenderSupport(view: KavioDocument): DirectRenderSupport {
+  const imageLayers = view.layers.filter((layer): layer is KavioImageLayer => layer.type === "image");
+  if (imageLayers.length > 0) {
+    return getDirectImageSequenceSupport(view, imageLayers);
+  }
+
   for (const layer of view.layers) {
     if (layer.type === "video") {
       continue;
@@ -237,6 +260,221 @@ export function getDirectRenderSupport(view: KavioDocument): DirectRenderSupport
   }
 
   return { ok: true };
+}
+
+function directImageSequence(
+  view: KavioDocument,
+  layers: KavioImageLayer[],
+  output: { width: number; height: number },
+  fps: number,
+  firstInputIndex: number,
+  background: string,
+  outputLabel: string
+): { inputArgs: string[]; chains: FfmpegFilterChain[] } {
+  const ordered = [...layers].sort((left, right) => left.startFrame - right.startFrame);
+  const inputArgs: string[] = [];
+  const chains: FfmpegFilterChain[] = [];
+  const labels: string[] = [];
+
+  ordered.forEach((layer, index) => {
+    const asset = imageAsset(view, layer.asset, layer.id);
+    const inputIndex = firstInputIndex + index;
+    if (directImageZoomSpec(layer) === null) {
+      inputArgs.push("-loop", "1", "-framerate", String(fps), "-t", formatSeconds(layer.durationFrames / fps), "-i", asset.src);
+    } else {
+      inputArgs.push("-i", asset.src);
+    }
+
+    const label = ordered.length === 1 ? outputLabel : `direct_image_${index}`;
+    const filters = directImageFilters(layer, output, fps, background);
+    labels.push(label);
+    chains.push({
+      inputLabels: [`${inputIndex}:v`],
+      filters,
+      outputLabel: label,
+      expression: `[${inputIndex}:v]${filters.join(",")}[${label}]`
+    });
+  });
+
+  if (labels.length > 1) {
+    chains.push(buildConcatFilterChain({ segmentLabels: labels, outputLabel }));
+  }
+  return { inputArgs, chains };
+}
+
+function getDirectImageSequenceSupport(view: KavioDocument, imageLayers: KavioImageLayer[]): DirectRenderSupport {
+  if ((view.tracks ?? []).length > 0) {
+    return { ok: false, reason: "image sequence direct render does not support transition tracks yet" };
+  }
+  if (view.layers.some((layer) => layer.type !== "image")) {
+    return { ok: false, reason: "image sequence direct render only supports image layers" };
+  }
+
+  const dimensions = getCanvasDimensions(view.composition);
+  const ordered = [...imageLayers].sort((left, right) => left.startFrame - right.startFrame);
+  let cursor = 0;
+  for (const layer of ordered) {
+    if (layer.startFrame !== cursor) {
+      return unsupported(layer, "image sequence layers must be contiguous and non-overlapping");
+    }
+    const reason = getUnsupportedDirectImageReason(layer, dimensions);
+    if (reason !== null) {
+      return unsupported(layer, reason);
+    }
+    cursor += layer.durationFrames;
+  }
+
+  if (cursor !== view.composition.durationFrames) {
+    return { ok: false, reason: "image sequence layers must cover the full composition duration" };
+  }
+
+  return { ok: true };
+}
+
+function getUnsupportedDirectImageReason(layer: KavioImageLayer, dimensions: CanvasDimensions): string | null {
+  if (!isFullFrameImage(layer, dimensions)) {
+    return "image layers must be full-frame with center anchor and canvas-sized output";
+  }
+  if (layer.opacity !== undefined && layer.opacity !== 1) {
+    return "image opacity is not supported";
+  }
+  if (layer.rotation !== undefined && layer.rotation !== 0) {
+    return "rotated image layers are not supported";
+  }
+  if (layer.scale !== undefined && layer.scale !== 1) {
+    return "scaled image layers are not supported";
+  }
+  if (layer.keyframes !== undefined && Object.keys(layer.keyframes).length > 0) {
+    const keyframes = Object.keys(layer.keyframes);
+    if (keyframes.length !== 1 || keyframes[0] !== "scale" || directImageZoomSpec(layer) === null) {
+      return "image keyframes only support a monotonic scale push-in from 1";
+    }
+  }
+  if (layer.effects !== undefined && layer.effects.length > 0) {
+    return "image effects are not supported";
+  }
+  if (layer.mask !== undefined && layer.mask !== null) {
+    return "image masks are not supported";
+  }
+  if (layer.transitionIn !== undefined && layer.transitionIn !== null) {
+    const reason = getUnsupportedDirectImageFadeReason(layer.transitionIn);
+    if (reason !== null) {
+      return reason;
+    }
+  }
+  if (layer.transitionOut !== undefined && layer.transitionOut !== null) {
+    const reason = getUnsupportedDirectImageFadeReason(layer.transitionOut);
+    if (reason !== null) {
+      return reason;
+    }
+  }
+  return null;
+}
+
+function directImageFilters(
+  layer: KavioImageLayer,
+  output: { width: number; height: number },
+  fps: number,
+  background: string
+): string[] {
+  const filters = [...buildFitVideoFilters({ dimensions: output, fit: layer.fit ?? "cover", background })];
+  const zoom = directImageZoomSpec(layer);
+  if (zoom !== null) {
+    filters.push(
+      `zoompan=z='min(zoom+${formatFfmpegNumber(zoom.perFrame)},${formatFfmpegNumber(zoom.to)})':d=${layer.durationFrames}:s=${output.width}x${output.height}:fps=${fps}`
+    );
+  }
+  filters.push(...directImageFadeFilters(layer, fps), "format=yuv420p");
+  return filters;
+}
+
+function directImageFadeFilters(layer: KavioImageLayer, fps: number): string[] {
+  const filters: string[] = [];
+  const transitionInFrames = directFadeDurationFrames(layer.transitionIn);
+  if (transitionInFrames !== null) {
+    filters.push(`fade=t=in:st=0:d=${formatSeconds(transitionInFrames / fps)}`);
+  }
+  const transitionOutFrames = directFadeDurationFrames(layer.transitionOut);
+  if (transitionOutFrames !== null) {
+    filters.push(
+      `fade=t=out:st=${formatSeconds((layer.durationFrames - transitionOutFrames) / fps)}:d=${formatSeconds(transitionOutFrames / fps)}`
+    );
+  }
+  return filters;
+}
+
+function directFadeDurationFrames(transition: KavioImageLayer["transitionIn"]): number | null {
+  if (transition === undefined || transition === null) {
+    return null;
+  }
+  if (transition.durationFrames !== undefined) {
+    return transition.durationFrames;
+  }
+  if (transition.timing !== undefined && "durationFrames" in transition.timing) {
+    return transition.timing.durationFrames;
+  }
+  return null;
+}
+
+function getUnsupportedDirectImageFadeReason(transition: NonNullable<KavioImageLayer["transitionIn"]>): string | null {
+  if (transition.type !== "fade") {
+    return "image direct render only supports fade transitions";
+  }
+  if (transition.easing !== undefined && transition.easing !== "linear") {
+    return "image direct render only supports linear fade transitions";
+  }
+  if (
+    transition.timing !== undefined &&
+    (transition.timing.type !== "tween" || (transition.timing.easing !== undefined && transition.timing.easing !== "linear"))
+  ) {
+    return "image direct render only supports linear fade timing";
+  }
+  if (directFadeDurationFrames(transition) === null) {
+    return "image direct render fade transitions require durationFrames";
+  }
+  return null;
+}
+
+function directImageZoomSpec(layer: KavioImageLayer): { to: number; perFrame: number } | null {
+  const scale = layer.keyframes?.scale;
+  if (scale === undefined || scale.length < 2) {
+    return null;
+  }
+  if (
+    scale.some((keyframe) => (keyframe.easing !== undefined && keyframe.easing !== "linear") || keyframe.timing !== undefined)
+  ) {
+    return null;
+  }
+  const first = scale[0];
+  const second = scale[1];
+  if (
+    first === undefined ||
+    second === undefined ||
+    first.frame !== 0 ||
+    !almostEqual(first.value, 1) ||
+    second.frame <= 0 ||
+    second.value <= first.value
+  ) {
+    return null;
+  }
+  if (scale.slice(2).some((keyframe) => !almostEqual(keyframe.value, second.value))) {
+    return null;
+  }
+  return { to: second.value, perFrame: (second.value - first.value) / second.frame };
+}
+
+function almostEqual(left: number, right: number): boolean {
+  return Math.abs(left - right) < 0.000001;
+}
+
+function isFullFrameImage(layer: KavioImageLayer, dimensions: CanvasDimensions): boolean {
+  return (
+    layer.position?.x === dimensions.width / 2 &&
+    layer.position?.y === dimensions.height / 2 &&
+    layer.anchor === "center" &&
+    layer.size?.width === dimensions.width &&
+    layer.size?.height === dimensions.height
+  );
 }
 
 function baseSegment(
@@ -386,8 +624,7 @@ function encodeArgs(preset: KavioExportPreset, fps: number): string[] {
   const args = [
     "-c:v",
     videoEncoder(codec),
-    "-crf",
-    String(preset.crf ?? 18),
+    ...(preset.bitrate === undefined ? ["-crf", String(preset.crf ?? 18)] : ["-b:v", preset.bitrate]),
     "-pix_fmt",
     pixelFormat(codec),
     "-r",
@@ -424,6 +661,19 @@ function videoAsset(view: KavioDocument, id: string, layerId: string): KavioVide
       code: "ASSET_UNSUPPORTED",
       stage: "render",
       message: `Video layer "${layerId}" references missing or non-video asset "${id}".`,
+      path: `assets.${id}`
+    });
+  }
+  return asset;
+}
+
+function imageAsset(view: KavioDocument, id: string, layerId: string): KavioImageAsset {
+  const asset = view.assets[id];
+  if (asset === undefined || asset.type !== "image") {
+    throw renderError({
+      code: "ASSET_UNSUPPORTED",
+      stage: "render",
+      message: `Image layer "${layerId}" references missing or non-image asset "${id}".`,
       path: `assets.${id}`
     });
   }

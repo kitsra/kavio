@@ -14,6 +14,7 @@ test("prints help for the default command", async () => {
   assert.match(result.stdout, /inspect\s+Print a composition summary/);
   assert.match(result.stdout, /presets\s+List social media export presets/);
   assert.match(result.stdout, /preview\s+Start a local browser preview server/);
+  assert.match(result.stdout, /--render-mode <mode>/);
   assert.equal(result.stderr, "");
 });
 

@@ -13,6 +13,7 @@ import {
   type ValidationResult
 } from "@kitsra/kavio-schema";
 import { renderBatch, type RenderBatchInput, type RenderBatchOptions, type RenderBatchRow } from "@kitsra/kavio-render";
+import type { RenderCompositionMode } from "@kitsra/kavio-render";
 
 declare const process: {
   argv: string[];
@@ -34,6 +35,7 @@ interface ParsedArgs {
   batchFile?: string;
   outDir?: string;
   concurrency?: number;
+  renderMode?: RenderCompositionMode;
   failFast: boolean;
   continueOnFrameError: boolean;
 }
@@ -182,7 +184,7 @@ interface LoadedJson {
 }
 
 const commands = new Set(["validate", "inspect", "migrate", "preview", "render", "presets"]);
-const VALUE_FLAGS = new Set(["--export", "--props", "--batch", "--out", "--concurrency"]);
+const VALUE_FLAGS = new Set(["--export", "--props", "--batch", "--out", "--concurrency", "--render-mode"]);
 
 async function main(argv: readonly string[]): Promise<number> {
   const parsed = parseArgs(argv);
@@ -287,6 +289,7 @@ function parseArgs(argv: readonly string[]): ParsedArgs | CliFailure {
   let batchFile: string | undefined;
   let outDir: string | undefined;
   let concurrency: number | undefined;
+  let renderMode: RenderCompositionMode | undefined;
   const positional: string[] = [];
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -331,6 +334,11 @@ function parseArgs(argv: readonly string[]): ParsedArgs | CliFailure {
         batchFile = value;
       } else if (arg === "--out") {
         outDir = value;
+      } else if (arg === "--render-mode") {
+        if (value !== "browser-overlay" && value !== "ffmpeg-direct") {
+          return flagFailure("--render-mode must be browser-overlay or ffmpeg-direct.");
+        }
+        renderMode = value;
       } else {
         const parsed = Number(value);
         if (!Number.isInteger(parsed) || parsed < 1) {
@@ -402,6 +410,9 @@ function parseArgs(argv: readonly string[]): ParsedArgs | CliFailure {
   }
   if (concurrency !== undefined) {
     parsed.concurrency = concurrency;
+  }
+  if (renderMode !== undefined) {
+    parsed.renderMode = renderMode;
   }
   return parsed;
 }
@@ -664,6 +675,9 @@ async function runRender(parsed: ParsedArgs): Promise<number> {
     failFast: parsed.failFast,
     continueOnFrameError: parsed.continueOnFrameError
   };
+  if (parsed.renderMode !== undefined) {
+    options.renderMode = parsed.renderMode;
+  }
   if (parsed.concurrency !== undefined) {
     options.concurrency = parsed.concurrency;
   }
@@ -1384,6 +1398,7 @@ Render options:
   --batch <file.json>        Array of prop rows -> rows x presets.
   --out <dir>                Output directory (default: renders).
   --concurrency <n>          Parallel jobs (default: 1).
+  --render-mode <mode>       browser-overlay or ffmpeg-direct.
   --fail-fast                Abort the batch on first job failure.
   --continue-on-frame-error  Tolerate per-frame capture failures.
 

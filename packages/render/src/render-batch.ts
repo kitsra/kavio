@@ -4,6 +4,7 @@ import type { FfmpegRunner } from "./ffmpeg-runner.js";
 
 export interface RenderBatchOptions {
   outDir?: string;
+  renderMode?: RenderCompositionOptions["renderMode"];
   driver?: BrowserDriver;
   ffmpegRunner?: FfmpegRunner;
   concurrency?: number;
@@ -65,6 +66,7 @@ function buildRenderOptions(
     propValues: job.props,
     outputName: job.outputName,
     ...(options.outDir !== undefined && { outDir: options.outDir }),
+    ...(options.renderMode !== undefined && { renderMode: options.renderMode }),
     ...(options.driver !== undefined && { driver: options.driver }),
     ...(options.ffmpegRunner !== undefined && { ffmpegRunner: options.ffmpegRunner }),
     ...(options.signal !== undefined && { signal: options.signal }),

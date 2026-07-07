@@ -24,6 +24,7 @@ export function defaultVideoCodec(format: KavioExportFormat): KavioExportCodec {
     case "png-sequence":
       return "h264";
   }
+  return unreachable(format);
 }
 
 export function defaultAudioCodec(format: KavioExportFormat): KavioAudioCodec {
@@ -36,6 +37,7 @@ export function defaultAudioCodec(format: KavioExportFormat): KavioAudioCodec {
     case "png-sequence":
       return "aac";
   }
+  return unreachable(format);
 }
 
 export function videoEncoder(codec: KavioExportCodec): string {
@@ -73,4 +75,8 @@ export function pixelFormat(codec: KavioExportCodec): string {
     case "h264":
       return "yuv420p";
   }
+}
+
+function unreachable(value: never): never {
+  throw new Error(`Unsupported export format: ${String(value)}`);
 }

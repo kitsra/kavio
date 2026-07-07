@@ -34,6 +34,17 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
 7. Render only when the user wants files produced and the optional browser and
    FFmpeg binaries are already available, or after the user agrees to install
    them through the repo's reviewed commands.
+8. For simple static image slideshows, prefer the explicit direct render path:
+   ```bash
+   node packages/cli/dist/index.js render path/to/composition.json --render-mode ffmpeg-direct
+   ```
+   Use it only for image-only compositions where every image layer is
+   full-frame, contiguous, non-overlapping, and covers the full duration.
+   Supported image motion is limited to linear `fade` transition-in/out with
+   `durationFrames` plus a simple linear `keyframes.scale` push-in from `1`.
+   Use normal rendering for text, masks, mixed layouts, non-fade transitions,
+   non-linear timing, unsupported keyframes, or any composition that the direct
+   path rejects.
 
 ## Build And Tooling
 
@@ -65,6 +76,19 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
   inclusive at `startFrame` and exclusive at `startFrame + durationFrames`.
 - Use `node packages/cli/dist/index.js presets` to discover standard social
   export presets, or `--json presets <preset-id>` for copyable JSON.
+- Use `--render-mode ffmpeg-direct` only as a performance path for full-frame
+  image sequences or supported shape-only compositions. Image sequences may use
+  limited production-style motion: linear fade in/out and monotonic scale
+  push-in. It skips browser PNG capture, so unsupported motion/layout features
+  will be rejected instead of approximated.
+- For zoomed stills, do not loop the image input before FFmpeg `zoompan`; read
+  one image frame and let `zoompan=d=<durationFrames>:fps=<fps>` create the
+  segment. Looping before `zoompan` expands the segment timeline and can make
+  final-duration truncation show the wrong slides.
+- GetPint/Pintwatch benchmark context from July 2026: production screenshot +
+  FFmpeg render measured `12.09s real`; Kavio `ffmpeg-direct` with CRF 18,
+  0.18s fades, and a 1.025 push-in measured `8.96s real` for the same 720-frame
+  24s reel, with SSIM `0.995476` and PSNR `40.20 dB`.
 
 ## Repair Loop
 
