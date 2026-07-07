@@ -27,17 +27,21 @@ node packages/cli/dist/index.js render composition.json --render-mode ffmpeg-dir
 `ffmpeg-direct` skips Chromium and browser PNG capture. Today it supports:
 
 - Shape-only compositions using static rectangular shapes with direct hex colors.
-- Image-only compositions where every image layer is full-frame, contiguous,
-  non-overlapping, and covers the full composition duration.
+- Image-only compositions where every image layer is full-frame, does not use
+  `fit: "none"`, and either is contiguous or is represented by one transition
+  track covering the full duration.
+- Transition-track image handoffs only when the overlap exactly matches a
+  linear `fade` / `crossfade` `transitionFromPrevious`; FFmpeg `xfade` performs
+  the blend.
 - Optional image-layer `transitionIn` / `transitionOut` when the transition type
   is `fade`, the timing is linear, and `durationFrames` is present.
 - Optional image-layer `keyframes.scale` when it describes a simple linear
   push-in from `1` to a larger value, with later keyframes holding that value.
 
 It intentionally rejects other image keyframes, non-fade transitions, non-linear
-timing, masks, opacity changes, mixed image/text/shape layouts, transition
-tracks, and other browser-only features. If it rejects a composition, use the
-default `browser-overlay` mode.
+timing, ambiguous overlaps, masks, opacity changes, mixed image/text/shape
+layouts, `fit: "none"`, and other browser-only features. If it rejects a
+composition, use the default `browser-overlay` mode.
 
 For zoomed stills, the direct renderer reads the image as a single frame and
 lets FFmpeg `zoompan=d=<durationFrames>:fps=<fps>` create the segment. Do not
@@ -48,6 +52,22 @@ GetPint/Pintwatch comparison, July 2026: production screenshot + FFmpeg render
 measured `12.09s real`; Kavio `ffmpeg-direct` with matching CRF 18, 0.18s
 fade-in/out, and 1.025 push-in measured `8.96s real` for the same 720-frame
 24s reel. Full-video comparison was SSIM `0.995476` and PSNR `40.20 dB`.
+
+To reproduce that style of visual comparison report for two existing videos,
+use the repo-local FFmpeg helper:
+
+```bash
+node scripts/compare-render-videos.mjs production.mp4 kavio.mp4 \
+  --reference-time 12.09 \
+  --candidate-time 8.96 \
+  --json render-comparison.json \
+  --markdown render-comparison.md
+```
+
+The helper shells out to `ffprobe` for stream metadata and `ffmpeg` for SSIM and
+PSNR. Set `FFMPEG` or `FFPROBE` when those binaries are not on `PATH`. Keep the
+source app's production render script in Pintwatch; Kavio only owns the
+cross-video comparison/report.
 
 ## What Exists Now
 
@@ -74,7 +94,8 @@ fade-in/out, and 1.025 push-in measured `8.96s real` for the same 720-frame
 - Audio mix planning for music, source audio, voiceover, fades, loudness, and
   basic ducking metadata.
 - FFmpeg-direct planning for static shape layers and full-frame image sequences,
-  including limited linear fade and scale push-in motion.
+  including limited linear fade, scale push-in, and exact `xfade` overlap
+  motion.
 
 ## What Remains For MVP Rendering
 

@@ -39,12 +39,14 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
    node packages/cli/dist/index.js render path/to/composition.json --render-mode ffmpeg-direct
    ```
    Use it only for image-only compositions where every image layer is
-   full-frame, contiguous, non-overlapping, and covers the full duration.
-   Supported image motion is limited to linear `fade` transition-in/out with
-   `durationFrames` plus a simple linear `keyframes.scale` push-in from `1`.
-   Use normal rendering for text, masks, mixed layouts, non-fade transitions,
-   non-linear timing, unsupported keyframes, or any composition that the direct
-   path rejects.
+   full-frame and either contiguous or represented by one transition track that
+   covers the full duration. Supported image motion is limited to linear `fade`
+   transition-in/out, exact linear `fade` / `crossfade`
+   `transitionFromPrevious` overlaps, plus a simple linear `keyframes.scale`
+   push-in from `1`.
+   Use normal rendering for text, masks, mixed layouts, `fit: "none"`,
+   non-fade transitions, non-linear timing, unsupported keyframes, or any
+   composition that the direct path rejects.
 
 ## Build And Tooling
 
@@ -59,6 +61,14 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
   most authoring work do not need browser or FFmpeg binaries.
 - Use `corepack pnpm run install:render-binaries` only for an explicit render
   workflow that needs local output files.
+- To compare an external production render with a Kavio render, use the
+  repo-local report helper after both videos already exist:
+  ```bash
+  node scripts/compare-render-videos.mjs production.mp4 kavio.mp4 --json render-comparison.json --markdown render-comparison.md
+  ```
+  Add `--reference-time <seconds>` and `--candidate-time <seconds>` when manual
+  wall-clock timings are available. The helper needs local `ffprobe` and
+  `ffmpeg`; keep source-app render scripts in their own repos.
 
 ## Authoring Rules
 
@@ -78,9 +88,10 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
   export presets, or `--json presets <preset-id>` for copyable JSON.
 - Use `--render-mode ffmpeg-direct` only as a performance path for full-frame
   image sequences or supported shape-only compositions. Image sequences may use
-  limited production-style motion: linear fade in/out and monotonic scale
-  push-in. It skips browser PNG capture, so unsupported motion/layout features
-  will be rejected instead of approximated.
+  limited production-style motion: linear fade in/out, exact linear
+  fade/crossfade `transitionFromPrevious` overlaps, and monotonic scale push-in.
+  `fit: "none"` is not supported. It skips browser PNG capture, so unsupported
+  motion/layout features will be rejected instead of approximated.
 - For zoomed stills, do not loop the image input before FFmpeg `zoompan`; read
   one image frame and let `zoompan=d=<durationFrames>:fps=<fps>` create the
   segment. Looping before `zoompan` expands the segment timeline and can make

@@ -1,5 +1,5 @@
-import { evaluateLayer, getCanvasDimensions, isLayerActive } from "@kitsra/kavio-core";
-import type { CanvasDimensions } from "@kitsra/kavio-core";
+import { compileTransitionOverlapWindows, evaluateLayer, getCanvasDimensions, isLayerActive, resolveLayout } from "@kitsra/kavio-core";
+import type { CanvasDimensions, TransitionOverlapWindow } from "@kitsra/kavio-core";
 import type {
   KavioAudioAsset,
   KavioAudioTrack,
@@ -9,6 +9,7 @@ import type {
   KavioImageLayer,
   KavioLayer,
   KavioShapeLayer,
+  KavioTrackClip,
   KavioVideoAsset,
   KavioVideoLayer
 } from "@kitsra/kavio-schema";
@@ -271,7 +272,8 @@ function directImageSequence(
   background: string,
   outputLabel: string
 ): { inputArgs: string[]; chains: FfmpegFilterChain[] } {
-  const ordered = [...layers].sort((left, right) => left.startFrame - right.startFrame);
+  const ordered = directImageLayerOrder(view, layers);
+  const transitionWindows = compileTransitionOverlapWindows(view.tracks);
   const inputArgs: string[] = [];
   const chains: FfmpegFilterChain[] = [];
   const labels: string[] = [];
@@ -296,30 +298,51 @@ function directImageSequence(
     });
   });
 
-  if (labels.length > 1) {
+  if (transitionWindows.length > 0) {
+    let leftLabel = labels[0]!;
+    transitionWindows.forEach((window, index) => {
+      const rightLabel = labels[index + 1]!;
+      const label = index === transitionWindows.length - 1 ? outputLabel : `direct_xfade_${index}`;
+      const filters = [
+        `xfade=transition=fade:duration=${formatSeconds(window.durationFrames / fps)}:offset=${formatSeconds(window.startFrame / fps)}`,
+        "format=yuv420p"
+      ];
+      chains.push({
+        inputLabels: [leftLabel, rightLabel],
+        filters,
+        outputLabel: label,
+        expression: `[${leftLabel}][${rightLabel}]${filters.join(",")}[${label}]`
+      });
+      leftLabel = label;
+    });
+  } else if (labels.length > 1) {
     chains.push(buildConcatFilterChain({ segmentLabels: labels, outputLabel }));
   }
   return { inputArgs, chains };
 }
 
 function getDirectImageSequenceSupport(view: KavioDocument, imageLayers: KavioImageLayer[]): DirectRenderSupport {
-  if ((view.tracks ?? []).length > 0) {
-    return { ok: false, reason: "image sequence direct render does not support transition tracks yet" };
-  }
   if (view.layers.some((layer) => layer.type !== "image")) {
     return { ok: false, reason: "image sequence direct render only supports image layers" };
   }
 
   const dimensions = getCanvasDimensions(view.composition);
-  const ordered = [...imageLayers].sort((left, right) => left.startFrame - right.startFrame);
+  for (const layer of imageLayers) {
+    const reason = getUnsupportedDirectImageReason(layer, dimensions);
+    if (reason !== null) {
+      return unsupported(layer, reason);
+    }
+  }
+
+  if ((view.tracks ?? []).length > 0) {
+    return getDirectImageTrackSupport(view, imageLayers);
+  }
+
+  const ordered = directImageLayerOrder(view, imageLayers);
   let cursor = 0;
   for (const layer of ordered) {
     if (layer.startFrame !== cursor) {
       return unsupported(layer, "image sequence layers must be contiguous and non-overlapping");
-    }
-    const reason = getUnsupportedDirectImageReason(layer, dimensions);
-    if (reason !== null) {
-      return unsupported(layer, reason);
     }
     cursor += layer.durationFrames;
   }
@@ -329,6 +352,93 @@ function getDirectImageSequenceSupport(view: KavioDocument, imageLayers: KavioIm
   }
 
   return { ok: true };
+}
+
+function getDirectImageTrackSupport(view: KavioDocument, imageLayers: KavioImageLayer[]): DirectRenderSupport {
+  const tracks = view.tracks ?? [];
+  if (tracks.length !== 1) {
+    return { ok: false, reason: "image sequence direct render supports one transition track" };
+  }
+
+  const track = tracks[0];
+  if (track === undefined || track.clips.length === 0) {
+    return { ok: false, reason: "image sequence transition track requires clips" };
+  }
+  if (track.clips.length !== imageLayers.length) {
+    return { ok: false, reason: "image sequence transition track must reference every image layer exactly once" };
+  }
+
+  const layersById = new Map(imageLayers.map((layer) => [layer.id, layer]));
+  const windowsByNextClipId = new Map(compileTransitionOverlapWindows(view.tracks).map((window) => [window.nextClipId, window]));
+  const seenLayerIds = new Set<string>();
+
+  for (let index = 0; index < track.clips.length; index += 1) {
+    const clip = track.clips[index]!;
+    const layer = layersById.get(clip.layerId);
+    if (layer === undefined || seenLayerIds.has(layer.id)) {
+      return { ok: false, reason: "image sequence transition track must reference every image layer exactly once" };
+    }
+    seenLayerIds.add(layer.id);
+
+    if (clip.startFrame !== layer.startFrame || clip.durationFrames !== layer.durationFrames) {
+      return unsupported(layer, "image transition track clip timing must match its image layer timing");
+    }
+    if (layer.transitionIn !== undefined || layer.transitionOut !== undefined) {
+      return unsupported(layer, "image transition tracks cannot be combined with layer transitions");
+    }
+
+    if (index === 0) {
+      if (clip.startFrame !== 0) {
+        return unsupported(layer, "image transition track must start at frame 0");
+      }
+      continue;
+    }
+
+    if (clip.transitionFromPrevious === undefined) {
+      return unsupported(layer, "image transition track requires transitionFromPrevious on every handoff");
+    }
+
+    const previousClip = track.clips[index - 1]!;
+    const window = windowsByNextClipId.get(clip.id);
+    if (window === undefined) {
+      return unsupported(layer, "image transition track timing is invalid");
+    }
+
+    const transitionReason = getUnsupportedDirectImageTrackTransitionReason(window);
+    if (transitionReason !== null) {
+      return unsupported(layer, transitionReason);
+    }
+    if (clip.startFrame !== previousClip.startFrame + previousClip.durationFrames - window.durationFrames) {
+      return unsupported(layer, "image transition overlap must exactly match transition duration");
+    }
+  }
+
+  const lastClip = track.clips.at(-1)!;
+  if (lastClip.startFrame + lastClip.durationFrames !== view.composition.durationFrames) {
+    return { ok: false, reason: "image transition track must cover the full composition duration" };
+  }
+
+  return { ok: true };
+}
+
+function getUnsupportedDirectImageTrackTransitionReason(window: TransitionOverlapWindow): string | null {
+  if (window.transition.type !== "fade" && window.transition.type !== "crossfade") {
+    return "image transition tracks only support linear fade/crossfade transitions";
+  }
+  if (window.transition.easing !== undefined && window.transition.easing !== "linear") {
+    return "image transition tracks only support linear fade/crossfade timing";
+  }
+  return null;
+}
+
+function directImageLayerOrder(view: KavioDocument, layers: KavioImageLayer[]): KavioImageLayer[] {
+  const track = view.tracks?.[0];
+  if (track === undefined) {
+    return [...layers].sort((left, right) => left.startFrame - right.startFrame);
+  }
+
+  const layersById = new Map(layers.map((layer) => [layer.id, layer]));
+  return track.clips.map((clip: KavioTrackClip) => layersById.get(clip.layerId)).filter((layer) => layer !== undefined);
 }
 
 function getUnsupportedDirectImageReason(layer: KavioImageLayer, dimensions: CanvasDimensions): string | null {
@@ -343,6 +453,9 @@ function getUnsupportedDirectImageReason(layer: KavioImageLayer, dimensions: Can
   }
   if (layer.scale !== undefined && layer.scale !== 1) {
     return "scaled image layers are not supported";
+  }
+  if (layer.fit === "none") {
+    return "image fit none is not supported";
   }
   if (layer.keyframes !== undefined && Object.keys(layer.keyframes).length > 0) {
     const keyframes = Object.keys(layer.keyframes);
@@ -381,23 +494,24 @@ function directImageFilters(
   const zoom = directImageZoomSpec(layer);
   if (zoom !== null) {
     filters.push(
-      `zoompan=z='min(zoom+${formatFfmpegNumber(zoom.perFrame)},${formatFfmpegNumber(zoom.to)})':d=${layer.durationFrames}:s=${output.width}x${output.height}:fps=${fps}`
+      `zoompan=z='min(1+on*${formatFfmpegNumber(zoom.perFrame)},${formatFfmpegNumber(zoom.to)})':d=${layer.durationFrames}:s=${output.width}x${output.height}:fps=${fps}`
     );
   }
-  filters.push(...directImageFadeFilters(layer, fps), "format=yuv420p");
+  filters.push(...directImageFadeFilters(layer, fps, background), "format=yuv420p");
   return filters;
 }
 
-function directImageFadeFilters(layer: KavioImageLayer, fps: number): string[] {
+function directImageFadeFilters(layer: KavioImageLayer, fps: number, background: string): string[] {
   const filters: string[] = [];
+  const color = formatFilterColor(background);
   const transitionInFrames = directFadeDurationFrames(layer.transitionIn);
   if (transitionInFrames !== null) {
-    filters.push(`fade=t=in:st=0:d=${formatSeconds(transitionInFrames / fps)}`);
+    filters.push(`fade=t=in:st=0:d=${formatSeconds(transitionInFrames / fps)}:color=${color}`);
   }
   const transitionOutFrames = directFadeDurationFrames(layer.transitionOut);
   if (transitionOutFrames !== null) {
     filters.push(
-      `fade=t=out:st=${formatSeconds((layer.durationFrames - transitionOutFrames) / fps)}:d=${formatSeconds(transitionOutFrames / fps)}`
+      `fade=t=out:st=${formatSeconds((layer.durationFrames - transitionOutFrames) / fps)}:d=${formatSeconds(transitionOutFrames / fps)}:color=${color}`
     );
   }
   return filters;
@@ -468,12 +582,12 @@ function almostEqual(left: number, right: number): boolean {
 }
 
 function isFullFrameImage(layer: KavioImageLayer, dimensions: CanvasDimensions): boolean {
+  const layout = resolveLayout(layer, dimensions);
   return (
-    layer.position?.x === dimensions.width / 2 &&
-    layer.position?.y === dimensions.height / 2 &&
-    layer.anchor === "center" &&
-    layer.size?.width === dimensions.width &&
-    layer.size?.height === dimensions.height
+    almostEqual(layout.topLeft.x ?? Number.NaN, 0) &&
+    almostEqual(layout.topLeft.y ?? Number.NaN, 0) &&
+    almostEqual(layout.size.width ?? Number.NaN, dimensions.width) &&
+    almostEqual(layout.size.height ?? Number.NaN, dimensions.height)
   );
 }
 
@@ -721,6 +835,14 @@ function formatDrawboxColor(value: string, opacity: number): string {
   const base = match[1]!;
   const alpha = match[2] === undefined ? 1 : Number.parseInt(match[2], 16) / 255;
   return `${escapeLavfi(`0x${base}`)}@${formatFfmpegNumber(alpha * opacity)}`;
+}
+
+function formatFilterColor(value: string): string {
+  const match = /^#([0-9a-f]{6})([0-9a-f]{2})?$/i.exec(value);
+  if (match !== null) {
+    return escapeLavfi(`0x${match[1]}${match[2] ?? ""}`);
+  }
+  return escapeLavfi(value);
 }
 
 function formatFfmpegNumber(value: number): string {

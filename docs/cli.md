@@ -139,9 +139,11 @@ Useful options:
 - `--render-mode <mode>` accepts `browser-overlay` or `ffmpeg-direct`.
   `ffmpeg-direct` skips browser capture for supported shape-only compositions
   and full-frame image sequences. Image sequences may use only linear
-  `fade` transition-in/out plus a simple scale push-in; use the default
-  `browser-overlay` mode for text, masks, mixed layouts, non-fade transitions,
-  non-linear timing, or unsupported keyframes.
+  `fade` transition-in/out, exact linear `fade` / `crossfade`
+  `transitionFromPrevious` overlaps, plus a simple scale push-in; use the
+  default `browser-overlay` mode for text, masks, mixed layouts, `fit: "none"`,
+  non-fade transitions, non-linear timing, ambiguous overlaps, or unsupported
+  keyframes.
 
 Schema-valid `gif`, `png-sequence`, and transparent final outputs are reserved
 for later render paths and fail clearly in the current renderer.
