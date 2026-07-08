@@ -48,18 +48,13 @@ lets FFmpeg `zoompan=d=<durationFrames>:fps=<fps>` create the segment. Do not
 loop a still input before `zoompan`; that multiplies segment length and can make
 the final `-t` truncate the wrong content.
 
-GetPint/Pintwatch comparison, July 2026: production screenshot + FFmpeg render
-measured `12.09s real`; Kavio `ffmpeg-direct` with matching CRF 18, 0.18s
-fade-in/out, and 1.025 push-in measured `8.96s real` for the same 720-frame
-24s reel. Full-video comparison was SSIM `0.995476` and PSNR `40.20 dB`.
-
-To reproduce that style of visual comparison report for two existing videos,
-use the repo-local FFmpeg helper:
+To produce a visual comparison report for two existing videos, use the
+repo-local FFmpeg helper:
 
 ```bash
 node scripts/compare-render-videos.mjs production.mp4 kavio.mp4 \
-  --reference-time 12.09 \
-  --candidate-time 8.96 \
+  --reference-time <seconds> \
+  --candidate-time <seconds> \
   --json render-comparison.json \
   --markdown render-comparison.md
 ```

@@ -96,10 +96,6 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
   one image frame and let `zoompan=d=<durationFrames>:fps=<fps>` create the
   segment. Looping before `zoompan` expands the segment timeline and can make
   final-duration truncation show the wrong slides.
-- GetPint/Pintwatch benchmark context from July 2026: production screenshot +
-  FFmpeg render measured `12.09s real`; Kavio `ffmpeg-direct` with CRF 18,
-  0.18s fades, and a 1.025 push-in measured `8.96s real` for the same 720-frame
-  24s reel, with SSIM `0.995476` and PSNR `40.20 dB`.
 
 ## Repair Loop
 
