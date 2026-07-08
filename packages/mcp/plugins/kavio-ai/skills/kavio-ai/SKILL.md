@@ -92,6 +92,12 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
   fade/crossfade `transitionFromPrevious` overlaps, and monotonic scale push-in.
   `fit: "none"` is not supported. It skips browser PNG capture, so unsupported
   motion/layout features will be rejected instead of approximated.
+- For reel-style image handoffs, prefer one top-level `tracks` transition
+  series with overlapped clips and linear `transitionFromPrevious`
+  `fade`/`crossfade`. Do not model those handoffs as adjacent layer
+  `transitionOut` / `transitionIn` fade pairs unless a fade-through-background
+  dip is explicitly desired; the track path uses FFmpeg `xfade` and is usually
+  smoother and faster.
 - For zoomed stills, do not loop the image input before FFmpeg `zoompan`; read
   one image frame and let `zoompan=d=<durationFrames>:fps=<fps>` create the
   segment. Looping before `zoompan` expands the segment timeline and can make

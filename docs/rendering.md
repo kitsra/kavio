@@ -38,6 +38,12 @@ node packages/cli/dist/index.js render composition.json --render-mode ffmpeg-dir
 - Optional image-layer `keyframes.scale` when it describes a simple linear
   push-in from `1` to a larger value, with later keyframes holding that value.
 
+For reel-style slide handoffs, prefer a top-level transition track with
+overlapped `transitionFromPrevious` clips. Adjacent layer `transitionOut` /
+`transitionIn` fade pairs fade through the background and are useful for
+entrances or exits, but they do not create the smoother FFmpeg `xfade` blend and
+can be slower for long still-image reels.
+
 It intentionally rejects other image keyframes, non-fade transitions, non-linear
 timing, ambiguous overlaps, masks, opacity changes, mixed image/text/shape
 layouts, `fit: "none"`, and other browser-only features. If it rejects a
