@@ -1,5 +1,16 @@
 # @kitsra/kavio-core
 
+## 0.4.0
+
+### Patch Changes
+
+- a6b1fa0: Add FFmpeg-direct rendering for full-frame image sequences with linear scale
+  push-in motion, layer fades, and transition-track crossfades. The CLI can now
+  select the direct render mode for supported slideshow compositions, transition
+  series timing defaults are normalized for exact overlap windows, and the bundled
+  Kavio AI skill documents the faster transition-track authoring path.
+  - @kitsra/kavio-schema@0.4.0
+
 ## 0.3.0
 
 ### Patch Changes

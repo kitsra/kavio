@@ -1,6 +1,6 @@
 {
   "name": "@kitsra/kavio-builder",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "TypeScript builder SDK for creating Kavio JSON.",
   "license": "Elastic-2.0",
   "repository": {
