@@ -97,7 +97,20 @@ Render code should:
 - Keep final outputs and metadata only.
 - Preserve enough error detail to debug validation, browser, or FFmpeg failures.
 
+## Render Comparison
+
+For two already-rendered videos, Kavio owns the shared comparison/report helper:
+
+```bash
+node scripts/compare-render-videos.mjs production.mp4 kavio.mp4
+```
+
+Add `--reference-time <seconds>` and `--candidate-time <seconds>` to include
+manual wall-clock render timings. Add `--json <path>` or `--markdown <path>` to
+write a reusable report. The helper uses local `ffprobe` metadata plus FFmpeg
+SSIM/PSNR filters; production-app render scripts stay in their source repos.
+
 ## Remaining MVP Gap
 
-The remaining MVP render work is to measure capture throughput and total render
-time, then use those measurements to guide hardening.
+The remaining MVP render work is to use captured timings and comparison reports
+to guide hardening.

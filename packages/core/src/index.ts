@@ -600,7 +600,10 @@ export function evaluateTransitionSeries(
       endFrame: window.endFrame,
       durationFrames: window.durationFrames,
       progress,
-      easedProgress: evaluateEasing(window.transition.easing ?? "linear", progress),
+      easedProgress:
+        window.transition.timing === undefined
+          ? evaluateEasing(window.transition.easing ?? "linear", progress)
+          : evaluateTiming(window.transition.timing, frame - window.startFrame, window.durationFrames),
       transition: window.transition
     });
   }
@@ -611,7 +614,8 @@ export function evaluateTransitionSeries(
 export function normalizeTransitionSeriesDefinition(definition: KavioTransitionSeriesDefinition): TransitionSeriesTransition {
   const transition: TransitionSeriesTransition = {
     type: definition.presentation.type,
-    durationFrames: definition.timing.durationFrames
+    durationFrames: definition.timing.durationFrames,
+    timing: definition.timing
   };
 
   if (definition.presentation.direction !== undefined) {

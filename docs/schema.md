@@ -229,7 +229,8 @@ overlap window that starts at the incoming clip's `startFrame`. Browser preview
 and browser-backed render paths consume those overlap windows so outgoing and
 incoming clips are evaluated together on the same frame. The timing duration
 must fit inside both the previous clip and the incoming clip, and transition
-windows on the same track may not overlap.
+windows on the same track may not overlap. If `timing.easing` is omitted, the
+series uses tween timing's linear default.
 
 Per-layer `transitionIn` and `transitionOut` remain valid for entrances, exits,
 overlays, and existing compositions.

@@ -231,6 +231,33 @@ assertClose(activeSeriesWindow.previous.layer.position.x, 500, "outgoing push st
 assertClose(activeSeriesWindow.next.layer.position.x, 1500, "incoming push starts offscreen before moving in");
 assertEqual(evaluateTransitionSeries(transitionSeriesDocument, 60, dimensions).length, 0, "transition series endFrame is exclusive");
 
+const linearTransitionSeriesDocument: KavioDocument = {
+  ...transitionSeriesDocument,
+  tracks: [
+    {
+      id: "main",
+      clips: [
+        { id: "a", layerId: "scene-a", startFrame: 0, durationFrames: 60 },
+        {
+          id: "b",
+          layerId: "scene-b",
+          startFrame: 48,
+          durationFrames: 42,
+          transitionFromPrevious: {
+            presentation: { type: "push", direction: "left" },
+            timing: { type: "tween", durationFrames: 5 }
+          }
+        }
+      ]
+    }
+  ]
+};
+const linearSeriesAtSecondFrame = evaluateTransitionSeries(linearTransitionSeriesDocument, 49, dimensions)[0];
+assert(linearSeriesAtSecondFrame !== undefined, "transition series without explicit easing evaluates active frames");
+assertClose(linearSeriesAtSecondFrame.easedProgress, 0.25, "transition series preserves tween timing's linear default");
+assertClose(linearSeriesAtSecondFrame.previous.layer.position.x, 250, "outgoing transition-series clip uses linear default timing");
+assertClose(linearSeriesAtSecondFrame.next.layer.position.x, 1250, "incoming transition-series clip uses linear default timing");
+
 const captionLayer: CaptionTimelineLayer = {
   id: "captions",
   type: "caption",

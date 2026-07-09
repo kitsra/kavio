@@ -98,6 +98,7 @@ const piped = pipedArgs.join(" ");
 assert(piped.includes("-f image2pipe"), "omitting framePattern reads overlay frames from an image2pipe stream");
 assert(pipedArgs.some((arg, index) => arg === "-i" && pipedArgs[index + 1] === "-"), "piped overlay input reads from stdin");
 assert(!piped.includes("overlay-%05d.png"), "piped render does not reference a frame pattern");
+assert(piped.includes("shortest=0"), "piped overlay does not shorten the timeline when frame capture backpressures");
 assert(piped.includes("[video_out]"), "piped render still maps the composited video stream");
 assertEqual(pipedArgs.filter((arg) => arg === "-filter_complex").length, 1, "piped render emits a single -filter_complex");
 
@@ -202,6 +203,18 @@ assert(webmArgs.includes("-c:v libvpx-vp9"), "webm defaults to VP9 video");
 assert(webmArgs.includes("-c:a libopus"), "webm defaults to Opus audio");
 assert(!webmArgs.includes("+faststart"), "webm does not use mp4/mov faststart flags");
 
+const bitrateView: KavioDocument = {
+  ...graphicsOnlyView,
+  exports: [{ name: "reels", format: "mp4", codec: "h264", width: 1080, height: 1920, bitrate: "8M" }]
+};
+const bitrateArgs = assembleRenderCommand({
+  view: bitrateView,
+  preset: bitrateView.exports[0]!,
+  framePattern: "/tmp/work/overlay-%05d.png"
+});
+assert(bitrateArgs.some((arg, index) => arg === "-b:v" && bitrateArgs[index + 1] === "8M"), "video bitrate is passed to ffmpeg");
+assert(!bitrateArgs.includes("-crf"), "video bitrate overrides CRF mode");
+
 const directShapeView: KavioDocument = {
   version: "0.1",
   composition: { width: 640, height: 360, fps: 30, durationFrames: 45, background: "#000000" },
@@ -237,6 +250,190 @@ assert(directArgs.includes("drawbox=x=32:y=48:w=200:h=96:color=0xffffff@0.75:t=4
 
 const directTextSupport = getDirectRenderSupport(graphicsOnlyView);
 assert(!directTextSupport.ok, "text composition is not eligible for FFmpeg-direct render yet");
+
+const directImageView: KavioDocument = {
+  version: "0.1",
+  composition: { width: 320, height: 240, fps: 30, durationFrames: 12, background: "#000000" },
+  assets: {
+    first: { type: "image", src: "first.png" },
+    second: { type: "image", src: "second.png" }
+  },
+  layers: [
+    {
+      id: "first",
+      type: "image",
+      asset: "first",
+      startFrame: 0,
+      durationFrames: 6,
+      position: { x: 160, y: 120 },
+      anchor: "center",
+      size: { width: 320, height: 240 },
+      fit: "cover"
+    },
+    {
+      id: "second",
+      type: "image",
+      asset: "second",
+      startFrame: 6,
+      durationFrames: 6,
+      position: { x: "50%w", y: "50%h" },
+      anchor: "center",
+      size: { width: "100%w", height: "100%h" },
+      fit: "cover"
+    }
+  ],
+  audio: [],
+  exports: [{ name: "image-direct", format: "mp4", codec: "h264", width: 320, height: 240 }]
+};
+assert(getDirectRenderSupport(directImageView).ok, "full-frame image sequence is eligible for FFmpeg-direct render");
+const directImageArgs = assembleDirectRenderCommand({
+  view: directImageView,
+  preset: directImageView.exports[0]!,
+  outputPath: "/tmp/image-direct.mp4"
+}).join(" ");
+assert(directImageArgs.includes("-loop 1 -framerate 30 -t 0.2 -i first.png"), "direct image render loops the first still for its layer duration");
+assert(directImageArgs.includes("-loop 1 -framerate 30 -t 0.2 -i second.png"), "direct image render loops the second still for its layer duration");
+assert(directImageArgs.includes("concat=n=2:v=1:a=0"), "direct image render concatenates still segments");
+assert(!directImageArgs.includes("image2pipe"), "direct image render skips browser overlay frames");
+
+const directImageMotionView: KavioDocument = {
+  ...directImageView,
+  composition: { ...directImageView.composition, background: "#334455" },
+  layers: directImageView.layers.map((layer) => ({
+    ...layer,
+    keyframes: {
+      scale: [
+        { frame: 0, value: 1 },
+        { frame: 3, value: 1.025 },
+        { frame: 5, value: 1.025 }
+      ]
+    },
+    transitionIn: { type: "fade", durationFrames: 2, easing: "linear" },
+    transitionOut: { type: "fade", durationFrames: 2, easing: "linear" }
+  }))
+};
+assert(getDirectRenderSupport(directImageMotionView).ok, "linear image fade and push-in sequence is eligible for FFmpeg-direct render");
+const directImageMotionArgs = assembleDirectRenderCommand({
+  view: directImageMotionView,
+  preset: directImageMotionView.exports[0]!,
+  outputPath: "/tmp/image-direct-motion.mp4"
+}).join(" ");
+assert(directImageMotionArgs.includes("-i first.png"), "direct image motion render reads the first still as a single frame");
+assert(!directImageMotionArgs.includes("-loop 1 -framerate 30 -t 0.2 -i first.png"), "direct image motion render does not loop still inputs before zoompan");
+assert(directImageMotionArgs.includes("zoompan=z='min(1+on*0.008333,1.025)'"), "direct image render preserves supported scale push-in");
+assert(directImageMotionArgs.includes("fade=t=in:st=0:d=0.066667:color=0x334455"), "direct image render preserves supported fade in");
+assert(directImageMotionArgs.includes("fade=t=out:st=0.133333:d=0.066667:color=0x334455"), "direct image render preserves supported fade out");
+
+const directImageTransitionView: KavioDocument = {
+  ...directImageView,
+  composition: { ...directImageView.composition, durationFrames: 10 },
+  layers: [
+    { ...directImageView.layers[0]!, durationFrames: 6 },
+    { ...directImageView.layers[1]!, startFrame: 4, durationFrames: 6 }
+  ],
+  tracks: [
+    {
+      id: "main",
+      clips: [
+        { id: "first", layerId: "first", startFrame: 0, durationFrames: 6 },
+        {
+          id: "second",
+          layerId: "second",
+          startFrame: 4,
+          durationFrames: 6,
+          transitionFromPrevious: {
+            presentation: { type: "crossfade" },
+            timing: { type: "tween", durationFrames: 2, easing: "linear" }
+          }
+        }
+      ]
+    }
+  ]
+};
+assert(getDirectRenderSupport(directImageTransitionView).ok, "linear image transition track is eligible for FFmpeg-direct render");
+const directImageTransitionArgs = assembleDirectRenderCommand({
+  view: directImageTransitionView,
+  preset: directImageTransitionView.exports[0]!,
+  outputPath: "/tmp/image-direct-transition.mp4"
+}).join(" ");
+assert(directImageTransitionArgs.includes("xfade=transition=fade:duration=0.066667:offset=0.133333"), "direct image transition track uses FFmpeg xfade");
+assert(!directImageTransitionArgs.includes("concat=n=2:v=1:a=0"), "direct image transition track does not concatenate overlapped stills");
+
+const directImageWithEasedTransition: KavioDocument = {
+  ...directImageTransitionView,
+  tracks: [
+    {
+      id: "main",
+      clips: [
+        { id: "first", layerId: "first", startFrame: 0, durationFrames: 6 },
+        {
+          id: "second",
+          layerId: "second",
+          startFrame: 4,
+          durationFrames: 6,
+          transitionFromPrevious: {
+            presentation: { type: "crossfade" },
+            timing: { type: "tween", durationFrames: 2, easing: "outCubic" }
+          }
+        }
+      ]
+    }
+  ]
+};
+assert(!getDirectRenderSupport(directImageWithEasedTransition).ok, "non-linear image transition track still uses browser rendering");
+
+const directImageWithEasedZoom: KavioDocument = {
+  ...directImageMotionView,
+  layers: [
+    {
+      ...directImageMotionView.layers[0]!,
+      keyframes: {
+        scale: [
+          { frame: 0, value: 1, easing: "outCubic" },
+          { frame: 3, value: 1.025 },
+          { frame: 5, value: 1.025 }
+        ]
+      }
+    },
+    directImageMotionView.layers[1]!
+  ]
+};
+assert(!getDirectRenderSupport(directImageWithEasedZoom).ok, "non-linear image push-in still uses browser rendering");
+
+const directImageWithUnsupportedMotion: KavioDocument = {
+  ...directImageMotionView,
+  layers: [
+    {
+      ...directImageMotionView.layers[0]!,
+      keyframes: {
+        x: [
+          { frame: 0, value: 0 },
+          { frame: 1, value: 10 }
+        ]
+      }
+    },
+    directImageMotionView.layers[1]!
+  ]
+};
+assert(!getDirectRenderSupport(directImageWithUnsupportedMotion).ok, "unsupported image motion still uses browser rendering");
+
+const directImageWithFitNone: KavioDocument = {
+  ...directImageView,
+  layers: [
+    {
+      id: "first",
+      type: "image",
+      asset: "first",
+      startFrame: 0,
+      durationFrames: 12,
+      position: { x: 160, y: 120 },
+      anchor: "center",
+      size: { width: 320, height: 240 },
+      fit: "none"
+    }
+  ]
+};
+assert(!getDirectRenderSupport(directImageWithFitNone).ok, "fit none image sequences still use browser rendering");
 
 // --- harness-server.ts -----------------------------------------------------
 
@@ -524,6 +721,20 @@ if (directRenderResult.ok) {
   assertEqual(directRenderResult.timings.captureMs, undefined, "ffmpeg-direct render reports no capture timing");
   assert(directRenderResult.timings.encodeMs >= 0, "ffmpeg-direct render reports encode timing");
 }
+
+const directImageDriver = new FakeBrowserDriver();
+const directImageRunner = createFakeFfmpegRunner();
+const directImageRenderResult = await renderComposition(directImageView, {
+  preset: "image-direct",
+  outDir,
+  renderMode: "ffmpeg-direct",
+  driver: directImageDriver,
+  ffmpegRunner: directImageRunner
+});
+assert(directImageRenderResult.ok === true, "ffmpeg-direct image render succeeds with fakes");
+assertEqual(directImageDriver.opens, 0, "ffmpeg-direct image render does not open the browser driver");
+assertEqual(directImageRunner.stdinChunks.length, 0, "ffmpeg-direct image render does not pipe browser frames");
+assert(directImageRunner.calls[0]?.join(" ").includes("concat=n=2:v=1:a=0") === true, "ffmpeg-direct image render uses concat");
 
 const parallelRenderDriver = new FakeBrowserDriver();
 const parallelRenderRunner = createFakeFfmpegRunner();
