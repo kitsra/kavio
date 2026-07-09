@@ -7,6 +7,7 @@ import {
   planBaseVideo,
   planBaseVideoSequence,
   planOverlayCompositing,
+  planVideoPipOverlay,
   renderFfmpegArgs
 } from "./index.js";
 
@@ -41,6 +42,7 @@ const basePlan = planBaseVideo({
 assertEqual(basePlan.steps.length, 2, "base video planning emits input and filter steps");
 assertEqual(basePlan.steps[0]?.kind, "input", "first base video step is inspectable as input");
 assert(renderFfmpegArgs(basePlan).includes("-filter_complex"), "base plan renders filter_complex args");
+assert(renderFfmpegArgs(basePlan).join(" ").includes("setpts=PTS-STARTPTS,fps=30"), "base video normalizes source timing to the render fps");
 
 const subjectCropPlan = planBaseVideo({
   asset: {
@@ -205,3 +207,36 @@ const mapStep = createMapStep({
   labels: ["video_out"]
 });
 assertEqual(mapStep.args.join(" "), "-map [video_out]", "map helper renders label mapping args");
+
+// --- planVideoPipOverlay -----------------------------------------------------
+
+const pipPlan = planVideoPipOverlay({
+  segment: {
+    asset: { src: "pip.mp4", trimStartFrames: 0, trimEndFrames: null, loop: false },
+    layer: { id: "pip clip", asset: "pip", durationFrames: 60, fit: "cover", playbackRate: 1 },
+    output: { width: 480, height: 270 },
+    fps: 30,
+    inputIndex: 1
+  },
+  baseLabel: "base_video",
+  x: 1320,
+  y: 90,
+  startFrame: 30,
+  durationFrames: 60,
+  fps: 30,
+  outputLabel: "pip_out"
+});
+const pipInputArgs = pipPlan.steps.filter((step) => step.kind === "input").flatMap((step) => step.args);
+assert(pipInputArgs.join(" ").includes("-i pip.mp4"), "pip overlay plan declares the pip video input");
+const pipFilterText = pipPlan.steps
+  .filter((step) => step.kind === "filter")
+  .flatMap((step) => step.chains)
+  .map((chain) => chain.expression)
+  .join(";");
+assert(pipFilterText.includes("scale="), "pip overlay plan normalizes the pip video to its layer size");
+assert(pipFilterText.includes("overlay=x=1320:y=90"), "pip overlay plan positions the pip plane");
+assert(pipFilterText.includes("enable='between("), "pip overlay plan bounds the pip plane to its frame window");
+assert(pipFilterText.includes("[base_video]"), "pip overlay plan composites over the provided base label");
+assert(pipFilterText.includes("[pip_out]"), "pip overlay plan emits the requested output label");
+
+console.log("FFmpeg pip overlay plan self-checks passed.");

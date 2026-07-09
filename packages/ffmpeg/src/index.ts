@@ -269,6 +269,7 @@ export function buildBaseVideoFilterChain(options: FfmpegBaseVideoPlanOptions): 
 
   const filters = [
     `setpts=${playbackRate === 1 ? "PTS-STARTPTS" : `(PTS-STARTPTS)/${formatDecimal(playbackRate)}`}`,
+    `fps=${formatDecimal(options.fps)}`,
     ...buildFitVideoFilters(fitOptions)
   ];
 
@@ -349,6 +350,55 @@ export function planBaseVideo(options: FfmpegBaseVideoPlanOptions): FfmpegPlan {
   ];
 
   return { steps };
+}
+
+export interface FfmpegVideoPipOverlayPlanOptions {
+  /** Pip source, trimmed/normalized to the pip plane's dimensions via `output`. */
+  segment: FfmpegBaseVideoPlanOptions;
+  /** Video stream label the pip plane composites onto. */
+  baseLabel: string;
+  x?: string | number;
+  y?: string | number;
+  /** Composition frame window during which the pip plane is visible. */
+  startFrame?: number;
+  durationFrames?: number;
+  fps: number;
+  outputLabel: string;
+}
+
+/**
+ * Composite one video layer over another video stream (picture-in-picture):
+ * declare the pip input, normalize it to the pip plane's dimensions, and
+ * overlay it at a fixed position bounded to its frame window. Simultaneous
+ * video layers stack by chaining plans, each consuming the previous output
+ * label; the browser graphics overlay still composites on top of them all.
+ */
+export function planVideoPipOverlay(options: FfmpegVideoPipOverlayPlanOptions): FfmpegPlan {
+  const inputIndex = options.segment.inputIndex ?? 1;
+  const pipLabel = options.segment.outputLabel ?? `${sanitizeLabelPart(options.segment.layer.id)}_pip`;
+  const segment = withBaseVideoLabels(options.segment, inputIndex, pipLabel);
+
+  const compositeOptions: FfmpegOverlayCompositingOptions = {
+    baseLabel: options.baseLabel,
+    overlayLabel: pipLabel,
+    outputLabel: options.outputLabel,
+    fps: options.fps,
+    ...(options.x !== undefined && { x: options.x }),
+    ...(options.y !== undefined && { y: options.y }),
+    ...(options.startFrame !== undefined && { startFrame: options.startFrame }),
+    ...(options.durationFrames !== undefined && { durationFrames: options.durationFrames })
+  };
+
+  return {
+    steps: [
+      buildBaseVideoInputStep(segment, inputIndex),
+      createFilterStep({
+        id: `${sanitizeLabelPart(options.segment.layer.id)}:pip-composite`,
+        description: `Composite video layer "${options.segment.layer.id}" as a picture-in-picture plane over "${options.baseLabel}".`,
+        chains: [buildBaseVideoFilterChain(segment), buildOverlayCompositingFilterChain(compositeOptions)]
+      })
+    ]
+  };
 }
 
 export function planBaseVideoSequence(options: FfmpegBaseVideoSequencePlanOptions): FfmpegPlan {

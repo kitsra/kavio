@@ -130,6 +130,66 @@ assert(hybridArgs.includes("overlay="), "composites the overlay over the base");
 assert(hybridArgs.includes("amix="), "mixes the declared audio track");
 assert(hybridArgs.includes("-i music.mp3"), "declares the audio input");
 
+const pipView: KavioDocument = {
+  version: "0.1",
+  composition: { width: 1920, height: 1080, fps: 30, durationFrames: 90, background: "#000000" },
+  assets: {
+    main: { type: "video", src: "main.mp4" },
+    inset: { type: "video", src: "inset.mp4" }
+  },
+  layers: [
+    { id: "main", type: "video", asset: "main", fit: "cover", startFrame: 0, durationFrames: 90 },
+    {
+      id: "inset",
+      type: "video",
+      asset: "inset",
+      fit: "cover",
+      startFrame: 30,
+      durationFrames: 45,
+      position: { x: 1320, y: 60 },
+      anchor: { x: 0, y: 0 },
+      size: { width: 480, height: 270 }
+    },
+    { id: "headline", type: "text", text: "Text over both videos", startFrame: 0, durationFrames: 90 }
+  ],
+  audio: [],
+  exports: [{ name: "pip", format: "mp4", codec: "h264", width: 1920, height: 1080 }]
+};
+const pipArgs = assembleRenderCommand({
+  view: pipView,
+  preset: pipView.exports[0]!,
+  framePattern: "/tmp/work/overlay-%05d.png"
+});
+const pip = pipArgs.join(" ");
+assert(pip.includes("-i main.mp4"), "pip render declares the base video input");
+assert(pip.includes("-i inset.mp4"), "pip render declares the inset video input");
+assert(!pip.includes("concat=n=2"), "time-overlapping videos are not concatenated");
+assert(pip.includes("overlay=x=1320:y=60"), "inset video composites at its layer top-left position");
+assert(pip.includes("enable='between("), "inset video plane is bounded to its frame window");
+assert(pip.includes("overlay-%05d.png"), "graphics overlay still reads captured frames");
+assert(pip.includes("[video_out]"), "pip render still maps the final composited stream");
+assertEqual(pipArgs.filter((arg) => arg === "-filter_complex").length, 1, "pip render emits a single -filter_complex");
+// The graphics overlay must composite over the pip result, not the bare base.
+const pipFilterComplex = pipArgs[pipArgs.indexOf("-filter_complex") + 1] ?? "";
+assert(
+  pipFilterComplex.indexOf("overlay=x=1320:y=60") < pipFilterComplex.indexOf("[video_out]"),
+  "graphics overlay composites after the pip plane"
+);
+
+const sequentialView: KavioDocument = {
+  ...pipView,
+  layers: [
+    { id: "first", type: "video", asset: "main", fit: "cover", startFrame: 0, durationFrames: 45 },
+    { id: "second", type: "video", asset: "inset", fit: "cover", startFrame: 45, durationFrames: 45 }
+  ]
+};
+const sequentialArgs = assembleRenderCommand({
+  view: sequentialView,
+  preset: sequentialView.exports[0]!,
+  framePattern: "/tmp/work/overlay-%05d.png"
+}).join(" ");
+assert(sequentialArgs.includes("concat=n=2"), "non-overlapping videos still concatenate in time");
+
 const webmView: KavioDocument = {
   ...graphicsOnlyView,
   exports: [{ name: "web", format: "webm", width: 1080, height: 1920 }]
@@ -709,6 +769,56 @@ if (webmRenderResult.ok) {
   assertEqual(webmRenderResult.metadata.codecs.audio, "opus", "webm metadata records Opus default");
 }
 
+const defaultPropDoc: KavioDocument = {
+  ...templateDoc,
+  props: { headline: { type: "string", default: "Fallback headline" } }
+};
+const defaultPropResult = await renderComposition(defaultPropDoc, {
+  preset: "reels",
+  outDir,
+  driver: new FakeBrowserDriver(),
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(defaultPropResult.ok === true, "render resolves declared prop defaults when values are omitted");
+
+const pngDoc: KavioDocument = {
+  ...templateDoc,
+  exports: [
+    { name: "card", format: "png", width: 1080, height: 1920, frame: 3 },
+    { name: "sticker", format: "png", width: 1080, height: 1920, background: "transparent" }
+  ]
+};
+const pngDriver = new FakeBrowserDriver();
+const pngRunner = createFakeFfmpegRunner();
+const pngResult = await renderComposition(pngDoc, {
+  preset: "card",
+  propValues: { headline: "Still" },
+  outDir,
+  driver: pngDriver,
+  ffmpegRunner: pngRunner
+});
+assert(pngResult.ok === true, "png export renders with fakes");
+if (pngResult.ok) {
+  assert(pngResult.outputPath.endsWith(".png"), "png export writes a .png output path");
+  assertEqual(pngResult.metadata.codecs.video, null, "png metadata records no video codec");
+  assertEqual(pngResult.metadata.codecs.audio, null, "png metadata records no audio codec");
+  assert(pngResult.metadata.checksums[0]!.bytes! > 0, "png export writes the captured bytes");
+  assert(pngResult.timings.captureMs !== undefined, "png export reports capture timing");
+  assertEqual(pngResult.timings.encodeMs, 0, "png export skips encoding");
+}
+assertEqual(pngRunner.calls.length, 0, "png export never invokes ffmpeg");
+assertEqual(pngDriver.renderedFrames.join(","), "3", "png export captures exactly the requested frame");
+assertEqual(pngDriver.closes, 1, "png export closes the browser driver");
+
+const transparentPngResult = await renderComposition(pngDoc, {
+  preset: "sticker",
+  propValues: { headline: "Alpha" },
+  outDir,
+  driver: new FakeBrowserDriver(),
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(transparentPngResult.ok === true, "transparent png export is supported");
+
 const invalidDoc: KavioDocument = {
   ...templateDoc,
   composition: { ...templateDoc.composition, durationFrames: 0 }
@@ -760,6 +870,25 @@ if (!unsupportedResult.ok) {
 }
 assertEqual(unsupportedDriver.renderedFrames.length, 0, "unsupported export format does not capture frames");
 
+const gifDoc: KavioDocument = {
+  ...templateDoc,
+  exports: [{ name: "loop", format: "gif", width: 1080, height: 1920 }]
+};
+const gifDriver = new FakeBrowserDriver();
+const gifRunner = createFakeFfmpegRunner();
+const gifResult = await renderComposition(gifDoc, {
+  preset: "loop",
+  propValues: { headline: "GIF" },
+  outDir,
+  driver: gifDriver,
+  ffmpegRunner: gifRunner
+});
+assert(gifResult.ok === true, "gif render succeeds with fakes");
+assertEqual(gifDriver.renderedFrames.length, 6, "gif render captures every frame");
+assert(gifRunner.calls[0]?.includes("gif") === true, "gif render selects gif muxing");
+assert(gifRunner.calls[0]?.includes("-map") === true, "gif render maps video output");
+assert(gifRunner.calls[0]?.includes(`[${"audio_out"}]`) === false, "gif render skips audio output");
+
 const transparentDoc: KavioDocument = {
   ...templateDoc,
   exports: [{ name: "alpha-webm", format: "webm", width: 1080, height: 1920, background: "transparent" }]
@@ -772,14 +901,27 @@ const transparentResult = await renderComposition(transparentDoc, {
   driver: transparentDriver,
   ffmpegRunner: createFakeFfmpegRunner()
 });
-assert(transparentResult.ok === false, "transparent final outputs fail before rendering");
-if (!transparentResult.ok) {
-  assert(
-    transparentResult.errors.some((error) => error.message.includes("transparent final outputs")),
-    "transparent output returns a clear render error"
-  );
+assert(transparentResult.ok === true, "transparent webm render succeeds with fakes");
+if (transparentResult.ok) {
+  assertEqual(transparentResult.metadata.codecs.video, "vp9", "transparent webm records VP9 codec");
 }
-assertEqual(transparentDriver.renderedFrames.length, 0, "transparent output does not capture frames");
+assertEqual(transparentDriver.renderedFrames.length, 6, "transparent webm captures every frame");
+
+const transparentMp4Doc: KavioDocument = {
+  ...templateDoc,
+  composition: { ...templateDoc.composition, background: "transparent" },
+  exports: [{ name: "bad-alpha", format: "mp4", codec: "h264", width: 1080, height: 1920 }]
+};
+const transparentMp4Driver = new FakeBrowserDriver();
+const transparentMp4Result = await renderComposition(transparentMp4Doc, {
+  preset: "bad-alpha",
+  propValues: { headline: "Alpha" },
+  outDir,
+  driver: transparentMp4Driver,
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(transparentMp4Result.ok === false, "transparent mp4 output fails before rendering");
+assertEqual(transparentMp4Driver.renderedFrames.length, 0, "transparent mp4 output does not capture frames");
 
 // --- render-batch.ts -------------------------------------------------------
 

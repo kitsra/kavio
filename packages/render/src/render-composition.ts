@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { availableParallelism } from "node:os";
 import { dirname, join } from "node:path";
-import { applyExportPreset, collectCompositionResourceLimitInputs, collectResourceLimitViolations, resolveTemplateProps } from "@kitsra/kavio-core";
+import { applyExportPreset, collectCompositionResourceLimitInputs, collectResourceLimitViolations, resolveDocumentProps } from "@kitsra/kavio-core";
 import {
   extensionForFormat,
   validateComposition,
@@ -76,7 +76,8 @@ export async function renderComposition(
   options: RenderCompositionOptions
 ): Promise<RenderCompositionResult> {
   const totalStart = performance.now();
-  const resolution = resolveTemplateProps(doc, options.propValues ?? {});
+  // resolveDocumentProps merges declared prop defaults before substitution.
+  const resolution = resolveDocumentProps(doc, options.propValues ?? {});
   if (!resolution.ok) {
     return { ok: false, errors: resolution.errors };
   }
@@ -106,14 +107,15 @@ export async function renderComposition(
     return { ok: false, errors: violations };
   }
 
-  const renderabilityError = validateRenderablePreset(preset);
+  const renderabilityError = validateRenderablePreset(preset, view.composition.background);
   if (renderabilityError !== null) {
     return { ok: false, errors: [renderabilityError] };
   }
 
   const outputName = options.outputName ?? `${preset.name}.${extensionForFormat(preset.format)}`;
   const outputPath = options.outDir === undefined ? outputName : join(options.outDir, outputName);
-  const metadataPreset = withEffectiveCodecs(preset);
+  const stillImage = preset.format === "png";
+  const metadataPreset = stillImage ? preset : withEffectiveCodecs(preset);
   const renderMode = options.renderMode ?? "browser-overlay";
 
   try {
@@ -127,7 +129,33 @@ export async function renderComposition(
     const ffmpegRunner = options.ffmpegRunner ?? createFfmpegRunner();
     let browserDriver: BrowserDriver | undefined;
 
-    if (renderMode === "ffmpeg-direct") {
+    if (stillImage) {
+      // Still images bypass ffmpeg entirely: capture one frame and write the
+      // PNG bytes. The stage paints the effective background in-browser, so
+      // opaque and transparent exports both match the preview exactly.
+      browserDriver = options.driver ?? new PlaywrightDriver();
+      const captureStart = performance.now();
+      const captureResult = await captureFrames({
+        driver: browserDriver,
+        composition: withStillImageBackground(view, preset),
+        startFrame: preset.frame ?? 0,
+        frameCount: 1,
+        retainCaptures: true
+      });
+      captureMs = performance.now() - captureStart;
+      browserOpenMs = captureResult.openMs;
+      captureEvaluateMs = captureResult.evaluateMs;
+      captureScreenshotMs = captureResult.screenshotMs;
+      const bytes = captureResult.captures[0]?.bytes;
+      if (bytes === undefined) {
+        throw renderError({
+          code: "RENDER_FRAME_FAILED",
+          stage: "render",
+          message: `Still-image capture produced no frame for "${preset.name}".`
+        });
+      }
+      await writeFile(outputPath, bytes);
+    } else if (renderMode === "ffmpeg-direct") {
       const args = assembleDirectRenderCommand({ view, preset, outputPath });
       const encodeStart = performance.now();
       await ffmpegRunner.run(args, options.signal === undefined ? {} : { signal: options.signal });
@@ -200,7 +228,7 @@ export async function renderComposition(
       outputName,
       outputPath,
       checksums: checksum,
-      ffmpegVersion: options.ffmpegVersion ?? "ffmpeg-static",
+      ffmpegVersion: options.ffmpegVersion ?? (stillImage ? "not-used" : "ffmpeg-static"),
       chromiumRevision: options.chromiumRevision ?? (renderMode === "ffmpeg-direct" ? "not-used" : chromiumRevisionOf(browserDriver))
     });
 
@@ -236,28 +264,43 @@ async function sha256File(path: string): Promise<RenderChecksum> {
   return { algorithm: "sha256", value, bytes: bytes.length };
 }
 
-function validateRenderablePreset(preset: KavioExportPreset): KavioError | null {
-  if (preset.format === "gif" || preset.format === "png-sequence") {
+function validateRenderablePreset(preset: KavioExportPreset, compositionBackground: string | undefined): KavioError | null {
+  if (preset.format === "png-sequence") {
     return renderError({
       code: "RENDER_FAILED",
       stage: "render",
       path: "exports.0.format",
       message: `kavio render does not yet support ${preset.format} exports.`,
-      hint: "Use mp4, webm, or mov for the current render pipeline."
+      hint: "Use gif, mp4, webm, or mov for the current render pipeline."
     });
   }
 
-  if (preset.background === "transparent") {
+  const background = preset.background ?? compositionBackground;
+  if (background === "transparent" && preset.format !== "webm" && preset.format !== "mov" && preset.format !== "png") {
     return renderError({
       code: "RENDER_FAILED",
       stage: "render",
       path: "exports.0.background",
-      message: "kavio render does not yet support transparent final outputs.",
-      hint: "Use an opaque export background until alpha-capable encoding lands."
+      message: `kavio render does not support transparent ${preset.format} outputs.`,
+      hint: "Use transparent webm, mov, or png exports for alpha output."
     });
   }
 
   return null;
+}
+
+/**
+ * Still images paint their effective background in the browser stage instead
+ * of compositing it in ffmpeg, so exports default to the composition
+ * background rather than capturing transparent pixels.
+ */
+function withStillImageBackground(view: KavioDocument, preset: KavioExportPreset): KavioDocument {
+  const background = preset.background ?? view.composition.background ?? "#000000";
+  const [first, ...rest] = view.exports;
+  if (first === undefined) {
+    return view;
+  }
+  return { ...view, exports: [{ ...first, background }, ...rest] };
 }
 
 function toKavioError(error: unknown): KavioError {

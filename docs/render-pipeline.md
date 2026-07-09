@@ -23,9 +23,7 @@ Implemented:
 
 Current limits:
 
-- `gif` exports.
 - `png-sequence` exports.
-- Transparent final outputs.
 - Performance measurement against PRD throughput targets.
 
 ## End-To-End Flow

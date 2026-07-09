@@ -1,5 +1,23 @@
 # @kitsra/kavio-render
 
+## 0.3.0
+
+### Minor Changes
+
+- d2c8586: Still-image `png` export format. Export presets accept `format: "png"` with an optional `frame` field selecting the composition frame to capture (default 0, validated against `durationFrames`; codecs are rejected). Rendering captures one browser frame and writes the PNG directly with no FFmpeg step; the stage paints the effective background (preset, then composition), and `background: "transparent"` produces a real alpha channel. Render metadata records null codecs and `not-used` for FFmpeg.
+- d2c8586: Video-in-video compositing. Time-overlapping video layers are no longer concatenated: video layers that don't overlap form the sequential base timeline, and overlapping layers become picture-in-picture planes (new `planVideoPipOverlay`) scaled to the layer's `size`, positioned at its resolved top-left, bounded to its frame window, and stacked in document order under the graphics overlay — so text and graphics composite over any number of simultaneous videos. The render harness now sets `renderVideoLayers: false` (new `BrowserRendererOptions` flag) so video layers are explicitly excluded from browser captures instead of relying on their sources failing to load. Pip position is static (evaluated mid-window); animated video position is not yet supported.
+
+### Patch Changes
+
+- d2c8586: Fix: `renderComposition` now resolves declared prop defaults. It previously called `resolveTemplateProps` directly, bypassing the `resolveDocumentProps` defaults merge, so any template prop without an explicit value failed with `PROP_UNRESOLVED` even when the document declared a default.
+- Updated dependencies [d2c8586]
+- Updated dependencies [d2c8586]
+  - @kitsra/kavio-schema@0.3.0
+  - @kitsra/kavio-render-worker@0.3.0
+  - @kitsra/kavio-ffmpeg@0.3.0
+  - @kitsra/kavio-browser-renderer@0.3.0
+  - @kitsra/kavio-core@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes

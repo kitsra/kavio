@@ -674,7 +674,27 @@ assertEqual(styleValue(verticalStage, "height"), "640px", "preview controller re
 preview.destroy();
 assertEqual(controlsRoot.children.length, 0, "preview controller removes controls on destroy");
 
+// Render-harness captures must not paint video layers: ffmpeg supplies video
+// as the base/pip planes, so browser-rendered video would double-composite.
+const overlayDocument = new FakeDocument();
+const overlayRenderer = createBrowserRenderer({
+  document: overlayDocument as unknown as Document,
+  renderVideoLayers: false
+});
+await overlayRenderer.loadComposition(composition);
+const overlayFrame = await overlayRenderer.renderFrame(15);
+assert(
+  overlayFrame.layers.every((layer) => renderedElement(layer.element).dataset.kavioLayerType !== "video"),
+  "renderVideoLayers:false omits video layers from rendered frames"
+);
+assert(overlayFrame.layers.length < 6, "renderVideoLayers:false renders fewer layers than the full frame");
+assert(
+  overlayFrame.layers.some((layer) => renderedElement(layer.element).dataset.kavioLayerType === "text"),
+  "renderVideoLayers:false still renders non-video layers"
+);
+
 const harnessHtml = createRenderHarnessHtml({ width: 1080, height: 1920, fps: 30, durationFrames: 30 });
+assert(harnessHtml.includes("renderVideoLayers: false"), "harness installs the runtime without video layers");
 assert(harnessHtml.includes("importmap"), "harness html declares an importmap");
 assert(harnessHtml.includes("@kitsra/kavio-core"), "harness maps the core module");
 assert(harnessHtml.includes("/composition.json"), "harness fetches composition json");

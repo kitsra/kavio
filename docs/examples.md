@@ -106,6 +106,27 @@ Files:
 - `browser-renderer.dom-snapshot.json`
 - `README.md`
 
+## quote-card
+
+A still-image template: one frame, three `png` export presets (square, story,
+and transparent), and props for the quote text, author, and accent color.
+Demonstrates image generation and prop defaults.
+
+```bash
+node packages/cli/dist/index.js validate examples/quote-card/composition.json
+node packages/cli/dist/index.js render examples/quote-card/composition.json --export square-card --props my-quote.json --out renders/quote-card
+```
+
+## video-pip
+
+Video-in-video: two time-overlapping video layers (a full-frame base and a
+picture-in-picture inset) with a text caption composited over both.
+
+```bash
+node packages/cli/dist/index.js validate examples/video-pip/composition.json
+node packages/cli/dist/index.js render examples/video-pip/composition.json --export pip-landscape --out renders/video-pip
+```
+
 ## Add A New Example
 
 Prefer examples that can be checked by CI:

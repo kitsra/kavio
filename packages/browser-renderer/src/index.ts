@@ -25,6 +25,12 @@ export interface BrowserRenderer {
 export interface BrowserRendererOptions {
   document?: Document;
   root?: HTMLElement;
+  /**
+   * Render video layers as DOM <video> elements. Defaults to true for
+   * interactive preview. The render harness sets false: ffmpeg supplies video
+   * as base/pip planes, so browser-painted video would double-composite.
+   */
+  renderVideoLayers?: boolean;
 }
 
 export interface BrowserRendererRuntime {
@@ -224,7 +230,7 @@ export function createRenderHarnessHtml(options: RenderHarnessHtmlOptions): stri
   <script type="module">
     import { installBrowserRendererRuntime } from "/vendor/browser-renderer/index.js";
     const stage = document.getElementById("stage");
-    const runtime = installBrowserRendererRuntime({ root: stage });
+    const runtime = installBrowserRendererRuntime({ root: stage, renderVideoLayers: false });
     const composition = await fetch("/composition.json").then((response) => response.json());
     await runtime.loadComposition(composition);
     window.__kavioReady = true;
@@ -507,7 +513,9 @@ function renderCompositionFrame(
   const root = getRenderRoot(options);
   const stage = createStage(root, dimensions, composition.exports[0]?.background);
   const transitionStates = activeTransitionRenderStates(composition, frame, dimensions);
-  const layerPromises = composition.layers.flatMap((layer, index) => {
+  const renderableLayers =
+    options.renderVideoLayers === false ? composition.layers.filter((layer) => layer.type !== "video") : composition.layers;
+  const layerPromises = renderableLayers.flatMap((layer, index) => {
     const transitionState = transitionStates.get(layer.id);
     if (transitionState !== undefined) {
       return [

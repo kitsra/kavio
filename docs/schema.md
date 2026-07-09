@@ -283,6 +283,12 @@ and basic ducking metadata.
 Export presets can override dimensions, FPS, codec settings, background, and
 layer layout overrides.
 
+Formats are `mp4`, `webm`, `mov`, `gif`, `png-sequence`, and `png`. The `png`
+format renders a single still image: the optional `frame` field selects which
+composition frame to capture (default 0, validated against `durationFrames`),
+codecs do not apply, and `background: "transparent"` produces a real alpha
+channel.
+
 The builder SDK provides helpers for common presets:
 
 - `exportPreset.vertical()`
