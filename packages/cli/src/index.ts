@@ -35,6 +35,7 @@ interface ParsedArgs {
   batchFile?: string;
   outDir?: string;
   concurrency?: number;
+  captureParallelism?: number;
   renderMode?: RenderCompositionMode;
   failFast: boolean;
   continueOnFrameError: boolean;
@@ -184,7 +185,7 @@ interface LoadedJson {
 }
 
 const commands = new Set(["validate", "inspect", "migrate", "preview", "render", "presets"]);
-const VALUE_FLAGS = new Set(["--export", "--props", "--batch", "--out", "--concurrency", "--render-mode"]);
+const VALUE_FLAGS = new Set(["--export", "--props", "--batch", "--out", "--concurrency", "--capture-parallelism", "--render-mode"]);
 
 async function main(argv: readonly string[]): Promise<number> {
   const parsed = parseArgs(argv);
@@ -289,6 +290,7 @@ function parseArgs(argv: readonly string[]): ParsedArgs | CliFailure {
   let batchFile: string | undefined;
   let outDir: string | undefined;
   let concurrency: number | undefined;
+  let captureParallelism: number | undefined;
   let renderMode: RenderCompositionMode | undefined;
   const positional: string[] = [];
 
@@ -335,16 +337,20 @@ function parseArgs(argv: readonly string[]): ParsedArgs | CliFailure {
       } else if (arg === "--out") {
         outDir = value;
       } else if (arg === "--render-mode") {
-        if (value !== "browser-overlay" && value !== "ffmpeg-direct") {
-          return flagFailure("--render-mode must be browser-overlay or ffmpeg-direct.");
+        if (value !== "auto" && value !== "browser-overlay" && value !== "ffmpeg-direct") {
+          return flagFailure("--render-mode must be auto, browser-overlay, or ffmpeg-direct.");
         }
         renderMode = value;
       } else {
         const parsed = Number(value);
         if (!Number.isInteger(parsed) || parsed < 1) {
-          return flagFailure("--concurrency must be a positive integer.");
+          return flagFailure(`${arg} must be a positive integer.`);
         }
-        concurrency = parsed;
+        if (arg === "--capture-parallelism") {
+          captureParallelism = parsed;
+        } else {
+          concurrency = parsed;
+        }
       }
       continue;
     }
@@ -410,6 +416,9 @@ function parseArgs(argv: readonly string[]): ParsedArgs | CliFailure {
   }
   if (concurrency !== undefined) {
     parsed.concurrency = concurrency;
+  }
+  if (captureParallelism !== undefined) {
+    parsed.captureParallelism = captureParallelism;
   }
   if (renderMode !== undefined) {
     parsed.renderMode = renderMode;
@@ -681,6 +690,9 @@ async function runRender(parsed: ParsedArgs): Promise<number> {
   if (parsed.concurrency !== undefined) {
     options.concurrency = parsed.concurrency;
   }
+  if (parsed.captureParallelism !== undefined) {
+    options.captureParallelism = parsed.captureParallelism;
+  }
 
   let results;
   try {
@@ -708,14 +720,20 @@ async function runRender(parsed: ParsedArgs): Promise<number> {
       succeeded,
       outputs: results.map((item) =>
         item.result.ok
-          ? { id: item.id, outputName: item.outputName, ok: true, outputPath: item.result.outputPath }
+          ? {
+              id: item.id,
+              outputName: item.outputName,
+              ok: true,
+              outputPath: item.result.outputPath,
+              renderMode: item.result.timings.renderMode
+            }
           : { id: item.id, outputName: item.outputName, ok: false, errors: item.result.errors }
       )
     });
   } else {
     for (const item of results) {
       if (item.result.ok) {
-        writeStdout(`Rendered ${item.result.outputPath}\n`);
+        writeStdout(`Rendered ${item.result.outputPath} (${item.result.timings.renderMode})\n`);
       } else {
         writeStderr(`Failed ${item.outputName}:\n`);
         for (const error of item.result.errors) {
@@ -1398,7 +1416,8 @@ Render options:
   --batch <file.json>        Array of prop rows -> rows x presets.
   --out <dir>                Output directory (default: renders).
   --concurrency <n>          Parallel jobs (default: 1).
-  --render-mode <mode>       browser-overlay or ffmpeg-direct.
+  --capture-parallelism <n>  Parallel browser capture pages per job.
+  --render-mode <mode>       auto, browser-overlay, or ffmpeg-direct.
   --fail-fast                Abort the batch on first job failure.
   --continue-on-frame-error  Tolerate per-frame capture failures.
 

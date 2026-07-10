@@ -35,6 +35,7 @@ export { PlaywrightDriver, type PlaywrightDriverOptions } from "./playwright-dri
 export {
   renderComposition,
   type RenderCompositionMode,
+  type ResolvedRenderCompositionMode,
   type RenderCompositionOptions,
   type RenderCompositionResult,
   type RenderStageTimings

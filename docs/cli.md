@@ -136,7 +136,11 @@ Useful options:
 - `--props <file.json>` renders one prop set.
 - `--out <dir>` changes the output directory.
 - `--concurrency <n>` renders multiple jobs in parallel.
-- `--render-mode <mode>` accepts `browser-overlay` or `ffmpeg-direct`.
+- `--capture-parallelism <n>` sets the positive integer number of concurrent
+  browser capture pages within each job. It defaults to `min(4, cores - 1)`.
+- `--render-mode <mode>` accepts `auto`, `browser-overlay`, or `ffmpeg-direct`.
+  `auto` selects FFmpeg-direct for eligible video compositions and otherwise
+  falls back to browser-overlay.
   `ffmpeg-direct` skips browser capture for supported shape-only compositions
   and full-frame image sequences. Image sequences may use only linear
   `fade` transition-in/out, exact linear `fade` / `crossfade`
@@ -144,6 +148,9 @@ Useful options:
   default `browser-overlay` mode for text, masks, mixed layouts, `fit: "none"`,
   non-fade transitions, non-linear timing, ambiguous overlaps, or unsupported
   keyframes.
+
+JSON render outputs include the resolved `renderMode`; text output prints it
+beside each completed output path.
 
 Schema-valid `png-sequence` outputs are reserved for a later archive render path
 and fail clearly in the current renderer. GIF and transparent `webm`/`mov`

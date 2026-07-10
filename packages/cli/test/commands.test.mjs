@@ -15,6 +15,7 @@ test("prints help for the default command", async () => {
   assert.match(result.stdout, /presets\s+List social media export presets/);
   assert.match(result.stdout, /preview\s+Start a local browser preview server/);
   assert.match(result.stdout, /--render-mode <mode>/);
+  assert.match(result.stdout, /--capture-parallelism <n>/);
   assert.equal(result.stderr, "");
 });
 
@@ -293,6 +294,30 @@ test("render rejects a missing flag value", async () => {
   assert.notEqual(status, 0);
   const payload = JSON.parse(stdout);
   assert.equal(payload.errors[0].code, "CLI_UNKNOWN_FLAG");
+});
+
+test("render accepts auto mode and validates capture parallelism", async () => {
+  const autoResult = await runCli([
+    "--json",
+    "render",
+    fixturePath("invalid-composition.json"),
+    "--render-mode",
+    "auto",
+    "--capture-parallelism",
+    "2"
+  ]);
+  assert.notEqual(autoResult.status, 0);
+  assert.equal(JSON.parse(autoResult.stdout).outputs[0].errors[0].code.startsWith("CLI_"), false);
+
+  const invalidResult = await runCli([
+    "--json",
+    "render",
+    fixturePath("valid-composition.json"),
+    "--capture-parallelism",
+    "0"
+  ]);
+  assert.notEqual(invalidResult.status, 0);
+  assert.match(JSON.parse(invalidResult.stdout).errors[0].message, /--capture-parallelism must be a positive integer/);
 });
 
 function escapeRegExp(value) {

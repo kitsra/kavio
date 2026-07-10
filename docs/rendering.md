@@ -28,6 +28,13 @@ The default render mode is `browser-overlay`: Kavio captures every frame in
 Chromium and pipes PNG frames into FFmpeg. Use it for text, masks, transitions,
 keyframes, mixed compositing, and anything visually rich.
 
+Use `auto` to select FFmpeg-direct when `getDirectRenderSupport` reports the
+resolved composition is eligible and otherwise fall back to browser-overlay:
+
+```bash
+node packages/cli/dist/index.js render composition.json --render-mode auto
+```
+
 For simple static slideshows, use the explicit fast path:
 
 ```bash
@@ -58,6 +65,16 @@ It intentionally rejects other image keyframes, non-fade transitions, non-linear
 timing, ambiguous overlaps, masks, opacity changes, mixed image/text/shape
 layouts, `fit: "none"`, and other browser-only features. If it rejects a
 composition, use the default `browser-overlay` mode.
+
+The render API records both `requestedRenderMode` and the resolved `renderMode`
+in stage timings. CLI JSON and text output report the resolved mode.
+
+Browser-overlay video renders capture multiple frames concurrently by default
+using `min(4, cores - 1)` pages. Set `captureParallelism` in
+`renderComposition` or `renderBatch`, or pass `--capture-parallelism <n>` to the
+CLI. Values must be positive integers. Batch `concurrency` controls jobs while
+capture parallelism controls browser pages within each job, so their resource
+costs multiply.
 
 For zoomed stills, the direct renderer reads the image as a single frame and
 lets FFmpeg `zoompan=d=<durationFrames>:fps=<fps>` create the segment. Do not

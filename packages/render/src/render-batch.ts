@@ -8,6 +8,7 @@ export interface RenderBatchOptions {
   driver?: BrowserDriver;
   ffmpegRunner?: FfmpegRunner;
   concurrency?: number;
+  captureParallelism?: number;
   failFast?: boolean;
   signal?: AbortSignal;
   continueOnFrameError?: boolean;
@@ -67,6 +68,7 @@ function buildRenderOptions(
     outputName: job.outputName,
     ...(options.outDir !== undefined && { outDir: options.outDir }),
     ...(options.renderMode !== undefined && { renderMode: options.renderMode }),
+    ...(options.captureParallelism !== undefined && { captureParallelism: options.captureParallelism }),
     ...(options.driver !== undefined && { driver: options.driver }),
     ...(options.ffmpegRunner !== undefined && { ffmpegRunner: options.ffmpegRunner }),
     ...(options.signal !== undefined && { signal: options.signal }),

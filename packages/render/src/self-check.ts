@@ -687,6 +687,8 @@ if (successResult.ok) {
   assert(successResult.metadata.checksums.length === 1, "records an output checksum");
   assertEqual(successResult.metadata.codecs.video, "h264", "mp4 metadata records the effective video codec");
   assertEqual(successResult.metadata.codecs.audio, "aac", "mp4 metadata records the effective audio codec");
+  assertEqual(successResult.timings.requestedRenderMode, "browser-overlay", "browser render reports its requested mode");
+  assertEqual(successResult.timings.renderMode, "browser-overlay", "browser render reports its resolved mode");
   assert(successResult.timings.captureMs !== undefined && successResult.timings.captureMs >= 0, "browser render reports capture timing");
   assert(successResult.timings.browserOpenMs !== undefined && successResult.timings.browserOpenMs >= 0, "browser render reports driver open timing");
   assert(successResult.timings.captureEvaluateMs !== undefined && successResult.timings.captureEvaluateMs >= 0, "browser render reports summed evaluate timing");
@@ -719,7 +721,38 @@ assert(!directRunner.calls[0]?.join(" ").includes("overlay-%05d.png"), "ffmpeg-d
 if (directRenderResult.ok) {
   assertEqual(directRenderResult.metadata.tools.chromium.revision, "not-used", "ffmpeg-direct metadata records no Chromium use");
   assertEqual(directRenderResult.timings.captureMs, undefined, "ffmpeg-direct render reports no capture timing");
+  assertEqual(directRenderResult.timings.renderMode, "ffmpeg-direct", "ffmpeg-direct render reports its resolved mode");
   assert(directRenderResult.timings.encodeMs >= 0, "ffmpeg-direct render reports encode timing");
+}
+
+const autoDirectDriver = new FakeBrowserDriver();
+const autoDirectResult = await renderComposition(directShapeView, {
+  preset: "direct",
+  outDir,
+  renderMode: "auto",
+  driver: autoDirectDriver,
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(autoDirectResult.ok === true, "auto render succeeds for a directly supported composition");
+assertEqual(autoDirectDriver.opens, 0, "auto render selects FFmpeg-direct when supported");
+if (autoDirectResult.ok) {
+  assertEqual(autoDirectResult.timings.requestedRenderMode, "auto", "auto render reports its requested mode");
+  assertEqual(autoDirectResult.timings.renderMode, "ffmpeg-direct", "auto render reports its direct resolution");
+}
+
+const autoFallbackDriver = new FakeBrowserDriver();
+const autoFallbackResult = await renderComposition(templateDoc, {
+  preset: "reels",
+  propValues: { headline: "Fallback" },
+  outDir,
+  renderMode: "auto",
+  driver: autoFallbackDriver,
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(autoFallbackResult.ok === true, "auto render falls back for an unsupported composition");
+assertEqual(autoFallbackDriver.opens, 1, "auto render selects browser-overlay when direct rendering is unsupported");
+if (autoFallbackResult.ok) {
+  assertEqual(autoFallbackResult.timings.renderMode, "browser-overlay", "auto render reports its browser fallback");
 }
 
 const directImageDriver = new FakeBrowserDriver();
@@ -751,6 +784,18 @@ assertEqual(parallelRenderDriver.renderedFrames.length, 6, "parallel capture ren
 assertEqual(parallelRenderRunner.stdinChunks.length, 6, "parallel capture still streams every frame to ffmpeg in order");
 assert(parallelRenderDriver.forks >= 1, "parallel capture forks the browser driver");
 assertEqual(parallelRenderDriver.forkCloses, parallelRenderDriver.forks, "parallel capture closes every fork");
+
+const invalidParallelismResult = await renderComposition(templateDoc, {
+  preset: "reels",
+  outDir,
+  captureParallelism: 0,
+  driver: new FakeBrowserDriver(),
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(invalidParallelismResult.ok === false, "capture parallelism must be a positive integer");
+if (!invalidParallelismResult.ok) {
+  assertEqual(invalidParallelismResult.errors[0]?.path, "captureParallelism", "capture parallelism error identifies the option");
+}
 
 const webmRenderDoc: KavioDocument = {
   ...templateDoc,
@@ -933,6 +978,7 @@ const batchTemplate: KavioDocument = {
   ]
 };
 
+const batchDriver = new FakeBrowserDriver();
 const batchResults = await renderBatch(
   {
     template: batchTemplate,
@@ -942,7 +988,7 @@ const batchResults = await renderBatch(
     ],
     presets: ["reels", "square"]
   },
-  { outDir, driver: new FakeBrowserDriver(), ffmpegRunner: createFakeFfmpegRunner() }
+  { outDir, driver: batchDriver, ffmpegRunner: createFakeFfmpegRunner(), captureParallelism: 2 }
 );
 assertEqual(batchResults.length, 4, "batch expands rows x presets");
 assert(
@@ -951,6 +997,7 @@ assert(
 );
 const batchPaths = batchResults.map((item) => (item.result.ok ? item.result.outputPath : ""));
 assertEqual(new Set(batchPaths).size, 4, "batch produces distinct output paths");
+assert(batchDriver.forks >= 1, "batch passes capture parallelism to each browser render");
 
 const failFastResults = await renderBatch(
   {

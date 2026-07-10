@@ -17,14 +17,15 @@ import {
   type RenderChecksum,
   type RenderOutputMetadata
 } from "@kitsra/kavio-render-worker";
-import { assembleDirectRenderCommand, assembleRenderCommand } from "./assemble-command.js";
+import { assembleDirectRenderCommand, assembleRenderCommand, getDirectRenderSupport } from "./assemble-command.js";
 import { createFfmpegRunner, type FfmpegRunner } from "./ffmpeg-runner.js";
 import { createFrameByteQueue } from "./frame-stream.js";
 import { isRenderError, renderError } from "./errors.js";
 import { PlaywrightDriver } from "./playwright-driver.js";
 import { withEffectiveCodecs } from "./encoding.js";
 
-export type RenderCompositionMode = "browser-overlay" | "ffmpeg-direct";
+export type RenderCompositionMode = "auto" | "browser-overlay" | "ffmpeg-direct";
+export type ResolvedRenderCompositionMode = Exclude<RenderCompositionMode, "auto">;
 
 export interface RenderCompositionOptions {
   preset: string | import("@kitsra/kavio-schema").KavioExportPreset;
@@ -32,8 +33,8 @@ export interface RenderCompositionOptions {
   outDir?: string;
   outputName?: string;
   /**
-   * Experimental: "ffmpeg-direct" skips browser PNG capture for compositions
-   * that can be compiled directly into FFmpeg filters.
+   * "auto" selects FFmpeg-direct for eligible video compositions and falls
+   * back to browser-overlay. Explicit FFmpeg-direct rejects unsupported views.
    */
   renderMode?: RenderCompositionMode;
   /**
@@ -50,6 +51,10 @@ export interface RenderCompositionOptions {
 }
 
 export interface RenderStageTimings {
+  /** Requested mode, including auto when used. */
+  requestedRenderMode: RenderCompositionMode;
+  /** Renderer actually used for this export. */
+  renderMode: ResolvedRenderCompositionMode;
   /** Browser launch + frame capture wall time; absent for ffmpeg-direct renders. */
   captureMs?: number;
   /** Driver open wall time (browser launch + harness ready) within captureMs. */
@@ -76,6 +81,20 @@ export async function renderComposition(
   options: RenderCompositionOptions
 ): Promise<RenderCompositionResult> {
   const totalStart = performance.now();
+  if (options.captureParallelism !== undefined && (!Number.isInteger(options.captureParallelism) || options.captureParallelism < 1)) {
+    return {
+      ok: false,
+      errors: [
+        renderError({
+          code: "RENDER_FAILED",
+          stage: "render",
+          path: "captureParallelism",
+          message: "captureParallelism must be a positive integer."
+        })
+      ]
+    };
+  }
+
   // resolveDocumentProps merges declared prop defaults before substitution.
   const resolution = resolveDocumentProps(doc, options.propValues ?? {});
   if (!resolution.ok) {
@@ -116,7 +135,12 @@ export async function renderComposition(
   const outputPath = options.outDir === undefined ? outputName : join(options.outDir, outputName);
   const stillImage = preset.format === "png";
   const metadataPreset = stillImage ? preset : withEffectiveCodecs(preset);
-  const renderMode = options.renderMode ?? "browser-overlay";
+  const requestedRenderMode = options.renderMode ?? "browser-overlay";
+  const renderMode: ResolvedRenderCompositionMode = stillImage
+    ? "browser-overlay"
+    : requestedRenderMode === "auto"
+      ? getDirectRenderSupport(view).ok ? "ffmpeg-direct" : "browser-overlay"
+      : requestedRenderMode;
 
   try {
     let captureMs: number | undefined;
@@ -233,6 +257,8 @@ export async function renderComposition(
     });
 
     const timings: RenderStageTimings = {
+      requestedRenderMode,
+      renderMode,
       ...(captureMs !== undefined && { captureMs }),
       ...(browserOpenMs !== undefined && { browserOpenMs }),
       ...(captureEvaluateMs !== undefined && { captureEvaluateMs }),
