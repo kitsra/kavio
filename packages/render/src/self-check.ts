@@ -130,6 +130,36 @@ assert(hybridArgs.includes("overlay="), "composites the overlay over the base");
 assert(hybridArgs.includes("amix="), "mixes the declared audio track");
 assert(hybridArgs.includes("-i music.mp3"), "declares the audio input");
 
+const loopedDuckingView: KavioDocument = {
+  ...hybridView,
+  composition: { ...hybridView.composition, durationFrames: 90 },
+  assets: {
+    ...hybridView.assets,
+    music: { type: "audio", src: "music.mp3", loop: true },
+    voiceover: { type: "audio", src: "voiceover.wav" }
+  },
+  layers: [{ ...hybridView.layers[0]!, durationFrames: 90 }],
+  audio: [
+    {
+      id: "music",
+      asset: "music",
+      role: "music",
+      startFrame: 0,
+      durationFrames: 90,
+      duck: { against: "voiceover", amountDb: -12, attackFrames: 3, releaseFrames: 9 }
+    },
+    { id: "voiceover", asset: "voiceover", role: "voiceover", startFrame: 30, durationFrames: 30 }
+  ]
+};
+const loopedDuckingArgs = assembleRenderCommand({
+  view: loopedDuckingView,
+  preset: loopedDuckingView.exports[0]!,
+  framePattern: "/tmp/work/overlay-%05d.png"
+}).join(" ");
+assert(loopedDuckingArgs.includes("-stream_loop -1 -t 3 -i music.mp3"), "render command emits planned audio looping");
+assert(loopedDuckingArgs.includes("sidechaincompress="), "render command emits planned FFmpeg sidechain ducking");
+assert(loopedDuckingArgs.includes("[voiceover_audio]asplit=outputs=2"), "render command preserves voiceover for ducking and mixing");
+
 const pipView: KavioDocument = {
   version: "0.1",
   composition: { width: 1920, height: 1080, fps: 30, durationFrames: 90, background: "#000000" },
