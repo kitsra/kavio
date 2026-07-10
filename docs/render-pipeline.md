@@ -88,6 +88,30 @@ successful outputs:
 - Chromium revision
 - creation time
 
+### FFmpeg runtime selection and diagnostics
+
+The render runtime resolves FFmpeg in a fixed order: executable
+`KAVIO_FFMPEG_PATH`, system `ffmpeg` on `PATH`, then the existing optional
+`ffmpeg-static` fallback. An explicitly configured path is validated and a bad
+value fails with a correction hint; it never silently changes the requested
+runtime.
+
+FFmpeg 8 is supplied by the caller or system. Kavio does not treat the pinned
+`ffmpeg-static` fallback as FFmpeg 8, and no package upgrade was made because
+runtime selection solves this without dependency or lockfile churn.
+
+Use `resolveFfmpegDiagnostics()` before a render to obtain the exact `path`,
+`source`, and parsed `version`. Callers that persist render metadata should pass
+that version into their metadata path and may retain the full diagnostics value
+in operational logs:
+
+```ts
+import { resolveFfmpegDiagnostics } from "@kitsra/kavio-render";
+
+const ffmpeg = await resolveFfmpegDiagnostics();
+console.info("Kavio FFmpeg", ffmpeg);
+```
+
 ## Cleanup Rules
 
 Render code should:

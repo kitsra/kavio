@@ -1,5 +1,14 @@
 # @kitsra/kavio-render
 
+## Unreleased
+
+### Patch Changes
+
+- Add validated `KAVIO_FFMPEG_PATH` support ahead of system and
+  `ffmpeg-static` resolution, plus `resolveFfmpegDiagnostics()` for recording
+  the selected binary source, path, and version. FFmpeg 8 remains a
+  caller/system runtime choice; no dependency version changed.
+
 ## 0.4.0
 
 ### Minor Changes

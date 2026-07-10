@@ -22,13 +22,18 @@ declare module "node:http" {
 }
 
 declare module "node:fs/promises" {
+  export function access(path: string | URL, mode?: number): Promise<void>;
   export function readFile(path: string | URL, encoding: "utf8"): Promise<string>;
   export function readFile(path: string | URL): Promise<Uint8Array>;
   export function writeFile(path: string | URL, data: string | Uint8Array): Promise<void>;
   export function mkdir(path: string | URL, options?: { recursive?: boolean }): Promise<string | undefined>;
   export function mkdtemp(prefix: string): Promise<string>;
   export function rm(path: string | URL, options?: { recursive?: boolean; force?: boolean }): Promise<void>;
-  export function stat(path: string | URL): Promise<{ size: number }>;
+  export function stat(path: string | URL): Promise<{ size: number; isFile(): boolean }>;
+}
+
+declare module "node:fs" {
+  export const constants: { X_OK: number };
 }
 
 declare module "node:path" {
@@ -45,6 +50,19 @@ declare module "node:os" {
 declare module "node:child_process" {
   export function spawn(command: string, args: readonly string[]): unknown;
   export function execSync(command: string, options?: unknown): { toString(): string };
+  export function execFileSync(
+    command: string,
+    args: readonly string[],
+    options: { encoding: "utf8"; stdio: ["ignore", "pipe", "ignore"] }
+  ): string;
+}
+
+declare module "node:process" {
+  const process: {
+    env: Record<string, string | undefined>;
+    platform: string;
+  };
+  export default process;
 }
 
 declare module "ffmpeg-static" {

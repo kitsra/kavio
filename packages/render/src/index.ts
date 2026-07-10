@@ -9,7 +9,12 @@ export {
   type AssembleRenderCommandOptions,
   type DirectRenderSupport
 } from "./assemble-command.js";
-export { resolveFfmpegPath } from "./binaries.js";
+export {
+  resolveFfmpegDiagnostics,
+  resolveFfmpegPath,
+  type FfmpegBinaryDiagnostics,
+  type FfmpegBinarySource
+} from "./binaries.js";
 export {
   createFfmpegRunner,
   type FfmpegRunner,

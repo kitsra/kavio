@@ -11,14 +11,40 @@ corepack pnpm add @kitsra/kavio-render
 
 ## Render Binaries
 
-`@kitsra/kavio-render` declares `ffmpeg-static` and `playwright` as optional
-dependencies. Projects that render MP4, MOV, or WebM outputs should provision
-those binaries after install:
+Kavio resolves FFmpeg in this order:
+
+1. The executable file named by `KAVIO_FFMPEG_PATH`.
+2. A system `ffmpeg` on `PATH`.
+3. The optional `ffmpeg-static` package.
+
+An invalid `KAVIO_FFMPEG_PATH` is reported instead of silently selecting a
+different binary. To run with FFmpeg 8, install it on the host or point
+`KAVIO_FFMPEG_PATH` at it; `ffmpeg-static` is only a compatibility fallback and
+is not represented as FFmpeg 8.
+
+Call `resolveFfmpegDiagnostics()` to confirm the exact path, resolution source,
+and version that Kavio will use. This value can also be recorded alongside
+render metadata:
+
+```ts
+import { resolveFfmpegDiagnostics } from "@kitsra/kavio-render";
+
+console.log(await resolveFfmpegDiagnostics());
+// { path: "/opt/homebrew/bin/ffmpeg", source: "system", version: "8.0.1" }
+```
+
+`@kitsra/kavio-render` also declares `playwright` as an optional dependency.
+Projects using the `ffmpeg-static` fallback or browser rendering should
+provision those binaries after install:
 
 ```bash
 corepack pnpm rebuild ffmpeg-static
 corepack pnpm exec playwright install chromium
 ```
+
+No dependency upgrade is required for FFmpeg 8 support: the FFmpeg runtime is
+supplied explicitly by the caller or host, avoiding lockfile churn and avoiding
+any false claim that the pinned `ffmpeg-static` package provides FFmpeg 8.
 
 ## What It Does
 
