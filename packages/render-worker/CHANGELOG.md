@@ -1,5 +1,11 @@
 # @kitsra/kavio-render-worker
 
+## 0.4.0
+
+### Patch Changes
+
+- @kitsra/kavio-schema@0.4.0
+
 ## 0.3.0
 
 ### Patch Changes

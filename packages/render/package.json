@@ -1,6 +1,6 @@
 {
   "name": "@kitsra/kavio-render",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Render execution layer for Kavio: browser frame capture and FFmpeg encoding.",
   "license": "Elastic-2.0",
   "repository": {
