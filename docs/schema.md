@@ -275,7 +275,9 @@ active cue, line text, active word, and highlight state for any frame.
 
 `audio` contains timeline-level audio tracks. Tracks reference audio or video
 assets and can define role, start frame, duration, volume, fades, loop behavior,
-and basic ducking metadata.
+and ducking behavior. Supported finite loops execute through FFmpeg whole-asset
+or trimmed-range repeat paths; ambiguous source ranges remain non-looping with
+planner diagnostics. Ducking executes through FFmpeg sidechain compression.
 
 ## Exports
 

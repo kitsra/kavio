@@ -3,12 +3,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Kavio Rendering Status</title>
+    <title>Kavio Rendering</title>
     <meta
       name="description"
-      content="Kavio rendering status, render pipeline direction, current preview support, and MVP demo MP4 limitations."
+      content="Kavio rendering modes, PNG sequences, quality gates, audio execution, and browser-overlay fidelity."
     />
-    <meta property="og:title" content="Kavio Rendering Status" />
+    <meta property="og:title" content="Kavio Rendering" />
     <meta property="og:type" content="article" />
     <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../styles.css" />
@@ -16,8 +16,8 @@
       {
         "@context": "https://schema.org",
         "@type": "TechArticle",
-        "headline": "Kavio Rendering Status",
-        "description": "Kavio rendering status, render pipeline direction, current preview support, and MVP demo MP4 limitations.",
+        "headline": "Kavio Rendering",
+        "description": "Kavio rendering modes, PNG sequences, quality gates, audio execution, and browser-overlay fidelity.",
         "url": "https://kitsra.github.io/Kavio/site/docs/rendering.html",
         "about": "Kavio rendering pipeline and render support",
         "programmingLanguage": "TypeScript",
@@ -47,11 +47,11 @@
     <main>
       <section class="page-hero">
         <p class="eyebrow">Docs</p>
-        <h1>Rendering is pre-release but wired end to end.</h1>
+        <h1>Rendering is wired end to end.</h1>
         <p>
-          The production end-to-end <code>kavio render</code> command exists for
-          opaque video outputs, with some formats reserved for later render
-          paths.
+          <code>kavio render</code> selects the fast FFmpeg-direct path for
+          eligible image sequences and keeps browser-overlay rendering as the
+          full-fidelity path for richer compositions.
         </p>
       </section>
 
@@ -64,6 +64,9 @@
           <li>Render-worker contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.</li>
           <li>Inspectable FFmpeg plan construction.</li>
           <li>Playwright-backed browser capture, FFmpeg execution, and CLI rendering.</li>
+          <li>Deterministic PNG-sequence directories with zero-based frame names.</li>
+          <li>Thresholded SSIM/PSNR video and selected-frame comparison gates.</li>
+          <li>Finite audio looping and FFmpeg sidechain ducking.</li>
           <li>MVP demo rendering through the shared render pipeline.</li>
         </ul>
       </section>
@@ -81,15 +84,16 @@
       </section>
 
       <section class="content-section">
-        <h2>Current Limits</h2>
+        <h2>Outputs And Quality</h2>
         <p>
-          The current render path supports opaque <code>mp4</code>,
-          <code>webm</code>, <code>mov</code>, <code>gif</code>, transparent
-          <code>webm</code>/<code>mov</code>, and still-image <code>png</code>
-          outputs (opaque or with a real alpha channel, no FFmpeg step).
-          Video-in-video composites as picture-in-picture planes.
-          <code>png-sequence</code> archives and golden-frame comparison remain
-          future work.
+          The current render path supports <code>mp4</code>, <code>webm</code>,
+          <code>mov</code>, <code>gif</code>, still-image <code>png</code>, and
+          <code>png-sequence</code> output. PNG sequences stream browser
+          captures to a fresh directory as <code>frame-00000.png</code>,
+          <code>frame-00001.png</code>, and so on. Use the comparison helper to
+          gate full-video and selected-frame SSIM/PSNR before accepting a visual
+          change. Browser-overlay remains the recommended mode for complex
+          transitions, text, masks, and arbitrary keyframes.
         </p>
       </section>
     </main>

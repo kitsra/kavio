@@ -111,6 +111,11 @@ repo-local FFmpeg helper:
 
 ```bash
 node scripts/compare-render-videos.mjs production.mp4 kavio.mp4 \
+  --min-ssim 0.99 \
+  --min-psnr 38 \
+  --frame 6 --frame 12 \
+  --min-frame-ssim 0.99 \
+  --min-frame-psnr 38 \
   --reference-time <seconds> \
   --candidate-time <seconds> \
   --json render-comparison.json \
@@ -118,9 +123,11 @@ node scripts/compare-render-videos.mjs production.mp4 kavio.mp4 \
 ```
 
 The helper shells out to `ffprobe` for stream metadata and `ffmpeg` for SSIM and
-PSNR. Set `FFMPEG` or `FFPROBE` when those binaries are not on `PATH`. Keep the
-source app's production render script in Pintwatch; Kavio only owns the
-cross-video comparison/report.
+PSNR. Supplying thresholds makes it a CI gate: regressions exit with code `2`,
+while `--json -` writes compact machine-readable output. Set `FFMPEG` or
+`FFPROBE` when those binaries are not on `PATH`. Keep the source app's
+production render script in Pintwatch; Kavio owns the cross-video
+comparison/report.
 
 ## What Exists Now
 
@@ -144,8 +151,10 @@ cross-video comparison/report.
 - Argument rendering from plan steps.
 - Base video trim, scale, crop, contain, cover, and concat planning.
 - Overlay frame-sequence planning.
-- Audio mix planning for music, source audio, voiceover, fades, loudness, and
-  basic ducking metadata.
+- Audio mix planning and execution for music, source audio, voiceover, fades,
+  loudness, finite whole-asset or trimmed-range loops, and FFmpeg sidechain
+  ducking. Ambiguous loop boundaries remain non-looping and are reported in
+  planner diagnostics rather than guessed.
 - FFmpeg-direct planning for static shape layers and full-frame image sequences,
   including limited linear fade, scale push-in, and exact `xfade` overlap
   motion.
@@ -153,8 +162,8 @@ cross-video comparison/report.
 ## What Remains For MVP Rendering
 
 The remaining render work is hardening and coverage: measure render throughput
-and total render time against PRD targets, add golden-frame comparison, broaden
-format support, and add alpha-capable outputs.
+and total render time against PRD targets, tune direct-render transition quality
+against the browser path, broaden format support, and add alpha-capable outputs.
 
 ## Current Demo Capability
 

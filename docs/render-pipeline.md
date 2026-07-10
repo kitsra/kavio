@@ -1,9 +1,10 @@
 # Render Pipeline Guide
 
-Kavio now has an end-to-end local render path for opaque video outputs. The
-general `kavio render` command delegates to `@kitsra/kavio-render`, which captures
-browser-rendered overlay frames with Playwright, composes media with FFmpeg, and
-returns structured output and metadata.
+Kavio now has an end-to-end local render path for video, still-image, and PNG
+sequence outputs. The general `kavio render` command delegates to
+`@kitsra/kavio-render`, which selects FFmpeg-direct for eligible image sequences
+or captures browser-rendered frames with Playwright for full-fidelity output,
+then returns structured output and metadata.
 
 ## Current Status
 
@@ -18,13 +19,20 @@ Implemented:
 - Playwright-backed frame capture.
 - FFmpeg command assembly and execution.
 - Batch expansion.
+- Deterministic `png-sequence` export directories.
+- FFmpeg-direct eligibility discovery and `auto` render mode.
+- Whole-asset and trimmed-range audio loop execution.
+- FFmpeg sidechain ducking.
+- SSIM/PSNR full-video and selected-frame comparison gates.
 - CLI `render` command.
 - MVP demo rendering through the shared render pipeline.
 
 Current limits:
 
-- `png-sequence` exports.
-- Performance measurement against PRD throughput targets.
+- Performance measurement against PRD throughput targets and GetPint quality
+  baselines.
+- Broader direct-render transition variants beyond the supported linear
+  fade/crossfade path.
 
 ## End-To-End Flow
 
@@ -36,8 +44,10 @@ The render pipeline works like this:
 4. Validate the expanded document.
 5. Assemble the FFmpeg command from an inspectable plan and start FFmpeg.
 6. Open the browser renderer at the export dimensions.
-7. Capture transparent overlay frames and stream them into FFmpeg stdin as an
-   `image2pipe` PNG stream, so capture and encode overlap.
+7. For browser-overlay video output, capture transparent overlay frames and
+   stream them into FFmpeg stdin as an `image2pipe` PNG stream, so capture and
+   encode overlap. PNG sequences instead stream ordered frames directly to a
+   fresh output directory.
 8. Compose base video, overlays, and audio.
 9. Write output, per-stage timings, and render metadata.
 10. Clean up browser contexts on success or failure.

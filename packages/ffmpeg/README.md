@@ -14,7 +14,8 @@ corepack pnpm add @kitsra/kavio-ffmpeg
 - Renders FFmpeg argument arrays from plan objects.
 - Plans base video input, trim, fit, and sequencing.
 - Plans overlay frame-sequence compositing.
-- Plans audio mixing and loudness normalization.
+- Plans audio mixing, loudness normalization, finite audio loops, and FFmpeg
+  sidechain ducking.
 
 This package builds command plans. It does not execute FFmpeg by itself.
 
