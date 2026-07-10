@@ -1,4 +1,12 @@
-import { evaluateEasing, evaluateLayer, evaluateTransitionSeries, getCanvasDimensions, isLayerActive, resolvePoint } from "@kitsra/kavio-core";
+import {
+  compileTransitionOverlapWindows,
+  evaluateEasing,
+  evaluateLayer,
+  evaluateTransitionSeries,
+  getCanvasDimensions,
+  isLayerActive,
+  resolvePoint
+} from "@kitsra/kavio-core";
 import type { CanvasDimensions, EvaluatedCaptionState, EvaluatedLayer, EvaluatedTransitionOverlap, Size } from "@kitsra/kavio-core";
 import type {
   KavioCaptionLayer,
@@ -513,6 +521,7 @@ function renderCompositionFrame(
   const root = getRenderRoot(options);
   const stage = createStage(root, dimensions, composition.exports[0]?.background);
   const transitionStates = activeTransitionRenderStates(composition, frame, dimensions);
+  const transitionedOutLayers = completedTransitionOutgoingLayers(composition, frame);
   const renderableLayers =
     options.renderVideoLayers === false ? composition.layers.filter((layer) => layer.type !== "video") : composition.layers;
   const layerPromises = renderableLayers.flatMap((layer, index) => {
@@ -526,7 +535,9 @@ function renderCompositionFrame(
       ];
     }
 
-    return isLayerActive(layer, frame) ? [renderLayer(stage.ownerDocument, composition, layer, index, frame, dimensions)] : [];
+    return isLayerActive(layer, frame) && !transitionedOutLayers.has(layer.id)
+      ? [renderLayer(stage.ownerDocument, composition, layer, index, frame, dimensions)]
+      : [];
   });
 
   return Promise.all(layerPromises).then(async (layers) => {
@@ -611,6 +622,22 @@ function activeTransitionRenderStates(
     });
   }
   return states;
+}
+
+function completedTransitionOutgoingLayers(composition: KavioDocument, frame: number): Set<string> {
+  const layerIds = new Set<string>();
+  for (const window of compileTransitionOverlapWindows(composition.tracks)) {
+    if (frame < window.endFrame) {
+      continue;
+    }
+
+    const track = composition.tracks?.find((entry) => entry.id === window.trackId);
+    const previous = track?.clips.find((clip) => clip.id === window.previousClipId);
+    if (previous && previous.layerId !== window.nextLayerId && frame < previous.startFrame + previous.durationFrames) {
+      layerIds.add(previous.layerId);
+    }
+  }
+  return layerIds;
 }
 
 function applyLayerReveal(element: HTMLElement, evaluation: EvaluatedLayer): void {

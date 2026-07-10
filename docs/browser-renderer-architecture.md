@@ -23,6 +23,14 @@ would make text parity, hit testing, and future editor inspection harder.
 - `renderFrame` validates the explicit frame, evaluates active layers using
   `@kitsra/kavio-core`, clears the runtime root, and installs a fresh DOM stage for the
   frame.
+- Layer windows include `startFrame` and exclude `startFrame + durationFrames`.
+  Authored transitions include their first and last frames, so an entrance
+  reaches its resting state on the last transition frame and an exit reaches
+  its hidden state on the layer's last active frame.
+- Track transitions use the same inclusive-start/exclusive-end overlap window.
+  Once an outgoing clip reaches the completed transition boundary, the browser
+  keeps it suppressed for any remaining active clip frames instead of allowing
+  the underlying layer to snap back to its resting state.
 - Each DOM layer carries `data-kavio-layer-id` and `data-kavio-layer-type` so
   worker tests and future preview tooling can inspect output without relying on
   generated class names.

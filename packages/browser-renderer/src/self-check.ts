@@ -611,6 +611,104 @@ const seriesLinearNext = renderedElement(seriesLinearFrame.layers.find((entry) =
 assertEqual(styleValue(seriesLinearPrevious, "left"), "-100px", "outgoing transition-series DOM uses linear default timing");
 assertEqual(styleValue(seriesLinearNext, "left"), "1060px", "incoming transition-series DOM uses linear default timing");
 
+const seriesLastOverlapFrame = await renderer.renderFrame(29);
+assertEqual(
+  styleValue(renderedElement(seriesLastOverlapFrame.layers.find((entry) => entry.id === "seriesA")?.element), "left"),
+  "-900px",
+  "outgoing transition-series clip reaches its final position on the last overlap frame"
+);
+assertEqual(
+  styleValue(renderedElement(seriesLastOverlapFrame.layers.find((entry) => entry.id === "seriesB")?.element), "left"),
+  "260px",
+  "incoming transition-series clip reaches its resting position on the last overlap frame"
+);
+const seriesAfterOverlapFrame = await renderer.renderFrame(30);
+assert(
+  !seriesAfterOverlapFrame.layers.some((entry) => entry.id === "seriesA"),
+  "completed outgoing transition-series clips stay hidden for their remaining active frames"
+);
+assert(
+  seriesAfterOverlapFrame.layers.some((entry) => entry.id === "seriesB"),
+  "incoming transition-series clips remain visible after the overlap"
+);
+
+const boundaryDocument = new FakeDocument();
+const boundaryRenderer = createBrowserRenderer({ document: boundaryDocument as unknown as Document });
+await boundaryRenderer.loadComposition({
+  version: schemaVersion,
+  composition: { width: 200, height: 100, fps: 25, durationFrames: 16 },
+  assets: {},
+  exports: [{ name: "preview", format: "png-sequence", width: 200, height: 100 }],
+  layers: [
+    {
+      id: "fade",
+      type: "shape",
+      shape: "rect",
+      startFrame: 5,
+      durationFrames: 7,
+      opacity: 0.8,
+      transitionIn: { type: "fade", durationFrames: 3 },
+      transitionOut: { type: "fade", durationFrames: 3 }
+    },
+    {
+      id: "zoom",
+      type: "shape",
+      shape: "rect",
+      startFrame: 5,
+      durationFrames: 7,
+      scale: 2,
+      transitionIn: { type: "zoom", durationFrames: 3, amount: 0.2 }
+    },
+    {
+      id: "pan",
+      type: "shape",
+      shape: "rect",
+      startFrame: 5,
+      durationFrames: 7,
+      position: { x: 20, y: 40 },
+      keyframes: { x: [{ frame: 0, value: 20 }, { frame: 2, value: 120 }] }
+    }
+  ]
+});
+assertEqual((await boundaryRenderer.renderFrame(4)).layers.length, 0, "layers are absent before their inclusive start frame");
+const boundaryStart = await boundaryRenderer.renderFrame(5);
+assertEqual(
+  styleValue(renderedElement(boundaryStart.layers.find((entry) => entry.id === "fade")?.element), "opacity"),
+  "0",
+  "fade entrance begins transparent on the inclusive start frame"
+);
+assert(
+  styleValue(renderedElement(boundaryStart.layers.find((entry) => entry.id === "zoom")?.element), "transform").includes("scale(2.4)"),
+  "zoom entrance multiplies authored scale on the inclusive start frame"
+);
+assertEqual(
+  styleValue(renderedElement(boundaryStart.layers.find((entry) => entry.id === "pan")?.element), "left"),
+  "20px",
+  "pan keyframes evaluate from layer-local frame zero"
+);
+const boundaryEntranceEnd = await boundaryRenderer.renderFrame(7);
+assertEqual(
+  styleValue(renderedElement(boundaryEntranceEnd.layers.find((entry) => entry.id === "fade")?.element), "opacity"),
+  "0.8",
+  "fade entrance reaches authored opacity on its final frame"
+);
+assert(
+  styleValue(renderedElement(boundaryEntranceEnd.layers.find((entry) => entry.id === "zoom")?.element), "transform").includes("scale(2)"),
+  "zoom entrance reaches authored scale on its final frame"
+);
+assertEqual(
+  styleValue(renderedElement(boundaryEntranceEnd.layers.find((entry) => entry.id === "pan")?.element), "left"),
+  "120px",
+  "pan keyframes reach their final position at the authored local frame"
+);
+const boundaryEnd = await boundaryRenderer.renderFrame(11);
+assertEqual(
+  styleValue(renderedElement(boundaryEnd.layers.find((entry) => entry.id === "fade")?.element), "opacity"),
+  "0",
+  "fade exit reaches transparent on the final active frame"
+);
+assertEqual((await boundaryRenderer.renderFrame(12)).layers.length, 0, "layers are absent at the exclusive end frame");
+
 const verticalPreview = createExportPreviewComposition(composition, "vertical");
 assertEqual(verticalPreview.exportIndex, 1, "export preview resolves selected export by name");
 assertEqual(verticalPreview.composition.composition.width, 360, "export preview uses selected export width");
