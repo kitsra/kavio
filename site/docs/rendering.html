@@ -64,6 +64,7 @@
           <li>Render-worker contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.</li>
           <li>Inspectable FFmpeg plan construction.</li>
           <li>Playwright-backed browser capture, FFmpeg execution, and CLI rendering.</li>
+          <li>Batch workers reuse Chromium processes while isolating every job in a fresh context and harness.</li>
           <li>Deterministic PNG-sequence directories with zero-based frame names.</li>
           <li>Thresholded SSIM/PSNR video and selected-frame comparison gates.</li>
           <li>Finite audio looping and FFmpeg sidechain ducking.</li>
@@ -93,7 +94,10 @@
           <code>frame-00001.png</code>, and so on. Use the comparison helper to
           gate full-video and selected-frame SSIM/PSNR before accepting a visual
           change. Browser-overlay remains the recommended mode for complex
-          transitions, text, masks, and arbitrary keyframes.
+          transitions, text, masks, and arbitrary keyframes. In batches, later
+          compatible browser-overlay jobs reuse worker-local Chromium processes;
+          <code>timings.browserLaunches</code> reports <code>0</code> when that
+          reuse occurs.
         </p>
       </section>
     </main>
