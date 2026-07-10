@@ -1,5 +1,12 @@
 # @kitsra/kavio-browser-renderer
 
+## Unreleased
+
+### Patch Changes
+
+- Reuse deterministic static-layer DOM between frames while keeping videos,
+  captions, text motion, keyframes, and transitions on the dynamic render path.
+
 ## 0.4.0
 
 ### Patch Changes

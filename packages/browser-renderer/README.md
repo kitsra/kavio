@@ -13,6 +13,9 @@ corepack pnpm add @kitsra/kavio-browser-renderer
 - Installs the browser renderer runtime.
 - Creates preview controllers.
 - Renders text, video, image, shape, and caption layers into DOM frames.
+- Reuses DOM for deterministic plain-text, image, and shape layers while
+  rebuilding videos, captions, animated text, keyframed layers, and transition
+  participants for every frame.
 - Handles font loading, preview controls, video fit metadata, and subject-crop
   preview positioning.
 

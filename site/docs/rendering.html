@@ -97,7 +97,11 @@
           transitions, text, masks, and arbitrary keyframes. In batches, later
           compatible browser-overlay jobs reuse worker-local Chromium processes;
           <code>timings.browserLaunches</code> reports <code>0</code> when that
-          reuse occurs.
+          reuse occurs. Within a loaded composition, the browser renderer also
+          reuses deterministic plain-text, image, and shape DOM layers. Videos,
+          captions, animated or keyframed layers, and transition participants
+          remain frame-dynamic, and composition reloads clear the reused layer
+          state.
         </p>
       </section>
     </main>

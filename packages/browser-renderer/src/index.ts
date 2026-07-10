@@ -135,6 +135,11 @@ interface TransitionRenderState {
   evaluation: EvaluatedLayer;
 }
 
+interface BrowserRenderState {
+  readonly staticLayers: Map<string, RenderedLayer>;
+  readonly transitionLayerIds: Set<string>;
+}
+
 interface TextMotionFragment {
   text: string;
   animatable: boolean;
@@ -150,6 +155,7 @@ declare global {
 export function createBrowserRenderer(options: BrowserRendererOptions = {}): BrowserRenderer {
   let loaded: KavioDocument | undefined;
   let resources: CompositionResources = emptyCompositionResources();
+  let renderState = createBrowserRenderState();
 
   return {
     get ready() {
@@ -158,6 +164,7 @@ export function createBrowserRenderer(options: BrowserRendererOptions = {}): Bro
     async loadComposition(composition) {
       releaseCompositionResources(resources);
       loaded = cloneComposition(composition);
+      renderState = createBrowserRenderState(loaded);
       resources = prepareCompositionResources(loaded, options);
       resources.ready.catch(() => undefined);
       return getLoadedComposition(loaded);
@@ -169,7 +176,7 @@ export function createBrowserRenderer(options: BrowserRendererOptions = {}): Bro
 
       assertRenderableFrame(frame, loaded);
       await resources.ready;
-      return renderCompositionFrame(loaded, frame, options);
+      return renderCompositionFrame(loaded, frame, options, renderState);
     }
   };
 }
@@ -515,7 +522,8 @@ export function createPreviewSafeZoneOverlay(document: Document, width: number, 
 function renderCompositionFrame(
   composition: KavioDocument,
   frame: number,
-  options: BrowserRendererOptions
+  options: BrowserRendererOptions,
+  state: BrowserRenderState
 ): Promise<RenderedFrame> {
   const dimensions = getCanvasDimensions(composition.composition);
   const root = getRenderRoot(options);
@@ -535,9 +543,13 @@ function renderCompositionFrame(
       ];
     }
 
-    return isLayerActive(layer, frame) && !transitionedOutLayers.has(layer.id)
-      ? [renderLayer(stage.ownerDocument, composition, layer, index, frame, dimensions)]
-      : [];
+    if (!isLayerActive(layer, frame) || transitionedOutLayers.has(layer.id)) {
+      return [];
+    }
+
+    return isStaticLayer(layer, state.transitionLayerIds)
+      ? [renderStaticLayer(stage.ownerDocument, composition, layer, index, frame, dimensions, state)]
+      : [renderLayer(stage.ownerDocument, composition, layer, index, frame, dimensions)];
   });
 
   return Promise.all(layerPromises).then(async (layers) => {
@@ -552,6 +564,49 @@ function renderCompositionFrame(
       layers
     };
   });
+}
+
+function createBrowserRenderState(composition?: KavioDocument): BrowserRenderState {
+  const transitionLayerIds = new Set<string>();
+  for (const window of compileTransitionOverlapWindows(composition?.tracks)) {
+    transitionLayerIds.add(window.previousLayerId);
+    transitionLayerIds.add(window.nextLayerId);
+  }
+
+  return { staticLayers: new Map(), transitionLayerIds };
+}
+
+async function renderStaticLayer(
+  document: Document,
+  composition: KavioDocument,
+  layer: KavioLayer,
+  index: number,
+  frame: number,
+  dimensions: CanvasDimensions,
+  state: BrowserRenderState
+): Promise<RenderedLayer> {
+  const evaluation = evaluateLayer(layer, frame, dimensions);
+  const cached = state.staticLayers.get(layer.id);
+  if (cached !== undefined) {
+    return { ...cached, localFrame: evaluation.localFrame, evaluation };
+  }
+
+  const rendered = await renderLayer(document, composition, layer, index, frame, dimensions, { evaluation });
+  state.staticLayers.set(layer.id, rendered);
+  return rendered;
+}
+
+function isStaticLayer(layer: KavioLayer, transitionLayerIds: ReadonlySet<string>): boolean {
+  if (layer.type === "video" || layer.type === "caption" || transitionLayerIds.has(layer.id)) {
+    return false;
+  }
+  if (layer.type === "text" && layer.textMotion !== undefined) {
+    return false;
+  }
+  if (layer.transitionIn != null || layer.transitionOut != null) {
+    return false;
+  }
+  return layer.keyframes === undefined || Object.values(layer.keyframes).every((keyframes) => (keyframes?.length ?? 0) === 0);
 }
 
 async function renderLayer(

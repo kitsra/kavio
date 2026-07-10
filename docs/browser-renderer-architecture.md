@@ -21,8 +21,11 @@ would make text parity, hit testing, and future editor inspection harder.
 - `loadComposition` snapshots the JSON composition and returns deterministic
   composition dimensions and timing metadata.
 - `renderFrame` validates the explicit frame, evaluates active layers using
-  `@kitsra/kavio-core`, clears the runtime root, and installs a fresh DOM stage for the
-  frame.
+  `@kitsra/kavio-core`, clears the runtime root, and installs a fresh DOM stage
+  for the frame. Within that stage, deterministic plain-text, image, and shape
+  layer elements may be reused across frames. Videos, captions, text motion,
+  non-empty keyframes, authored transitions, and both sides of track
+  transitions are always rebuilt.
 - Layer windows include `startFrame` and exclude `startFrame + durationFrames`.
   Authored transitions include their first and last frames, so an entrance
   reaches its resting state on the last transition frame and an exit reaches
@@ -50,6 +53,9 @@ would make text parity, hit testing, and future editor inspection harder.
   CSS stacking hint.
 - Any future async asset work must resolve from composition data and requested
   frame only, not from elapsed wall time.
+- Static-layer reuse is scoped to one loaded composition. Loading or switching
+  a composition discards every reused element so no prior DOM state can leak
+  into the next render.
 
 ## Preview Controls
 

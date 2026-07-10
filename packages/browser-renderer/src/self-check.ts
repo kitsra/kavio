@@ -382,6 +382,23 @@ const composition: KavioDocument = {
       }
     },
     {
+      id: "staticLabel",
+      type: "text",
+      text: "Static label",
+      startFrame: 0,
+      durationFrames: 40,
+      position: { x: 20, y: 20 }
+    },
+    {
+      id: "motionLabel",
+      type: "text",
+      text: "Motion label",
+      startFrame: 0,
+      durationFrames: 40,
+      position: { x: 20, y: 50 },
+      textMotion: { type: "typeOn", durationFrames: 20 }
+    },
+    {
       id: "logo",
       type: "image",
       asset: "logo",
@@ -499,7 +516,7 @@ await renderer.ready;
 assertEqual(document.fonts.faces.size, 1, "loadComposition registers supplied font assets");
 
 const frame = await renderer.renderFrame(15);
-assertEqual(frame.layers.length, 6, "renderFrame returns active video, text, shape, image, and caption layers");
+assertEqual(frame.layers.length, 8, "renderFrame returns active video, text, shape, image, and caption layers");
 
 const staticVideo = renderedElement(frame.layers.find((layer) => layer.id === "clipStatic")?.element);
 assertEqual(staticVideo.dataset.kavioLayerType, "video", "video layer carries inspectable type");
@@ -582,6 +599,18 @@ if (!activeWord) {
 assertEqual(activeWord.textContent, "from", "caption active word follows local frame state");
 assertEqual(styleValue(activeWord, "color"), "#ffd400", "caption active word applies highlight color");
 
+const staticLabel = renderedElement(frame.layers.find((layer) => layer.id === "staticLabel")?.element);
+const motionLabel = renderedElement(frame.layers.find((layer) => layer.id === "motionLabel")?.element);
+const nextFrame = await renderer.renderFrame(16);
+assert(renderedElement(nextFrame.layers.find((layer) => layer.id === "panel")?.element) === shape, "static shape element is reused between frames");
+assertEqual(nextFrame.layers.find((layer) => layer.id === "panel")?.localFrame, 16, "reused layers still report the requested local frame");
+assert(renderedElement(nextFrame.layers.find((layer) => layer.id === "logo")?.element) === image, "static image element is reused between frames");
+assert(renderedElement(nextFrame.layers.find((layer) => layer.id === "staticLabel")?.element) === staticLabel, "plain text element is reused between frames");
+assert(renderedElement(nextFrame.layers.find((layer) => layer.id === "headline")?.element) !== text, "keyframed text still rerenders between frames");
+assert(renderedElement(nextFrame.layers.find((layer) => layer.id === "motionLabel")?.element) !== motionLabel, "text motion still rerenders between frames");
+assert(renderedElement(nextFrame.layers.find((layer) => layer.id === "clipStatic")?.element) !== staticVideo, "video still rerenders between frames");
+assert(renderedElement(nextFrame.layers.find((layer) => layer.id === "caption")?.element) !== caption, "caption still rerenders between frames");
+
 const maskTransitionFrame = await renderer.renderFrame(32);
 const gridTransition = maskTransitionFrame.layers.find((entry) => entry.id === "gridTransition")?.element;
 assert(gridTransition !== undefined, "grid transition layer renders during its entrance");
@@ -608,6 +637,8 @@ assert(styleValue(seriesNext, "left") !== "260px", "incoming transition-series c
 const seriesLinearFrame = await renderer.renderFrame(25);
 const seriesLinearPrevious = renderedElement(seriesLinearFrame.layers.find((entry) => entry.id === "seriesA")?.element);
 const seriesLinearNext = renderedElement(seriesLinearFrame.layers.find((entry) => entry.id === "seriesB")?.element);
+assert(seriesLinearPrevious !== seriesPrevious, "outgoing track-transition layers rerender within the overlap");
+assert(seriesLinearNext !== seriesNext, "incoming track-transition layers rerender within the overlap");
 assertEqual(styleValue(seriesLinearPrevious, "left"), "-100px", "outgoing transition-series DOM uses linear default timing");
 assertEqual(styleValue(seriesLinearNext, "left"), "1060px", "incoming transition-series DOM uses linear default timing");
 
@@ -630,6 +661,12 @@ assert(
 assert(
   seriesAfterOverlapFrame.layers.some((entry) => entry.id === "seriesB"),
   "incoming transition-series clips remain visible after the overlap"
+);
+const seriesAfterOverlap = renderedElement(seriesAfterOverlapFrame.layers.find((entry) => entry.id === "seriesB")?.element);
+const seriesSettledFrame = await renderer.renderFrame(31);
+assert(
+  renderedElement(seriesSettledFrame.layers.find((entry) => entry.id === "seriesB")?.element) !== seriesAfterOverlap,
+  "track-transition participants remain dynamic after the overlap"
 );
 
 const boundaryDocument = new FakeDocument();
@@ -667,13 +704,23 @@ await boundaryRenderer.loadComposition({
       durationFrames: 7,
       position: { x: 20, y: 40 },
       keyframes: { x: [{ frame: 0, value: 20 }, { frame: 2, value: 120 }] }
+    },
+    {
+      id: "still",
+      type: "shape",
+      shape: "rect",
+      startFrame: 5,
+      durationFrames: 7,
+      position: { x: 5, y: 5 }
     }
   ]
 });
 assertEqual((await boundaryRenderer.renderFrame(4)).layers.length, 0, "layers are absent before their inclusive start frame");
 const boundaryStart = await boundaryRenderer.renderFrame(5);
+const boundaryStill = renderedElement(boundaryStart.layers.find((entry) => entry.id === "still")?.element);
+const boundaryFade = renderedElement(boundaryStart.layers.find((entry) => entry.id === "fade")?.element);
 assertEqual(
-  styleValue(renderedElement(boundaryStart.layers.find((entry) => entry.id === "fade")?.element), "opacity"),
+  styleValue(boundaryFade, "opacity"),
   "0",
   "fade entrance begins transparent on the inclusive start frame"
 );
@@ -687,6 +734,14 @@ assertEqual(
   "pan keyframes evaluate from layer-local frame zero"
 );
 const boundaryEntranceEnd = await boundaryRenderer.renderFrame(7);
+assert(
+  renderedElement(boundaryEntranceEnd.layers.find((entry) => entry.id === "still")?.element) === boundaryStill,
+  "static layers reuse DOM across the same inclusive boundary frames"
+);
+assert(
+  renderedElement(boundaryEntranceEnd.layers.find((entry) => entry.id === "fade")?.element) !== boundaryFade,
+  "transitioning layers rebuild DOM across the same inclusive boundary frames"
+);
 assertEqual(
   styleValue(renderedElement(boundaryEntranceEnd.layers.find((entry) => entry.id === "fade")?.element), "opacity"),
   "0.8",
@@ -708,6 +763,10 @@ assertEqual(
   "fade exit reaches transparent on the final active frame"
 );
 assertEqual((await boundaryRenderer.renderFrame(12)).layers.length, 0, "layers are absent at the exclusive end frame");
+
+await renderer.loadComposition(composition);
+const reloadedPanel = renderedElement((await renderer.renderFrame(15)).layers.find((entry) => entry.id === "panel")?.element);
+assert(reloadedPanel !== shape, "loading a composition discards cached DOM from the previous load");
 
 const verticalPreview = createExportPreviewComposition(composition, "vertical");
 assertEqual(verticalPreview.exportIndex, 1, "export preview resolves selected export by name");
@@ -785,7 +844,7 @@ assert(
   overlayFrame.layers.every((layer) => renderedElement(layer.element).dataset.kavioLayerType !== "video"),
   "renderVideoLayers:false omits video layers from rendered frames"
 );
-assert(overlayFrame.layers.length < 6, "renderVideoLayers:false renders fewer layers than the full frame");
+assert(overlayFrame.layers.length < frame.layers.length, "renderVideoLayers:false renders fewer layers than the full frame");
 assert(
   overlayFrame.layers.some((layer) => renderedElement(layer.element).dataset.kavioLayerType === "text"),
   "renderVideoLayers:false still renders non-video layers"
