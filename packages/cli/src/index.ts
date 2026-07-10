@@ -12,7 +12,13 @@ import {
   type KavioError,
   type ValidationResult
 } from "@kitsra/kavio-schema";
-import { renderBatch, type RenderBatchInput, type RenderBatchOptions, type RenderBatchRow } from "@kitsra/kavio-render";
+import {
+  getDirectRenderSupport,
+  renderBatch,
+  type RenderBatchInput,
+  type RenderBatchOptions,
+  type RenderBatchRow
+} from "@kitsra/kavio-render";
 import type { RenderCompositionMode } from "@kitsra/kavio-render";
 
 declare const process: {
@@ -90,6 +96,11 @@ interface InspectSummary {
   exports: {
     count: number;
     names: string[];
+  };
+  directRender: {
+    eligible: boolean;
+    recommendedMode: "ffmpeg-direct" | "browser-overlay";
+    reason: string;
   };
 }
 
@@ -932,6 +943,7 @@ function inspectDocument(filePath: string, document: KavioDocument): InspectSumm
     composition.colorSpace = document.composition.colorSpace;
   }
 
+  const directSupport = getDirectRenderSupport(document);
   return {
     file: filePath,
     version: document.version,
@@ -969,7 +981,18 @@ function inspectDocument(filePath: string, document: KavioDocument): InspectSumm
     exports: {
       count: document.exports.length,
       names: document.exports.map((entry, index) => readName(entry) ?? `export-${index + 1}`)
-    }
+    },
+    directRender: directSupport.ok
+      ? {
+          eligible: true,
+          recommendedMode: "ffmpeg-direct",
+          reason: "Eligible for FFmpeg-direct rendering; use --render-mode ffmpeg-direct to skip browser capture."
+        }
+      : {
+          eligible: false,
+          recommendedMode: "browser-overlay",
+          reason: `Use browser-overlay because FFmpeg-direct is unavailable${directSupport.layerId === undefined ? "" : ` at layer "${directSupport.layerId}"`}: ${directSupport.reason}.`
+        }
   };
 }
 
@@ -1100,6 +1123,9 @@ function writeInspection(summary: InspectSummary): void {
     );
   }
   writeStdout(`Audio: ${summary.audio.count}\n`);
+  writeStdout(
+    `Direct render: ${summary.directRender.eligible ? "eligible" : "ineligible"} (${summary.directRender.recommendedMode}) — ${summary.directRender.reason}\n`
+  );
   writeStdout(`Exports: ${summary.exports.count}\n`);
 
   for (const exportName of summary.exports.names) {

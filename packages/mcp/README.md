@@ -29,8 +29,10 @@ Example MCP host configuration:
 ```
 
 The package exposes tools for composition validation, inspection, migration,
-prop resolution, export preset listing, render planning, and rendering. It also
-ships provider adapter schemas for Anthropic, OpenAI, and Gemini.
+prop resolution, export preset listing, render planning, and rendering.
+`plan_render` reports whether each resolved job should use `ffmpeg-direct` or
+`browser-overlay`, explains the decision, and returns arguments for that path.
+It also ships provider adapter schemas for Anthropic, OpenAI, and Gemini.
 
 ## Links
 

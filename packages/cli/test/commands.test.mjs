@@ -75,6 +75,8 @@ test("inspects a valid composition in text and JSON modes", async () => {
   assert.match(textResult.stdout, /Assets: 2 \(video: 1, image: 1\)/);
   assert.match(textResult.stdout, /Layers: 2 \(video: 1, text: 1\)/);
   assert.match(textResult.stdout, /Tracks: 0 \(0 clips, 0 transition windows\)/);
+  assert.match(textResult.stdout, /Direct render: ineligible \(browser-overlay\)/);
+  assert.match(textResult.stdout, /layer "headline".*text.*browser rendering/i);
   assert.match(textResult.stdout, /  - social/);
   assert.equal(textResult.stderr, "");
 
@@ -87,7 +89,20 @@ test("inspects a valid composition in text and JSON modes", async () => {
   assert.equal(payload.ok, true);
   assert.equal(payload.summary.file, validFile);
   assert.equal(payload.summary.composition.durationSeconds, 3);
+  assert.equal(payload.summary.directRender.eligible, false);
+  assert.equal(payload.summary.directRender.recommendedMode, "browser-overlay");
+  assert.match(payload.summary.directRender.reason, /browser-overlay/);
   assert.deepEqual(payload.summary.exports.names, ["social"]);
+});
+
+test("inspect recommends FFmpeg-direct for eligible compositions", async () => {
+  const result = await runCli(["--json", "inspect", fixturePath("direct-render-composition.json")]);
+  const payload = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 0);
+  assert.equal(payload.summary.directRender.eligible, true);
+  assert.equal(payload.summary.directRender.recommendedMode, "ffmpeg-direct");
+  assert.match(payload.summary.directRender.reason, /eligible.*--render-mode ffmpeg-direct/i);
 });
 
 test("inspect reports transition series overlap windows", async () => {
