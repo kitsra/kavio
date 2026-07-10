@@ -4,6 +4,11 @@
 
 ### Patch Changes
 
+- Add browser-captured `png-sequence` export as deterministic
+  `frame-%05d.png` files in a new output directory. Frames write as they are
+  captured without FFmpeg or full-sequence buffering, and render results expose
+  the directory plus exact output pattern.
+
 - Add validated `KAVIO_FFMPEG_PATH` support ahead of system and
   `ffmpeg-static` resolution, plus `resolveFfmpegDiagnostics()` for recording
   the selected binary source, path, and version. FFmpeg 8 remains a

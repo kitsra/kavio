@@ -52,6 +52,8 @@ any false claim that the pinned `ffmpeg-static` package provides FFmpeg 8.
 - Resolves FFmpeg binaries.
 - Assembles render commands.
 - Renders a single composition/export.
+- Streams `png-sequence` captures to deterministic `frame-%05d.png` files in a
+  new output directory without invoking FFmpeg.
 - Expands and renders batch jobs.
 
 ## Links

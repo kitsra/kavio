@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { availableParallelism } from "node:os";
 import { dirname, join } from "node:path";
 import { applyExportPreset, collectCompositionResourceLimitInputs, collectResourceLimitViolations, resolveDocumentProps } from "@kitsra/kavio-core";
@@ -72,7 +72,7 @@ export interface RenderStageTimings {
 }
 
 export type RenderCompositionResult =
-  | { ok: true; outputPath: string; metadata: RenderOutputMetadata; timings: RenderStageTimings }
+  | { ok: true; outputPath: string; outputPattern?: string; metadata: RenderOutputMetadata; timings: RenderStageTimings }
   | { ok: false; errors: KavioError[] };
 
 /** End-to-end render for one (composition × export): props → view → validate → capture → encode. */
@@ -131,12 +131,33 @@ export async function renderComposition(
     return { ok: false, errors: [renderabilityError] };
   }
 
-  const outputName = options.outputName ?? `${preset.name}.${extensionForFormat(preset.format)}`;
+  const pngSequence = preset.format === "png-sequence";
+  if (pngSequence && options.continueOnFrameError === true) {
+    return {
+      ok: false,
+      errors: [
+        renderError({
+          code: "RENDER_FAILED",
+          stage: "render",
+          path: "continueOnFrameError",
+          message: "png-sequence exports require every frame and do not support continueOnFrameError.",
+          hint: "Remove continueOnFrameError so a missing frame fails and cleans up the incomplete sequence."
+        })
+      ]
+    };
+  }
+  const requestedOutputName = options.outputName ?? `${preset.name}.${extensionForFormat(preset.format)}`;
+  const sequenceOutput = pngSequence ? resolvePngSequenceOutputName(requestedOutputName) : null;
+  if (sequenceOutput !== null && !sequenceOutput.ok) {
+    return { ok: false, errors: [sequenceOutput.error] };
+  }
+  const outputName = sequenceOutput?.name ?? requestedOutputName;
   const outputPath = options.outDir === undefined ? outputName : join(options.outDir, outputName);
   const stillImage = preset.format === "png";
-  const metadataPreset = stillImage ? preset : withEffectiveCodecs(preset);
+  const browserImageOutput = stillImage || pngSequence;
+  const metadataPreset = browserImageOutput ? preset : withEffectiveCodecs(preset);
   const requestedRenderMode = options.renderMode ?? "browser-overlay";
-  const renderMode: ResolvedRenderCompositionMode = stillImage
+  const renderMode: ResolvedRenderCompositionMode = browserImageOutput
     ? "browser-overlay"
     : requestedRenderMode === "auto"
       ? getDirectRenderSupport(view).ok ? "ffmpeg-direct" : "browser-overlay"
@@ -152,6 +173,8 @@ export async function renderComposition(
     await mkdir(dirname(outputPath), { recursive: true });
     const ffmpegRunner = options.ffmpegRunner ?? createFfmpegRunner();
     let browserDriver: BrowserDriver | undefined;
+    let sequenceChecksum: RenderChecksum | undefined;
+    let outputPattern: string | undefined;
 
     if (stillImage) {
       // Still images bypass ffmpeg entirely: capture one frame and write the
@@ -179,6 +202,34 @@ export async function renderComposition(
         });
       }
       await writeFile(outputPath, bytes);
+    } else if (pngSequence) {
+      await createPngSequenceDirectory(outputPath);
+      browserDriver = options.driver ?? new PlaywrightDriver();
+      const hash = createHash("sha256");
+      let bytes = 0;
+      outputPattern = join(outputPath, "frame-%05d.png");
+      const captureStart = performance.now();
+      try {
+        const captureResult = await captureFrames({
+          driver: browserDriver,
+          composition: withStillImageBackground(view, preset),
+          parallelism: options.captureParallelism ?? defaultCaptureParallelism(),
+          continueOnFrameError: options.continueOnFrameError === true,
+          onFrame: async (capture) => {
+            hash.update(capture.bytes);
+            bytes += capture.bytes.byteLength;
+            await writeFile(join(outputPath, pngSequenceFrameName(capture.frame)), capture.bytes);
+          }
+        });
+        captureMs = performance.now() - captureStart;
+        browserOpenMs = captureResult.openMs;
+        captureEvaluateMs = captureResult.evaluateMs;
+        captureScreenshotMs = captureResult.screenshotMs;
+        sequenceChecksum = { algorithm: "sha256", value: hash.digest("hex"), bytes };
+      } catch (error) {
+        await rm(outputPath, { recursive: true, force: true });
+        throw error;
+      }
     } else if (renderMode === "ffmpeg-direct") {
       const args = assembleDirectRenderCommand({ view, preset, outputPath });
       const encodeStart = performance.now();
@@ -243,7 +294,7 @@ export async function renderComposition(
     }
 
     const checksumStart = performance.now();
-    const checksum = await sha256File(outputPath);
+    const checksum = sequenceChecksum ?? await sha256File(outputPath);
     const checksumMs = performance.now() - checksumStart;
 
     const metadata = createRenderMetadata({
@@ -252,7 +303,7 @@ export async function renderComposition(
       outputName,
       outputPath,
       checksums: checksum,
-      ffmpegVersion: options.ffmpegVersion ?? (stillImage ? "not-used" : "ffmpeg-static"),
+      ffmpegVersion: options.ffmpegVersion ?? (browserImageOutput ? "not-used" : "ffmpeg-static"),
       chromiumRevision: options.chromiumRevision ?? (renderMode === "ffmpeg-direct" ? "not-used" : chromiumRevisionOf(browserDriver))
     });
 
@@ -267,7 +318,7 @@ export async function renderComposition(
       checksumMs,
       totalMs: performance.now() - totalStart
     };
-    return { ok: true, outputPath, metadata, timings };
+    return { ok: true, outputPath, ...(outputPattern !== undefined && { outputPattern }), metadata, timings };
   } catch (error) {
     return { ok: false, errors: [toKavioError(error)] };
   }
@@ -291,28 +342,60 @@ async function sha256File(path: string): Promise<RenderChecksum> {
 }
 
 function validateRenderablePreset(preset: KavioExportPreset, compositionBackground: string | undefined): KavioError | null {
-  if (preset.format === "png-sequence") {
-    return renderError({
-      code: "RENDER_FAILED",
-      stage: "render",
-      path: "exports.0.format",
-      message: `kavio render does not yet support ${preset.format} exports.`,
-      hint: "Use gif, mp4, webm, or mov for the current render pipeline."
-    });
-  }
-
   const background = preset.background ?? compositionBackground;
-  if (background === "transparent" && preset.format !== "webm" && preset.format !== "mov" && preset.format !== "png") {
+  if (background === "transparent" && preset.format !== "webm" && preset.format !== "mov" && preset.format !== "png-sequence" && preset.format !== "png") {
     return renderError({
       code: "RENDER_FAILED",
       stage: "render",
       path: "exports.0.background",
       message: `kavio render does not support transparent ${preset.format} outputs.`,
-      hint: "Use transparent webm, mov, or png exports for alpha output."
+      hint: "Use transparent webm, mov, png-sequence, or png exports for alpha output."
     });
   }
 
   return null;
+}
+
+function resolvePngSequenceOutputName(outputName: string): { ok: true; name: string } | { ok: false; error: KavioError } {
+  const name = outputName.toLowerCase().endsWith(".zip") ? outputName.slice(0, -4) : outputName;
+  if (name.length === 0 || name === "." || name === ".." || /[\\/]/u.test(name)) {
+    return {
+      ok: false,
+      error: renderError({
+        code: "RENDER_FAILED",
+        stage: "render",
+        path: "outputName",
+        message: "png-sequence outputName must name one new directory and cannot contain path separators.",
+        hint: "Pass the parent directory with outDir and a directory name such as frames with outputName."
+      })
+    };
+  }
+  return { ok: true, name };
+}
+
+async function createPngSequenceDirectory(outputPath: string): Promise<void> {
+  try {
+    await mkdir(outputPath);
+  } catch (error) {
+    if (isNodeError(error) && error.code === "EEXIST") {
+      throw renderError({
+        code: "RENDER_FAILED",
+        stage: "render",
+        path: "outputName",
+        message: `png-sequence output path already exists: ${outputPath}`,
+        hint: "Choose a new outputName or remove the existing directory before rendering."
+      });
+    }
+    throw error;
+  }
+}
+
+function pngSequenceFrameName(frame: number): string {
+  return `frame-${String(frame).padStart(5, "0")}.png`;
+}
+
+function isNodeError(error: unknown): error is Error & { code: string } {
+  return error instanceof Error && "code" in error && typeof error.code === "string";
 }
 
 /**

@@ -898,22 +898,22 @@ const pngSequenceDoc: KavioDocument = {
   ...templateDoc,
   exports: [{ name: "frames", format: "png-sequence", width: 1080, height: 1920 }]
 };
-const unsupportedDriver = new FakeBrowserDriver();
-const unsupportedResult = await renderComposition(pngSequenceDoc, {
+const pngSequenceDriver = new FakeBrowserDriver();
+const pngSequenceResult = await renderComposition(pngSequenceDoc, {
   preset: "frames",
   propValues: { headline: "Frames" },
   outDir,
-  driver: unsupportedDriver,
+  driver: pngSequenceDriver,
   ffmpegRunner: createFakeFfmpegRunner()
 });
-assert(unsupportedResult.ok === false, "unsupported export formats fail before rendering");
-if (!unsupportedResult.ok) {
-  assert(
-    unsupportedResult.errors.some((error) => error.message.includes("does not yet support png-sequence")),
-    "unsupported export format returns a clear render error"
-  );
+assert(pngSequenceResult.ok === true, "png-sequence export renders with fakes");
+if (pngSequenceResult.ok) {
+  assert(pngSequenceResult.outputPath.endsWith("frames"), "png-sequence output path names its directory");
+  assert(pngSequenceResult.outputPattern?.endsWith("frame-%05d.png") === true, "png-sequence exposes its numbered output pattern");
+  assertEqual(pngSequenceResult.metadata.checksums[0]?.bytes, 48, "png-sequence checksum covers all frame bytes");
+  assertEqual(pngSequenceResult.timings.encodeMs, 0, "png-sequence skips encoding");
 }
-assertEqual(unsupportedDriver.renderedFrames.length, 0, "unsupported export format does not capture frames");
+assertEqual(pngSequenceDriver.renderedFrames.length, 6, "png-sequence captures every frame");
 
 const gifDoc: KavioDocument = {
   ...templateDoc,

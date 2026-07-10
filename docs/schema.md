@@ -285,9 +285,11 @@ layer layout overrides.
 
 Formats are `mp4`, `webm`, `mov`, `gif`, `png-sequence`, and `png`. The `png`
 format renders a single still image: the optional `frame` field selects which
-composition frame to capture (default 0, validated against `durationFrames`),
-codecs do not apply, and `background: "transparent"` produces a real alpha
-channel.
+composition frame to capture (default 0, validated against `durationFrames`).
+The `png-sequence` format renders every composition frame into a directory as
+zero-based, five-digit files (`frame-00000.png`, `frame-00001.png`, ...). For
+both PNG formats codecs do not apply, and `background: "transparent"` preserves
+the alpha channel.
 
 The builder SDK provides helpers for common presets:
 

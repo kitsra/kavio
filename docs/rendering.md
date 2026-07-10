@@ -9,11 +9,36 @@ node packages/cli/dist/index.js render examples/basic-json/composition.json
 ```
 
 Supported final formats in the current render pipeline are opaque `mp4`,
-`webm`, `mov`, `gif`, transparent `webm`/`mov`, and still-image `png` (opaque
-or transparent). Still images capture one browser frame (the preset's `frame`,
-default 0) and write the PNG directly with no FFmpeg step, so alpha output
-works out of the box. Schema-valid `png-sequence` outputs are reserved for a
-later archive render path and fail with a clear render error today.
+`webm`, `mov`, `gif`, transparent `webm`/`mov`, still-image `png`, and
+`png-sequence` (both opaque or transparent). Still images capture one browser
+frame (the preset's `frame`, default 0) and write the PNG directly with no
+FFmpeg step. PNG sequences capture every composition frame through the same
+browser path and write each frame directly, without FFmpeg or a full-sequence
+memory buffer.
+
+## PNG Sequences
+
+A `png-sequence` export writes a new directory containing zero-based,
+five-digit files named `frame-00000.png`, `frame-00001.png`, and so on. The API
+result uses `outputPath` for the directory and `outputPattern` for the exact
+`frame-%05d.png` path pattern. Render metadata also points to the directory;
+its SHA-256 checksum covers the ordered concatenation of all captured frame
+bytes, and its byte count is the sequence total. Codecs are `null`, FFmpeg is
+recorded as `not-used`, and `encodeMs` is zero.
+
+The default directory is the preset name under `outDir`. Existing stable batch
+names end in `.zip`; render strips that suffix because the output is a directory,
+not an archive. For example, a batch `outputName` of `001-frames.zip` produces
+`<outDir>/001-frames/`. A custom `outputName` must be one directory name with no
+path separators; use `outDir` for its parent. The destination must not already
+exist, which prevents stale frames and accidental deletion. Failed captures
+remove the incomplete directory, and `continueOnFrameError` is rejected because
+a successful sequence must contain every frame.
+
+CLI text prints `Rendered <outputPath> (browser-overlay)`. CLI JSON returns that
+directory in `outputs[].outputPath`; its `outputs[].outputName` remains the
+stable logical batch name and may retain `.zip` for compatibility. The
+`renderComposition` API additionally returns `outputPattern`.
 
 Video layers compose in two ways: layers that do not overlap in time
 concatenate into the sequential base timeline, and layers overlapping the base
@@ -69,7 +94,7 @@ composition, use the default `browser-overlay` mode.
 The render API records both `requestedRenderMode` and the resolved `renderMode`
 in stage timings. CLI JSON and text output report the resolved mode.
 
-Browser-overlay video renders capture multiple frames concurrently by default
+Browser-overlay video and PNG-sequence renders capture multiple frames concurrently by default
 using `min(4, cores - 1)` pages. Set `captureParallelism` in
 `renderComposition` or `renderBatch`, or pass `--capture-parallelism <n>` to the
 CLI. Values must be positive integers. Batch `concurrency` controls jobs while
