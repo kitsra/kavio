@@ -31,6 +31,7 @@ interface PlaywrightCdpSession {
 interface PlaywrightContext {
   newPage(): Promise<PlaywrightPage>;
   newCDPSession(page: PlaywrightPage): Promise<PlaywrightCdpSession>;
+  close(): Promise<void>;
 }
 
 interface PlaywrightBrowser {
@@ -67,13 +68,65 @@ export interface PlaywrightDriverOptions {
   readyTimeoutMs?: number;
 }
 
+/** Worker-local Chromium pool. Each driver still owns an isolated context and harness. */
+export class PlaywrightSession {
+  private readonly browsers: Promise<PlaywrightBrowser>[] = [];
+  private launches = 0;
+  private closed = false;
+
+  constructor(
+    private readonly options: PlaywrightDriverOptions = {},
+    private readonly launcher: () => Promise<PlaywrightBrowser> = launchBrowser
+  ) {}
+
+  get launchCount(): number {
+    return this.launches;
+  }
+
+  createDriver(): PlaywrightDriver {
+    if (this.closed) {
+      throw new Error("PlaywrightSession.createDriver called after close().");
+    }
+    return new PlaywrightDriver(this.options, this);
+  }
+
+  async browser(index: number): Promise<PlaywrightBrowser> {
+    if (this.closed) {
+      throw new Error("PlaywrightSession browser requested after close().");
+    }
+    let browser = this.browsers[index];
+    if (browser === undefined) {
+      browser = this.launcher().then((launched) => {
+        this.launches += 1;
+        return launched;
+      });
+      this.browsers[index] = browser;
+    }
+    return browser;
+  }
+
+  async close(): Promise<void> {
+    if (this.closed) {
+      return;
+    }
+    this.closed = true;
+    const browsers = await Promise.allSettled(this.browsers);
+    const closes = await Promise.allSettled(
+      browsers.flatMap((result) => result.status === "fulfilled" ? [result.value.close()] : [])
+    );
+    const failure = closes.find((result): result is PromiseRejectedResult => result.status === "rejected");
+    if (failure !== undefined) {
+      throw failure.reason;
+    }
+  }
+}
+
 /**
  * Concrete BrowserDriver backed by Playwright + bundled Chromium. Launches with
  * the deterministic flags, serves the headless harness page, and captures one
  * transparent PNG per frame. Real binaries are exercised only in the gated e2e.
  */
 export class PlaywrightDriver implements BrowserDriver {
-  private browser: PlaywrightBrowser | null = null;
   private context: PlaywrightContext | null = null;
   private page: PlaywrightPage | null = null;
   private cdp: PlaywrightCdpSession | null = null;
@@ -81,43 +134,37 @@ export class PlaywrightDriver implements BrowserDriver {
   private viewport: BrowserViewport | null = null;
   private readonly deviceScaleFactor: number;
   private readonly readyTimeoutMs: number;
+  private readonly sharedSession: PlaywrightSession | undefined;
+  private session: PlaywrightSession | null = null;
+  private forkIndex = 1;
+  private observedLaunches = 0;
 
   /** Chromium version string, available after open() for render metadata. */
   chromiumVersion: string | null = null;
 
-  constructor(options: PlaywrightDriverOptions = {}) {
+  constructor(options: PlaywrightDriverOptions = {}, session?: PlaywrightSession) {
     this.deviceScaleFactor = options.deviceScaleFactor ?? 1;
     this.readyTimeoutMs = options.readyTimeoutMs ?? 30_000;
+    this.sharedSession = session;
+  }
+
+  /** Chromium launches observed by this driver's session, for non-wall-clock timing diagnostics. */
+  get browserLaunches(): number {
+    return this.session?.launchCount ?? this.sharedSession?.launchCount ?? this.observedLaunches;
   }
 
   async open(composition: KavioDocument, options: BrowserOpenOptions = {}): Promise<void> {
     const viewport = options.viewport ?? createBrowserViewport(composition, this.deviceScaleFactor);
     this.viewport = viewport;
 
-    const chromium = await loadChromium();
-    try {
-      this.browser = await chromium.launch({
-        headless: DEFAULT_CHROMIUM_LAUNCH_OPTIONS.headless,
-        args: DEFAULT_CHROMIUM_LAUNCH_OPTIONS.args
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      if (missingBrowserExecutable(message)) {
-        throw renderError({
-          code: "BINARY_MISSING",
-          stage: "render",
-          message: "Playwright Chromium is not installed for Kavio rendering.",
-          hint: "Install render browser binaries with 'corepack pnpm run install:render-browsers'."
-        });
-      }
-      throw renderError({
-        code: "RENDER_FAILED",
-        stage: "render",
-        message: `Failed to launch Playwright Chromium: ${message}`
-      });
-    }
-    this.chromiumVersion = this.browser.version();
-    this.context = await this.browser.newContext({
+    this.session = this.sharedSession ?? new PlaywrightSession({
+      deviceScaleFactor: this.deviceScaleFactor,
+      readyTimeoutMs: this.readyTimeoutMs
+    });
+    this.forkIndex = 1;
+    const browser = await this.session.browser(0);
+    this.chromiumVersion = browser.version();
+    this.context = await browser.newContext({
       viewport: { width: viewport.width, height: viewport.height },
       deviceScaleFactor: viewport.deviceScaleFactor
     });
@@ -142,59 +189,74 @@ export class PlaywrightDriver implements BrowserDriver {
   }
 
   /**
-   * Launch a sibling Chromium process against this driver's harness server,
-   * ready to render frames for the same composition. Chromium serializes
-   * screenshot capture inside one browser process, so true capture
-   * parallelism needs one process per worker; the harness server and its
-   * composition stay owned by this driver.
+   * Open a sibling context against this driver's harness server. The session
+   * assigns one retained Chromium process per capture worker because Chromium
+   * serializes screenshot capture inside one process.
    */
   async fork(): Promise<BrowserDriver> {
-    if (this.server === null || this.viewport === null) {
+    const { server, session, viewport } = this;
+    if (server === null || session === null || viewport === null) {
       throw renderError({
         code: "RENDER_FAILED",
         stage: "render",
         message: "PlaywrightDriver.fork called before open()."
       });
     }
-    const chromium = await loadChromium();
-    const browser = await chromium.launch({
-      headless: DEFAULT_CHROMIUM_LAUNCH_OPTIONS.headless,
-      args: DEFAULT_CHROMIUM_LAUNCH_OPTIONS.args
-    });
+    const browserIndex = this.forkIndex;
+    this.forkIndex += 1;
+    const browser = await session.browser(browserIndex);
+    let context: PlaywrightContext | null = null;
     try {
-      const context = await browser.newContext({
-        viewport: { width: this.viewport.width, height: this.viewport.height },
-        deviceScaleFactor: this.viewport.deviceScaleFactor
+      context = await browser.newContext({
+        viewport: { width: viewport.width, height: viewport.height },
+        deviceScaleFactor: viewport.deviceScaleFactor
       });
       const page = await context.newPage();
-      await page.goto(this.server.url);
+      await page.goto(server.url);
       await page.waitForFunction("window.__kavioReady === true", undefined, { timeout: this.readyTimeoutMs });
       const cdp = await createFastScreenshotSession(context, page);
-      return new PlaywrightForkDriver(browser, page, cdp, this.viewport);
+      return new PlaywrightForkDriver(context, page, cdp, viewport);
     } catch (error) {
-      await browser.close();
+      await context?.close();
       throw error;
     }
   }
 
   async close(): Promise<void> {
-    try {
-      await this.browser?.close();
-    } finally {
-      await this.server?.close();
-    }
-    this.browser = null;
+    const context = this.context;
+    const server = this.server;
+    const session = this.session;
     this.context = null;
     this.page = null;
     this.server = null;
     this.viewport = null;
+    this.session = null;
+
+    const jobCleanup = await Promise.allSettled([
+      ...(context === null ? [] : [context.close()]),
+      ...(server === null ? [] : [server.close()])
+    ]);
+    let failure = jobCleanup.find((result): result is PromiseRejectedResult => result.status === "rejected")?.reason;
+    if (session !== null) {
+      this.observedLaunches = session.launchCount;
+    }
+    if (session !== null && this.sharedSession === undefined) {
+      try {
+        await session.close();
+      } catch (error) {
+        failure ??= error;
+      }
+    }
+    if (failure !== undefined) {
+      throw failure;
+    }
   }
 }
 
-/** Fork of a PlaywrightDriver: its own Chromium process on the shared harness server. */
+/** Fork of a PlaywrightDriver: an isolated context on a session worker browser. */
 class PlaywrightForkDriver implements BrowserDriver {
   constructor(
-    private readonly browser: PlaywrightBrowser,
+    private readonly context: PlaywrightContext,
     private readonly page: PlaywrightPage,
     private readonly cdp: PlaywrightCdpSession | null,
     private readonly viewport: BrowserViewport
@@ -213,7 +275,32 @@ class PlaywrightForkDriver implements BrowserDriver {
   }
 
   async close(): Promise<void> {
-    await this.browser.close();
+    await this.context.close();
+  }
+}
+
+async function launchBrowser(): Promise<PlaywrightBrowser> {
+  const chromium = await loadChromium();
+  try {
+    return await chromium.launch({
+      headless: DEFAULT_CHROMIUM_LAUNCH_OPTIONS.headless,
+      args: DEFAULT_CHROMIUM_LAUNCH_OPTIONS.args
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (missingBrowserExecutable(message)) {
+      throw renderError({
+        code: "BINARY_MISSING",
+        stage: "render",
+        message: "Playwright Chromium is not installed for Kavio rendering.",
+        hint: "Install render browser binaries with 'corepack pnpm run install:render-browsers'."
+      });
+    }
+    throw renderError({
+      code: "RENDER_FAILED",
+      stage: "render",
+      message: `Failed to launch Playwright Chromium: ${message}`
+    });
   }
 }
 

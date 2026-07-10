@@ -6,6 +6,7 @@ import { createFfmpegRunner, type FfmpegChildProcess, type FfmpegSpawn } from ".
 import { createFrameByteQueue } from "./frame-stream.js";
 import { renderComposition } from "./render-composition.js";
 import { renderBatch } from "./render-batch.js";
+import { PlaywrightSession } from "./playwright-driver.js";
 import { FakeBrowserDriver, createFakeFfmpegRunner } from "./testing.js";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -999,6 +1000,78 @@ assert(transparentMp4Result.ok === false, "transparent mp4 output fails before r
 assertEqual(transparentMp4Driver.renderedFrames.length, 0, "transparent mp4 output does not capture frames");
 
 // --- render-batch.ts -------------------------------------------------------
+
+let sessionLaunches = 0;
+let sessionBrowserCloses = 0;
+let sessionContextCloses = 0;
+const reusableSession = new PlaywrightSession({}, async () => {
+  sessionLaunches += 1;
+  return {
+    async newContext() {
+      return {
+        async newPage() {
+          return {
+            async goto() {},
+            async evaluate() {},
+            async waitForFunction() {},
+            async screenshot() { return new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]); },
+            async close() {}
+          };
+        },
+        async newCDPSession() {
+          return {
+            async send(method: string) {
+              return method === "Page.captureScreenshot" ? { data: "iVBORw0KGgo=" } : undefined;
+            }
+          };
+        },
+        async close() { sessionContextCloses += 1; }
+      };
+    },
+    version() { return "fake-session-chromium"; },
+    async close() { sessionBrowserCloses += 1; }
+  };
+});
+
+const firstSessionRender = await renderComposition(templateDoc, {
+  preset: "reels",
+  propValues: { headline: "Session A" },
+  outputName: "session-a.mp4",
+  outDir,
+  driver: reusableSession.createDriver(),
+  ffmpegRunner: createFakeFfmpegRunner(),
+  captureParallelism: 3
+});
+const secondSessionRender = await renderComposition(templateDoc, {
+  preset: "reels",
+  propValues: { headline: "Session B" },
+  outputName: "session-b.mp4",
+  outDir,
+  driver: reusableSession.createDriver(),
+  ffmpegRunner: createFakeFfmpegRunner(),
+  captureParallelism: 3
+});
+assert(firstSessionRender.ok && secondSessionRender.ok, "reusable browser session renders isolated jobs");
+if (firstSessionRender.ok && secondSessionRender.ok) {
+  assertEqual(firstSessionRender.timings.browserLaunches, 3, "first session render launches its capture browsers");
+  assertEqual(secondSessionRender.timings.browserLaunches, 0, "compatible next render reuses browser launches without wall-clock assertions");
+}
+assertEqual(sessionLaunches, 3, "session launches once per capture worker rather than once per job");
+assertEqual(sessionContextCloses, 6, "session closes every job and fork context while retaining browsers");
+const failedSessionRender = await renderComposition(templateDoc, {
+  preset: "reels",
+  propValues: { headline: "Session failure" },
+  outputName: "session-failure.mp4",
+  outDir,
+  driver: reusableSession.createDriver(),
+  ffmpegRunner: createFakeFfmpegRunner({ fail: true }),
+  captureParallelism: 3
+});
+assert(failedSessionRender.ok === false, "reusable browser session reports an encode failure");
+assertEqual(sessionLaunches, 3, "failed compatible render still reuses retained browsers");
+assertEqual(sessionContextCloses, 9, "failed render closes every job and fork context");
+await reusableSession.close();
+assertEqual(sessionBrowserCloses, 3, "session closes every retained browser");
 
 const batchTemplate: KavioDocument = {
   ...templateDoc,

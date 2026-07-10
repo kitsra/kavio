@@ -101,6 +101,14 @@ CLI. Values must be positive integers. Batch `concurrency` controls jobs while
 capture parallelism controls browser pages within each job, so their resource
 costs multiply.
 
+Within each batch worker, compatible browser-overlay jobs retain the Chromium
+processes assigned to their capture workers. Every job still receives a fresh
+browser context, page, and render harness, and all retained processes close when
+the batch worker finishes or fails. This avoids paying Chromium startup once per
+row or export without sharing page state between jobs. `timings.browserLaunches`
+reports how many Chromium processes a render launched; a value of `0` on later
+browser-overlay jobs confirms reuse without relying on wall-clock comparisons.
+
 For zoomed stills, the direct renderer reads the image as a single frame and
 lets FFmpeg `zoompan=d=<durationFrames>:fps=<fps>` create the segment. Do not
 loop a still input before `zoompan`; that multiplies segment length and can make

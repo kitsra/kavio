@@ -59,6 +59,8 @@ export interface RenderStageTimings {
   captureMs?: number;
   /** Driver open wall time (browser launch + harness ready) within captureMs. */
   browserOpenMs?: number;
+  /** Chromium processes launched during this render; zero means a batch session reused them. */
+  browserLaunches?: number;
   /** Summed per-frame seek/evaluate time, when the driver reports it. */
   captureEvaluateMs?: number;
   /** Summed per-frame screenshot time, when the driver reports it. */
@@ -166,6 +168,7 @@ export async function renderComposition(
   try {
     let captureMs: number | undefined;
     let browserOpenMs: number | undefined;
+    let browserLaunches: number | undefined;
     let captureEvaluateMs: number | undefined;
     let captureScreenshotMs: number | undefined;
     let encodeMs = 0;
@@ -181,6 +184,7 @@ export async function renderComposition(
       // PNG bytes. The stage paints the effective background in-browser, so
       // opaque and transparent exports both match the preview exactly.
       browserDriver = options.driver ?? new PlaywrightDriver();
+      const launchesBefore = browserLaunchCountOf(browserDriver);
       const captureStart = performance.now();
       const captureResult = await captureFrames({
         driver: browserDriver,
@@ -191,6 +195,7 @@ export async function renderComposition(
       });
       captureMs = performance.now() - captureStart;
       browserOpenMs = captureResult.openMs;
+      browserLaunches = browserLaunchDelta(browserDriver, launchesBefore);
       captureEvaluateMs = captureResult.evaluateMs;
       captureScreenshotMs = captureResult.screenshotMs;
       const bytes = captureResult.captures[0]?.bytes;
@@ -205,6 +210,7 @@ export async function renderComposition(
     } else if (pngSequence) {
       await createPngSequenceDirectory(outputPath);
       browserDriver = options.driver ?? new PlaywrightDriver();
+      const launchesBefore = browserLaunchCountOf(browserDriver);
       const hash = createHash("sha256");
       let bytes = 0;
       outputPattern = join(outputPath, "frame-%05d.png");
@@ -223,6 +229,7 @@ export async function renderComposition(
         });
         captureMs = performance.now() - captureStart;
         browserOpenMs = captureResult.openMs;
+        browserLaunches = browserLaunchDelta(browserDriver, launchesBefore);
         captureEvaluateMs = captureResult.evaluateMs;
         captureScreenshotMs = captureResult.screenshotMs;
         sequenceChecksum = { algorithm: "sha256", value: hash.digest("hex"), bytes };
@@ -241,12 +248,14 @@ export async function renderComposition(
       // the render or round-tripping PNG files through a temp directory.
       const args = assembleRenderCommand({ view, preset, outputPath });
       browserDriver = options.driver ?? new PlaywrightDriver();
+      const captureDriver = browserDriver;
+      const launchesBefore = browserLaunchCountOf(captureDriver);
       const frames = createFrameByteQueue();
 
       const captureStart = performance.now();
       // captureFrames manages browser-context cleanup (open → capture → close).
       const capturePromise = captureFrames({
-        driver: browserDriver,
+        driver: captureDriver,
         composition: view,
         parallelism: options.captureParallelism ?? defaultCaptureParallelism(),
         continueOnFrameError: options.continueOnFrameError === true,
@@ -257,6 +266,7 @@ export async function renderComposition(
         (captureResult) => {
           captureMs = performance.now() - captureStart;
           browserOpenMs = captureResult.openMs;
+          browserLaunches = browserLaunchDelta(captureDriver, launchesBefore);
           captureEvaluateMs = captureResult.evaluateMs;
           captureScreenshotMs = captureResult.screenshotMs;
           frames.end();
@@ -312,6 +322,7 @@ export async function renderComposition(
       renderMode,
       ...(captureMs !== undefined && { captureMs }),
       ...(browserOpenMs !== undefined && { browserOpenMs }),
+      ...(browserLaunches !== undefined && { browserLaunches }),
       ...(captureEvaluateMs !== undefined && { captureEvaluateMs }),
       ...(captureScreenshotMs !== undefined && { captureScreenshotMs }),
       encodeMs,
@@ -333,6 +344,15 @@ function chromiumRevisionOf(driver: BrowserDriver | undefined): string {
     return driver.chromiumVersion;
   }
   return "unknown";
+}
+
+function browserLaunchCountOf(driver: BrowserDriver): number | undefined {
+  return "browserLaunches" in driver && typeof driver.browserLaunches === "number" ? driver.browserLaunches : undefined;
+}
+
+function browserLaunchDelta(driver: BrowserDriver, before: number | undefined): number | undefined {
+  const after = browserLaunchCountOf(driver);
+  return before === undefined || after === undefined ? undefined : after - before;
 }
 
 async function sha256File(path: string): Promise<RenderChecksum> {

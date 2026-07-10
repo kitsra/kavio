@@ -54,7 +54,9 @@ any false claim that the pinned `ffmpeg-static` package provides FFmpeg 8.
 - Renders a single composition/export.
 - Streams `png-sequence` captures to deterministic `frame-%05d.png` files in a
   new output directory without invoking FFmpeg.
-- Expands and renders batch jobs.
+- Expands and renders batch jobs, retaining worker-local Chromium processes
+  across compatible browser-overlay jobs while isolating each job in a fresh
+  browser context and harness.
 
 ## Links
 

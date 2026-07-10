@@ -4,6 +4,11 @@
 
 ### Patch Changes
 
+- Reuse worker-local Chromium processes across compatible browser-overlay batch
+  jobs while creating fresh contexts and harnesses per job. Render timings now
+  include `browserLaunches`, so launch reuse is observable without inferring it
+  from wall-clock duration.
+
 - Add browser-captured `png-sequence` export as deterministic
   `frame-%05d.png` files in a new output directory. Frames write as they are
   captured without FFmpeg or full-sequence buffering, and render results expose
