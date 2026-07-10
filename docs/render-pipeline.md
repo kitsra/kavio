@@ -130,9 +130,35 @@ node scripts/compare-render-videos.mjs production.mp4 kavio.mp4
 ```
 
 Add `--reference-time <seconds>` and `--candidate-time <seconds>` to include
-manual wall-clock render timings. Add `--json <path>` or `--markdown <path>` to
-write a reusable report. The helper uses local `ffprobe` metadata plus FFmpeg
-SSIM/PSNR filters; production-app render scripts stay in their source repos.
+manual wall-clock render timings. The helper uses local `ffprobe` metadata plus
+FFmpeg SSIM/PSNR filters; production-app render scripts stay in their source
+repos.
+
+For a CI quality gate, set explicit whole-video thresholds and write compact
+JSON to stdout:
+
+```bash
+node scripts/compare-render-videos.mjs baseline.mp4 candidate.mp4 \
+  --min-ssim 0.98 --min-psnr 35 --json -
+```
+
+Use repeatable `--frame <seconds>` flags with `--min-frame-ssim` and
+`--min-frame-psnr` to protect important moments independently of aggregate
+video quality:
+
+```bash
+node scripts/compare-render-videos.mjs baseline.mp4 candidate.mp4 \
+  --frame 0.5 --frame 4.25 \
+  --min-ssim 0.98 --min-psnr 35 \
+  --min-frame-ssim 0.99 --min-frame-psnr 38 --json comparison.json
+```
+
+Exit code `0` means all configured thresholds passed, `2` means a quality
+threshold regressed, and `1` means the command or FFmpeg execution failed. JSON
+contains `passed`, a structured `failures` array, thresholds, probes, aggregate
+metrics, and selected-frame metrics. Keep baselines deterministic and choose
+timestamps away from scene cuts; SSIM and PSNR detect pixel differences, not
+whether a visual change was intentional.
 
 ## Remaining MVP Gap
 
