@@ -4,6 +4,16 @@
 
 ### Patch Changes
 
+- Expand FFmpeg-direct image transition tracks beyond fade/crossfade with
+  directional wipe, slide, and push; circular iris and expand-mask; and default
+  clockwise clock-wipe mappings. Unsupported shapes, directions, and easing
+  continue to fall back to browser rendering.
+
+- Preserve browser-rendered transition frames in opaque graphics-only videos
+  by encoding the background-painted Kavio stage as the primary PNG stream.
+  This removes secondary-overlay starvation that could collapse a smooth
+  transition into a hard cut while capture was still producing frames.
+
 - Add deterministic custom HTML frame callbacks to `PlaywrightDriver`, including
   parallel capture forks, for opt-in renderers such as `@kitsra/kavio-react`.
 

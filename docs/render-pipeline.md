@@ -24,6 +24,8 @@ Implemented:
 - Whole-asset and trimmed-range audio loop execution.
 - FFmpeg sidechain ducking.
 - SSIM/PSNR full-video and selected-frame comparison gates.
+- Primary-stream encoding for opaque graphics-only Kavio captures so live PNG
+  production cannot starve FFmpeg framesync and drop transition frames.
 - CLI `render` command.
 - MVP demo rendering through the shared render pipeline.
 
@@ -31,8 +33,8 @@ Current limits:
 
 - Performance measurement against PRD throughput targets and GetPint quality
   baselines.
-- Broader direct-render transition variants beyond the supported linear
-  fade/crossfade path.
+- Quality comparison and careful expansion beyond the direct renderer's linear
+  fade, directional wipe/slide/push, circular iris, and clock-wipe variants.
 
 ## End-To-End Flow
 

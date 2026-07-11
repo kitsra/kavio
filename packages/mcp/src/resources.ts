@@ -126,7 +126,10 @@ const CURRENT_TRANSITION_SUPPORT = Object.fromEntries(
       transparentVideoRender: "stable",
       gifRender: "stable",
       pngSequenceRender: "unsupported",
-      nativeRender: "unsupported"
+      nativeRender: ["fade", "crossfade", "wipe", "slide", "push", "iris", "expandMask", "clockWipe"].includes(transition)
+        ? "stable"
+        : "unsupported",
+      nativeRenderNote: "FFmpeg-direct transition support requires a linear, exactly overlapped, full-frame image transition track; iris and expandMask require a circle shape."
     }
   ])
 );

@@ -69,6 +69,7 @@
           <li>Deterministic PNG-sequence directories with zero-based frame names.</li>
           <li>Thresholded SSIM/PSNR video and selected-frame comparison gates.</li>
           <li>Finite audio looping and FFmpeg sidechain ducking.</li>
+          <li>FFmpeg-direct fade, directional wipe/slide/push, circular iris, and clock-wipe image handoffs.</li>
           <li>MVP demo rendering through the shared render pipeline.</li>
         </ul>
       </section>
@@ -116,6 +117,20 @@
           captions, animated or keyframed layers, and transition participants
           remain frame-dynamic, and composition reloads clear the reused layer
           state.
+        </p>
+        <p>
+          Linear full-frame image transition tracks can stay on FFmpeg-direct
+          for fade/crossfade, directional wipe, slide and push, circular iris
+          and expand-mask, and default clockwise clock-wipe handoffs. Other
+          transition shapes, directions, or easing continue through the
+          browser-overlay renderer for fidelity.
+        </p>
+        <p>
+          Opaque graphics-only browser renders encode the background-painted
+          Kavio stage as the primary PNG stream. This preserves every captured
+          transition frame instead of letting a faster synthetic background
+          advance while a secondary overlay is still being produced. Hybrid
+          source-video and custom React renders retain overlay compositing.
         </p>
       </section>
     </main>

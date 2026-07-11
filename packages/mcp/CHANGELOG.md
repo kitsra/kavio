@@ -1,5 +1,13 @@
 # @kitsra/kavio-mcp
 
+## Unreleased
+
+### Patch Changes
+
+- Report FFmpeg-direct eligibility for linear full-frame image transition tracks
+  using fade/crossfade, directional wipe/slide/push, circular iris/expand-mask,
+  and default clockwise clock-wipe handoffs.
+
 ## 0.4.0
 
 ### Patch Changes

@@ -1,4 +1,4 @@
-import type { KavioDocument } from "@kitsra/kavio-schema";
+import type { KavioDocument, KavioTransitionPresentation } from "@kitsra/kavio-schema";
 import { assembleDirectRenderCommand, assembleRenderCommand, getDirectRenderSupport } from "./assemble-command.js";
 import { renderError, RENDER_ERROR_CODES } from "./errors.js";
 import { createRenderHarnessServer } from "./harness-server.js";
@@ -102,6 +102,15 @@ assert(!piped.includes("overlay-%05d.png"), "piped render does not reference a f
 assert(piped.includes("shortest=0"), "piped overlay does not shorten the timeline when frame capture backpressures");
 assert(piped.includes("[video_out]"), "piped render still maps the composited video stream");
 assertEqual(pipedArgs.filter((arg) => arg === "-filter_complex").length, 1, "piped render emits a single -filter_complex");
+
+const flattenedArgs = assembleRenderCommand({
+  view: graphicsOnlyView,
+  preset: graphicsOnlyView.exports[0]!,
+  flattenedBrowserFrames: true
+}).join(" ");
+assert(flattenedArgs.includes("-f image2pipe -framerate 30 -i -"), "flattened browser render reads captured frames as its primary video");
+assert(!flattenedArgs.includes("color=c="), "flattened browser render does not synthesize a racing background input");
+assert(!flattenedArgs.includes("overlay="), "flattened browser render does not framesync captured transitions as a secondary overlay");
 
 const unsafeBackgroundView: KavioDocument = {
   ...graphicsOnlyView,
@@ -389,6 +398,68 @@ const directImageTransitionArgs = assembleDirectRenderCommand({
 }).join(" ");
 assert(directImageTransitionArgs.includes("xfade=transition=fade:duration=0.066667:offset=0.133333"), "direct image transition track uses FFmpeg xfade");
 assert(!directImageTransitionArgs.includes("concat=n=2:v=1:a=0"), "direct image transition track does not concatenate overlapped stills");
+
+const directTrackTransitionCases: Array<{ presentation: KavioTransitionPresentation; xfade: string }> = [
+  { presentation: { type: "wipe", direction: "right" }, xfade: "wipeleft" },
+  { presentation: { type: "slide", direction: "down" }, xfade: "slidedown" },
+  { presentation: { type: "push", direction: "left" }, xfade: "slideleft" },
+  { presentation: { type: "iris", shape: "circle" }, xfade: "circleopen" },
+  { presentation: { type: "expandMask" }, xfade: "circleopen" },
+  { presentation: { type: "clockWipe" }, xfade: "radial" }
+];
+for (const { presentation, xfade } of directTrackTransitionCases) {
+  const view: KavioDocument = {
+    ...directImageTransitionView,
+    tracks: [{
+      id: "main",
+      clips: [
+        { id: "first", layerId: "first", startFrame: 0, durationFrames: 6 },
+        {
+          id: "second",
+          layerId: "second",
+          startFrame: 4,
+          durationFrames: 6,
+          transitionFromPrevious: {
+            presentation,
+            timing: { type: "tween", durationFrames: 2, easing: "linear" }
+          }
+        }
+      ]
+    }]
+  };
+  assert(getDirectRenderSupport(view).ok, `${presentation.type} image transition is eligible for FFmpeg-direct render`);
+  const args = assembleDirectRenderCommand({
+    view,
+    preset: view.exports[0]!,
+    outputPath: `/tmp/image-direct-${presentation.type}.mp4`
+  }).join(" ");
+  assert(args.includes(`xfade=transition=${xfade}:duration=0.066667:offset=0.133333`), `${presentation.type} maps to FFmpeg ${xfade}`);
+}
+
+const directDiamondIrisView: KavioDocument = {
+  ...directImageTransitionView,
+  tracks: [{
+    id: "main",
+    clips: [
+      { id: "first", layerId: "first", startFrame: 0, durationFrames: 6 },
+      {
+        id: "second",
+        layerId: "second",
+        startFrame: 4,
+        durationFrames: 6,
+        transitionFromPrevious: {
+          presentation: { type: "iris", shape: "diamond" },
+          timing: { type: "tween", durationFrames: 2, easing: "linear" }
+        }
+      }
+    ]
+  }]
+};
+const directDiamondIrisSupport = getDirectRenderSupport(directDiamondIrisView);
+assert(!directDiamondIrisSupport.ok, "diamond iris stays on the browser renderer");
+if (!directDiamondIrisSupport.ok) {
+  assert(directDiamondIrisSupport.reason.includes("circular iris"), "diamond iris reports its direct-render limitation");
+}
 
 const directImageWithEasedTransition: KavioDocument = {
   ...directImageTransitionView,
@@ -1033,6 +1104,7 @@ const htmlSession = new PlaywrightSession({
   async close() {}
 }));
 const htmlDriver = htmlSession.createDriver();
+assertEqual(htmlDriver.usesKavioRenderHarness, false, "custom HTML driver does not claim flattened Kavio stage frames");
 await htmlDriver.open(templateDoc);
 await htmlDriver.renderFrame(2);
 const htmlFork = await htmlDriver.fork();
@@ -1080,13 +1152,16 @@ const reusableSession = new PlaywrightSession({}, async () => {
   };
 });
 
+const firstSessionRunner = createFakeFfmpegRunner();
+const firstSessionDriver = reusableSession.createDriver();
+assertEqual(firstSessionDriver.usesKavioRenderHarness, true, "default Playwright driver identifies Kavio stage captures");
 const firstSessionRender = await renderComposition(templateDoc, {
   preset: "reels",
   propValues: { headline: "Session A" },
   outputName: "session-a.mp4",
   outDir,
-  driver: reusableSession.createDriver(),
-  ffmpegRunner: createFakeFfmpegRunner(),
+  driver: firstSessionDriver,
+  ffmpegRunner: firstSessionRunner,
   captureParallelism: 3
 });
 const secondSessionRender = await renderComposition(templateDoc, {
@@ -1099,6 +1174,8 @@ const secondSessionRender = await renderComposition(templateDoc, {
   captureParallelism: 3
 });
 assert(firstSessionRender.ok && secondSessionRender.ok, "reusable browser session renders isolated jobs");
+assert(!firstSessionRunner.calls[0]?.includes("color=c="), "opaque graphics-only Kavio capture does not race a synthesized FFmpeg background");
+assert(!firstSessionRunner.calls[0]?.includes("overlay="), "opaque graphics-only Kavio capture is the primary encoded video stream");
 if (firstSessionRender.ok && secondSessionRender.ok) {
   assertEqual(firstSessionRender.timings.browserLaunches, 3, "first session render launches its capture browsers");
   assertEqual(secondSessionRender.timings.browserLaunches, 0, "compatible next render reuses browser launches without wall-clock assertions");

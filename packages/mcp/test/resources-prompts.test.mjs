@@ -46,6 +46,9 @@ test("motion support resource exposes transition support and budgets", () => {
   assert.equal(support.transitions.fade.browserPreview, "stable");
   assert.equal(support.transitions.blurDissolve.opaqueVideoRender, "stable");
   assert.equal(support.transitions.cameraWhip.browserPreview, "stable");
+  assert.equal(support.transitions.wipe.nativeRender, "stable");
+  assert.equal(support.transitions.iris.nativeRender, "stable");
+  assert.equal(support.transitions.cameraWhip.nativeRender, "unsupported");
   assert.equal(support.transitionSeries.coreEvaluation, "stable");
   assert.equal(support.transitionSeries.browserPreview, "stable");
   assert.equal(support.transitionSeries.opaqueVideoRender, "stable");

@@ -246,9 +246,11 @@ export async function renderComposition(
       // Overlay frames stream straight into ffmpeg stdin so capture and encode
       // overlap; the bounded queue applies backpressure instead of buffering
       // the render or round-tripping PNG files through a temp directory.
-      const args = assembleRenderCommand({ view, preset, outputPath });
       browserDriver = options.driver ?? new PlaywrightDriver();
       const captureDriver = browserDriver;
+      const flattenedBrowserFrames = canFlattenBrowserFrames(captureDriver, view, preset);
+      const captureView = flattenedBrowserFrames ? withStillImageBackground(view, preset) : view;
+      const args = assembleRenderCommand({ view, preset, outputPath, flattenedBrowserFrames });
       const launchesBefore = browserLaunchCountOf(captureDriver);
       const frames = createFrameByteQueue();
 
@@ -256,7 +258,7 @@ export async function renderComposition(
       // captureFrames manages browser-context cleanup (open → capture → close).
       const capturePromise = captureFrames({
         driver: captureDriver,
-        composition: view,
+        composition: captureView,
         parallelism: options.captureParallelism ?? defaultCaptureParallelism(),
         continueOnFrameError: options.continueOnFrameError === true,
         onFrame: async (capture) => {
@@ -430,6 +432,16 @@ function withStillImageBackground(view: KavioDocument, preset: KavioExportPreset
     return view;
   }
   return { ...view, exports: [{ ...first, background }, ...rest] };
+}
+
+function canFlattenBrowserFrames(driver: BrowserDriver, view: KavioDocument, preset: KavioExportPreset): boolean {
+  const background = preset.background ?? view.composition.background ?? "#000000";
+  return (
+    driver instanceof PlaywrightDriver &&
+    driver.usesKavioRenderHarness &&
+    background !== "transparent" &&
+    !view.layers.some((layer) => layer.type === "video")
+  );
 }
 
 function toKavioError(error: unknown): KavioError {

@@ -72,9 +72,10 @@ node packages/cli/dist/index.js render composition.json --render-mode ffmpeg-dir
 - Image-only compositions where every image layer is full-frame, does not use
   `fit: "none"`, and either is contiguous or is represented by one transition
   track covering the full duration.
-- Transition-track image handoffs only when the overlap exactly matches a
-  linear `fade` / `crossfade` `transitionFromPrevious`; FFmpeg `xfade` performs
-  the blend.
+- Transition-track image handoffs when the overlap exactly matches a linear
+  `transitionFromPrevious`. FFmpeg `xfade` supports `fade`, `crossfade`,
+  directional `wipe`, `slide`, and `push`, circular `iris` / `expandMask`, and
+  the default clockwise `clockWipe`.
 - Optional image-layer `transitionIn` / `transitionOut` when the transition type
   is `fade`, the timing is linear, and `durationFrames` is present.
 - Optional image-layer `keyframes.scale` when it describes a simple linear
@@ -86,10 +87,18 @@ overlapped `transitionFromPrevious` clips. Adjacent layer `transitionOut` /
 entrances or exits, but they do not create the smoother FFmpeg `xfade` blend and
 can be slower for long still-image reels.
 
-It intentionally rejects other image keyframes, non-fade transitions, non-linear
-timing, ambiguous overlaps, masks, opacity changes, mixed image/text/shape
-layouts, `fit: "none"`, and other browser-only features. If it rejects a
-composition, use the default `browser-overlay` mode.
+Opaque graphics-only browser renders paint the effective background into the
+captured Kavio stage and encode that PNG stream as the primary video. This keeps
+FFmpeg from advancing a synthetic background ahead of a slower secondary
+overlay stream, which previously could collapse intermediate transition frames
+into a hard cut. Hybrid renders with source video and custom HTML/React drivers
+retain explicit overlay compositing.
+
+It intentionally rejects other image keyframes, unlisted transitions,
+non-linear timing, diamond iris masks, non-default clock-wipe directions,
+ambiguous overlaps, masks, opacity changes, mixed image/text/shape layouts,
+`fit: "none"`, and other browser-only features. If it rejects a composition,
+use the default `browser-overlay` mode.
 
 The render API records both `requestedRenderMode` and the resolved `renderMode`
 in stage timings. CLI JSON and text output report the resolved mode.

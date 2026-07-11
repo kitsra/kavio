@@ -51,8 +51,12 @@ any false claim that the pinned `ffmpeg-static` package provides FFmpeg 8.
 - Provides `PlaywrightDriver` for browser frame capture.
 - Supports deterministic custom HTML frame callbacks, used by
   `@kitsra/kavio-react` for opt-in component rendering.
+- Encodes opaque graphics-only Kavio stage captures as the primary video stream
+  so live browser transitions are not dropped by FFmpeg framesync.
 - Resolves FFmpeg binaries.
 - Assembles render commands.
+- Maps linear full-frame image transition tracks to FFmpeg-direct fade,
+  directional wipe/slide/push, circular iris, and clock-wipe filters.
 - Renders a single composition/export.
 - Streams `png-sequence` captures to deterministic `frame-%05d.png` files in a
   new output directory without invoking FFmpeg.

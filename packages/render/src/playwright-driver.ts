@@ -165,6 +165,11 @@ export class PlaywrightDriver implements BrowserDriver {
     return this.session?.launchCount ?? this.sharedSession?.launchCount ?? this.observedLaunches;
   }
 
+  /** True when frames come from Kavio's stage, which can paint an opaque composition background. */
+  get usesKavioRenderHarness(): boolean {
+    return this.renderHtmlFrame === undefined;
+  }
+
   async open(composition: KavioDocument, options: BrowserOpenOptions = {}): Promise<void> {
     const viewport = options.viewport ?? createBrowserViewport(composition, this.deviceScaleFactor);
     this.viewport = viewport;
