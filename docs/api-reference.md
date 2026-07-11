@@ -71,6 +71,7 @@ Layer helpers:
 
 - `clip(id, options)`
 - `videoLayer(id, options)`
+- `pictureInPicture(id, options)`
 - `image(id, options)`
 - `text(id, options)`
 - `shape(id, options)`

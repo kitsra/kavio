@@ -259,6 +259,27 @@ composition
       </section>
 
       <section class="content-section">
+        <h2>Picture In Picture</h2>
+        <p>
+          Add the full-frame video first, then use
+          <code>pictureInPicture(...)</code> for a responsive overlapping inset.
+          Choose a corner with <code>placement</code> and tune
+          <code>widthPercent</code>, <code>insetPercent</code>, and
+          <code>aspectRatio</code>. The inset defaults to muted playback and
+          elevated stacking; mix its audio only through an explicit audio track.
+        </p>
+        <pre><code>pictureInPicture("guest", {
+  asset: guestVideo,
+  startFrame: 30,
+  durationFrames: 240,
+  placement: "bottom-right",
+  widthPercent: 30,
+  insetPercent: 4,
+  aspectRatio: 4 / 3
+});</code></pre>
+      </section>
+
+      <section class="content-section">
         <h2>Motion</h2>
         <p>
           Kavio supports timeline-safe motion through frame-based timing,

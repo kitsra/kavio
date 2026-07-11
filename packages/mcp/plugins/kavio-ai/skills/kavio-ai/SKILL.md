@@ -134,3 +134,13 @@ job, follow its machine-readable `renderMode` and `reason`: `ffmpeg-direct`
 arguments skip browser capture, while `browser-overlay` arguments require the
 normal browser frame path. Prefer this per-job result over the base CLI inspect
 summary when both are available.
+
+## Picture In Picture
+
+For TypeScript authoring, add the full-frame base video first and create the
+overlapping inset with `pictureInPicture(...)` from `@kitsra/kavio-builder`.
+Choose a corner with `placement`, then tune `widthPercent`, `insetPercent`, and
+`aspectRatio`; the helper defaults to a muted source and elevated stacking.
+Keep PiP audio explicit as a Kavio audio track so two video sources are not
+mixed accidentally. In raw JSON, use an overlapping video layer with
+`position`, `anchor`, `size`, and `z`.

@@ -45,7 +45,10 @@ concatenate into the sequential base timeline, and layers overlapping the base
 become picture-in-picture planes — scaled to the layer `size`, positioned at
 its resolved top-left, visible only within their frame window, stacked in
 document order under the browser graphics overlay. Pip position is static per
-layer today.
+layer today. The builder's `pictureInPicture(...)` helper creates responsive
+corner geometry with percentage units, a muted source, and elevated stacking;
+raw JSON can continue to specify `position`, `anchor`, `size`, and `z`
+directly. PiP audio is mixed only when it is declared as an audio track.
 
 ## Render Modes
 

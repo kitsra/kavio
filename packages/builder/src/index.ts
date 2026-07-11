@@ -155,6 +155,18 @@ export interface VideoLayerOptions extends CommonLayerOptions {
   playbackRate?: number;
 }
 
+export type PictureInPicturePlacement = "top-left" | "top-right" | "bottom-left" | "bottom-right";
+
+export interface PictureInPictureOptions extends VideoLayerOptions {
+  placement?: PictureInPicturePlacement;
+  /** Width as a percentage of the composition width. Default 32. */
+  widthPercent?: number;
+  /** Distance from the selected edges as a percentage of each canvas axis. Default 3. */
+  insetPercent?: number;
+  /** Width divided by height. Default 16 / 9. */
+  aspectRatio?: number;
+}
+
 export interface ImageLayerOptions extends CommonLayerOptions {
   asset: AssetReference | string;
   fit?: Fit;
@@ -944,6 +956,42 @@ export function videoLayer(id: string, options: VideoLayerOptions): LayerBuilder
   return clip(id, options);
 }
 
+export function pictureInPicture(id: string, options: PictureInPictureOptions): LayerBuilder {
+  const {
+    placement = "top-right",
+    widthPercent = 32,
+    insetPercent = 3,
+    aspectRatio = 16 / 9,
+    ...layerOptions
+  } = options;
+  assertOptionalRange(widthPercent, "picture-in-picture widthPercent", 1, 100);
+  assertOptionalRange(insetPercent, "picture-in-picture insetPercent", 0, 49);
+  assertOptionalPositiveNumber(aspectRatio, "picture-in-picture aspectRatio");
+
+  const heightPercent = widthPercent / aspectRatio;
+  if (heightPercent > 100) {
+    throw new RangeError("picture-in-picture height must not exceed 100% of the composition width.");
+  }
+  const left = placement.endsWith("left");
+  const top = placement.startsWith("top");
+
+  return videoLayer(id, {
+    fit: "cover",
+    muted: true,
+    z: 100,
+    position: {
+      x: percentUnit(left ? insetPercent : 100 - insetPercent, "w"),
+      y: percentUnit(top ? insetPercent : 100 - insetPercent, "h")
+    },
+    anchor: placement,
+    size: {
+      width: percentUnit(widthPercent, "w"),
+      height: percentUnit(heightPercent, "w")
+    },
+    ...layerOptions
+  });
+}
+
 export function image(id: string, options: ImageLayerOptions): LayerBuilder {
   return buildLayer(id, "image", options);
 }
@@ -983,6 +1031,7 @@ export function track(id: string, clips: readonly TrackClipDefinition[] = []): T
 export const layers = {
   video: videoLayer,
   clip,
+  pictureInPicture,
   image,
   text,
   shape,
@@ -2047,6 +2096,10 @@ function buildLayer(id: string, type: LayerType, options: CommonLayerOptions): L
   }
 
   return new LayerBuilder(layer);
+}
+
+function percentUnit(value: number, axis: "w" | "h"): `${number}%w` | `${number}%h` {
+  return `${Number(value.toFixed(6))}%${axis}` as `${number}%w` | `${number}%h`;
 }
 
 function transitionDefinition(type: TransitionType, options: TransitionOptions): TransitionDefinition {

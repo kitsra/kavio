@@ -33,6 +33,21 @@ The builder includes layer helpers, asset helpers, prop references, keyframes,
 native transitions, camera helpers, cinematic helpers, text motion helpers, and
 social export presets.
 
+Create a responsive video inset with `pictureInPicture(...)`:
+
+```ts
+import { pictureInPicture } from "@kitsra/kavio-builder";
+
+pictureInPicture("guest", {
+  asset: guestVideo,
+  startFrame: 30,
+  durationFrames: 240,
+  placement: "bottom-right",
+  widthPercent: 30,
+  aspectRatio: 4 / 3
+});
+```
+
 ## Links
 
 - Repository: https://github.com/kitsra/kavio

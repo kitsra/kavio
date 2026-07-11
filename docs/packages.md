@@ -120,6 +120,7 @@ Capabilities include:
 - `video(...)` composition builder.
 - Asset helpers for video, image, audio, and font assets.
 - Layer helpers for video, image, text, shape, and captions.
+- Responsive `pictureInPicture(...)` authoring for overlapping video layers.
 - `prop(...)` references and metadata.
 - `keyframes(...)` and easing helpers.
 - Native `transition.*`, `camera.*`, `cinematic.*`, and `textMotion.*`

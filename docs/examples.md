@@ -121,6 +121,8 @@ node packages/cli/dist/index.js render examples/quote-card/composition.json --ex
 
 Video-in-video: two time-overlapping video layers (a full-frame base and a
 picture-in-picture inset) with a text caption composited over both.
+TypeScript authors can produce the inset geometry with the builder's
+`pictureInPicture(...)` helper; this fixture retains raw JSON for CLI testing.
 
 ```bash
 node packages/cli/dist/index.js validate examples/video-pip/composition.json
