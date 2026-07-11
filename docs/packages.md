@@ -188,6 +188,20 @@ Capabilities include:
 - `renderBatch(...)` for prop rows times export presets.
 - Test fakes for binary-free orchestration coverage.
 
+## @kitsra/kavio-react
+
+Owns opt-in React static-markup frame rendering.
+
+Capabilities include:
+
+- `useCurrentFrame()` and `useVideoConfig()` frame hooks.
+- `createReactFrameRenderer(...)` for deterministic HTML generation.
+- `createReactPlaywrightDriver(...)` for capture and video encoding through the
+  standard render pipeline.
+
+Use this package when component authoring is useful. Kavio JSON remains the
+timeline and media contract, and React rendering must use `browser-overlay`.
+
 This package is the only workspace package that should launch Chromium or spawn
 FFmpeg.
 

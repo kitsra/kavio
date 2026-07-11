@@ -49,6 +49,8 @@ any false claim that the pinned `ffmpeg-static` package provides FFmpeg 8.
 ## What It Does
 
 - Provides `PlaywrightDriver` for browser frame capture.
+- Supports deterministic custom HTML frame callbacks, used by
+  `@kitsra/kavio-react` for opt-in component rendering.
 - Resolves FFmpeg binaries.
 - Assembles render commands.
 - Renders a single composition/export.

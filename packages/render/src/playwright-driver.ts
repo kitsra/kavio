@@ -19,6 +19,7 @@ import { createRenderHarnessServer, type RenderHarnessServer } from "./harness-s
 interface PlaywrightPage {
   goto(url: string): Promise<unknown>;
   evaluate(expression: string): Promise<unknown>;
+  setContent(html: string): Promise<unknown>;
   waitForFunction(expression: string, arg?: unknown, options?: { timeout?: number }): Promise<unknown>;
   screenshot(options?: { type?: "png"; omitBackground?: boolean }): Promise<Uint8Array>;
   close(): Promise<void>;
@@ -66,7 +67,13 @@ async function loadChromium(): Promise<PlaywrightChromium> {
 export interface PlaywrightDriverOptions {
   deviceScaleFactor?: number;
   readyTimeoutMs?: number;
+  /** Render deterministic body markup for a frame instead of using Kavio's DOM harness. */
+  renderHtmlFrame?: HtmlFrameRenderer;
+  /** CSS installed once for custom HTML frame rendering. */
+  htmlStyles?: string;
 }
+
+export type HtmlFrameRenderer = (frame: number, composition: KavioDocument) => string | Promise<string>;
 
 /** Worker-local Chromium pool. Each driver still owns an isolated context and harness. */
 export class PlaywrightSession {
@@ -134,10 +141,13 @@ export class PlaywrightDriver implements BrowserDriver {
   private viewport: BrowserViewport | null = null;
   private readonly deviceScaleFactor: number;
   private readonly readyTimeoutMs: number;
+  private readonly renderHtmlFrame: HtmlFrameRenderer | undefined;
+  private readonly htmlStyles: string;
   private readonly sharedSession: PlaywrightSession | undefined;
   private session: PlaywrightSession | null = null;
   private forkIndex = 1;
   private observedLaunches = 0;
+  private composition: KavioDocument | null = null;
 
   /** Chromium version string, available after open() for render metadata. */
   chromiumVersion: string | null = null;
@@ -145,6 +155,8 @@ export class PlaywrightDriver implements BrowserDriver {
   constructor(options: PlaywrightDriverOptions = {}, session?: PlaywrightSession) {
     this.deviceScaleFactor = options.deviceScaleFactor ?? 1;
     this.readyTimeoutMs = options.readyTimeoutMs ?? 30_000;
+    this.renderHtmlFrame = options.renderHtmlFrame;
+    this.htmlStyles = options.htmlStyles ?? "";
     this.sharedSession = session;
   }
 
@@ -156,6 +168,7 @@ export class PlaywrightDriver implements BrowserDriver {
   async open(composition: KavioDocument, options: BrowserOpenOptions = {}): Promise<void> {
     const viewport = options.viewport ?? createBrowserViewport(composition, this.deviceScaleFactor);
     this.viewport = viewport;
+    this.composition = composition;
 
     this.session = this.sharedSession ?? new PlaywrightSession({
       deviceScaleFactor: this.deviceScaleFactor,
@@ -170,9 +183,13 @@ export class PlaywrightDriver implements BrowserDriver {
     });
     this.page = await this.context.newPage();
 
-    this.server = await createRenderHarnessServer({ composition });
-    await this.page.goto(this.server.url);
-    await this.page.waitForFunction("window.__kavioReady === true", undefined, { timeout: this.readyTimeoutMs });
+    if (this.renderHtmlFrame === undefined) {
+      this.server = await createRenderHarnessServer({ composition });
+      await this.page.goto(this.server.url);
+      await this.page.waitForFunction("window.__kavioReady === true", undefined, { timeout: this.readyTimeoutMs });
+    } else {
+      await this.page.setContent(createHtmlShell(this.htmlStyles));
+    }
     this.cdp = await createFastScreenshotSession(this.context, this.page);
   }
 
@@ -185,7 +202,10 @@ export class PlaywrightDriver implements BrowserDriver {
       });
     }
 
-    return renderFrameOnPage(this.page, this.cdp, this.viewport, frame, options);
+    const prepareFrame = this.renderHtmlFrame === undefined
+      ? undefined
+      : () => prepareHtmlFrame(this.page!, this.renderHtmlFrame!(frame, this.composition!), this.readyTimeoutMs);
+    return renderFrameOnPage(this.page, this.cdp, this.viewport, frame, options, prepareFrame);
   }
 
   /**
@@ -194,8 +214,8 @@ export class PlaywrightDriver implements BrowserDriver {
    * serializes screenshot capture inside one process.
    */
   async fork(): Promise<BrowserDriver> {
-    const { server, session, viewport } = this;
-    if (server === null || session === null || viewport === null) {
+    const { server, session, viewport, composition } = this;
+    if (session === null || viewport === null || composition === null || (this.renderHtmlFrame === undefined && server === null)) {
       throw renderError({
         code: "RENDER_FAILED",
         stage: "render",
@@ -212,10 +232,23 @@ export class PlaywrightDriver implements BrowserDriver {
         deviceScaleFactor: viewport.deviceScaleFactor
       });
       const page = await context.newPage();
-      await page.goto(server.url);
-      await page.waitForFunction("window.__kavioReady === true", undefined, { timeout: this.readyTimeoutMs });
+      if (this.renderHtmlFrame === undefined) {
+        await page.goto(server!.url);
+        await page.waitForFunction("window.__kavioReady === true", undefined, { timeout: this.readyTimeoutMs });
+      } else {
+        await page.setContent(createHtmlShell(this.htmlStyles));
+      }
       const cdp = await createFastScreenshotSession(context, page);
-      return new PlaywrightForkDriver(context, page, cdp, viewport);
+      return new PlaywrightForkDriver(
+        context,
+        page,
+        cdp,
+        viewport,
+        this.readyTimeoutMs,
+        this.renderHtmlFrame === undefined
+          ? undefined
+          : (frame) => this.renderHtmlFrame!(frame, composition)
+      );
     } catch (error) {
       await context?.close();
       throw error;
@@ -231,6 +264,7 @@ export class PlaywrightDriver implements BrowserDriver {
     this.server = null;
     this.viewport = null;
     this.session = null;
+    this.composition = null;
 
     const jobCleanup = await Promise.allSettled([
       ...(context === null ? [] : [context.close()]),
@@ -259,7 +293,9 @@ class PlaywrightForkDriver implements BrowserDriver {
     private readonly context: PlaywrightContext,
     private readonly page: PlaywrightPage,
     private readonly cdp: PlaywrightCdpSession | null,
-    private readonly viewport: BrowserViewport
+    private readonly viewport: BrowserViewport,
+    private readonly readyTimeoutMs: number,
+    private readonly renderHtmlFrame?: (frame: number) => string | Promise<string>
   ) {}
 
   async open(): Promise<void> {
@@ -271,7 +307,10 @@ class PlaywrightForkDriver implements BrowserDriver {
   }
 
   async renderFrame(frame: number, options: BrowserFrameCaptureOptions = {}): Promise<BrowserFrameCapture> {
-    return renderFrameOnPage(this.page, this.cdp, this.viewport, frame, options);
+    const prepareFrame = this.renderHtmlFrame === undefined
+      ? undefined
+      : () => prepareHtmlFrame(this.page, this.renderHtmlFrame!(frame), this.readyTimeoutMs);
+    return renderFrameOnPage(this.page, this.cdp, this.viewport, frame, options, prepareFrame);
   }
 
   async close(): Promise<void> {
@@ -331,11 +370,16 @@ async function renderFrameOnPage(
   cdp: PlaywrightCdpSession | null,
   viewport: BrowserViewport,
   frame: number,
-  options: BrowserFrameCaptureOptions
+  options: BrowserFrameCaptureOptions,
+  prepareFrame?: () => Promise<void>
 ): Promise<BrowserFrameCapture> {
   const omitBackground = options.omitBackground ?? true;
   const evaluateStart = performance.now();
-  await page.evaluate(`window.__kavio.renderFrame(${frame})`);
+  if (prepareFrame === undefined) {
+    await page.evaluate(`window.__kavio.renderFrame(${frame})`);
+  } else {
+    await prepareFrame();
+  }
   const screenshotStart = performance.now();
   let bytes: Uint8Array;
   if (cdp !== null && omitBackground) {
@@ -356,6 +400,24 @@ async function renderFrameOnPage(
     omitBackground,
     timing: { evaluateMs: screenshotStart - evaluateStart, screenshotMs: screenshotEnd - screenshotStart }
   });
+}
+
+async function prepareHtmlFrame(
+  page: PlaywrightPage,
+  markup: string | Promise<string>,
+  readyTimeoutMs: number
+): Promise<void> {
+  const body = await markup;
+  await page.evaluate(`document.body.innerHTML = ${JSON.stringify(body)}`);
+  await page.evaluate("document.fonts.ready");
+  await page.waitForFunction("Array.from(document.images).every((image) => image.complete)", undefined, {
+    timeout: readyTimeoutMs
+  });
+}
+
+function createHtmlShell(styles: string): string {
+  const safeStyles = styles.replaceAll("</style", "<\\/style");
+  return `<!doctype html><html><head><meta charset="utf-8"><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}${safeStyles}</style></head><body></body></html>`;
 }
 
 function missingBrowserExecutable(message: string): boolean {

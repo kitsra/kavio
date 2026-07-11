@@ -35,6 +35,8 @@ which rendering pieces are complete.
   cleanup rules, and current format limits.
 - [Rendering status](rendering.md): what is implemented now and what remains
   after initial opaque video export support.
+- [React rendering](react.md): opt-in deterministic React components captured
+  through the existing Playwright and FFmpeg pipeline.
 - [MVP demo fixture](demo.md): the multi-row, multi-aspect demo fixture.
 - [MCP server, skill, and agent tools](mcp.md): MCP setup, tools, resources,
   prompts, provider adapters, portable skill/plugin usage, and render safety notes.

@@ -6,7 +6,7 @@
     <title>Kavio API Overview</title>
     <meta
       name="description"
-      content="API and package overview for Kavio schema, core, builder, browser-renderer, render-worker, ffmpeg, render, CLI, and MCP packages."
+      content="API and package overview for Kavio schema, core, builder, browser-renderer, React rendering, render-worker, ffmpeg, render, CLI, and MCP packages."
     />
     <meta property="og:title" content="Kavio API Overview" />
     <meta property="og:type" content="article" />
@@ -17,7 +17,7 @@
         "@context": "https://schema.org",
         "@type": "TechArticle",
         "headline": "Kavio API Overview",
-        "description": "API and package overview for Kavio schema, core, builder, browser-renderer, render-worker, ffmpeg, render, CLI, and MCP packages.",
+        "description": "API and package overview for Kavio schema, core, builder, browser-renderer, React rendering, render-worker, ffmpeg, render, CLI, and MCP packages.",
         "url": "https://kitsra.github.io/Kavio/site/docs/api.html",
         "about": "Kavio package APIs, builder methods, motion helpers, and export presets",
         "programmingLanguage": "TypeScript",
@@ -71,6 +71,7 @@
           <div><dt>@kitsra/kavio-ffmpeg</dt><dd>Inspectable FFmpeg plan construction.</dd></div>
           <div><dt>@kitsra/kavio-cli</dt><dd>Local commands for validation, inspection, migration, and preview.</dd></div>
           <div><dt>@kitsra/kavio-render</dt><dd>Render execution layer that owns real browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.</dd></div>
+          <div><dt>@kitsra/kavio-react</dt><dd>Opt-in deterministic React frame hooks and a Playwright driver for static-markup capture through the standard render pipeline.</dd></div>
           <div><dt>@kitsra/kavio-mcp</dt><dd>MCP server, provider tool adapters, portable skill, and plugin manifests for agent-facing Kavio workflows. It calls <code>@kitsra/kavio-render</code> instead of spawning binaries itself.</dd></div>
         </dl>
       </section>

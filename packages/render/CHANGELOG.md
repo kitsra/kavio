@@ -4,6 +4,9 @@
 
 ### Patch Changes
 
+- Add deterministic custom HTML frame callbacks to `PlaywrightDriver`, including
+  parallel capture forks, for opt-in renderers such as `@kitsra/kavio-react`.
+
 - Reuse worker-local Chromium processes across compatible browser-overlay batch
   jobs while creating fresh contexts and harnesses per job. Render timings now
   include `browserLaunches`, so launch reuse is observable without inferring it

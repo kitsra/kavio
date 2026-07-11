@@ -31,7 +31,11 @@ export {
   type RenderHarnessServer,
   type CreateRenderHarnessServerOptions
 } from "./harness-server.js";
-export { PlaywrightDriver, type PlaywrightDriverOptions } from "./playwright-driver.js";
+export {
+  PlaywrightDriver,
+  type HtmlFrameRenderer,
+  type PlaywrightDriverOptions
+} from "./playwright-driver.js";
 export {
   renderComposition,
   type RenderCompositionMode,

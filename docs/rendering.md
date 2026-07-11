@@ -153,6 +153,15 @@ comparison/report.
 - Cleanup primitives for browser contexts, temporary frames, temporary files,
   and custom cleanup hooks.
 
+## React Frames
+
+`@kitsra/kavio-react` renders a React component to deterministic static markup
+for every frame, then passes those frames through the same Playwright and
+FFmpeg execution path. This is an opt-in API path, not a new timeline model or
+CLI render mode. Select `browser-overlay` explicitly when passing its driver.
+See [React rendering](react.md) for hooks, limitations, performance, and agent
+guidance.
+
 `@kitsra/kavio-ffmpeg` includes:
 
 - Inspectable FFmpeg plan objects.

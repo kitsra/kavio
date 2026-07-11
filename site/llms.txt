@@ -45,6 +45,7 @@ later archive render path.
 - CLI reference: `docs/cli.html`
 - Browser preview: `docs/preview.html`
 - Rendering status: `docs/rendering.html`
+- React rendering: `docs/react.html`
 - API overview: `docs/api.html`
 - MCP server and AI plugins: `docs/mcp.html`
 - Troubleshooting: `docs/troubleshooting.html`
@@ -99,6 +100,7 @@ Important builder exports include `video`, `prop`, `validate`, `keyframes`,
 - `@kitsra/kavio-core`: timeline evaluation, frame math, easing, prop resolution, layout, captions, and limits.
 - `@kitsra/kavio-builder`: TypeScript authoring SDK with social export presets that outputs canonical Kavio JSON.
 - `@kitsra/kavio-browser-renderer`: browser preview and DOM rendering runtime for text, video, image, shape, and captions.
+- `@kitsra/kavio-react`: opt-in deterministic React static-markup frame rendering through Playwright capture and FFmpeg encoding.
 - `@kitsra/kavio-render-worker`: browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.
 - `@kitsra/kavio-ffmpeg`: inspectable FFmpeg plan construction.
 - `@kitsra/kavio-cli`: local commands for validation, inspection, migration, preview, presets, and rendering.

@@ -64,12 +64,26 @@
           <li>Render-worker contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.</li>
           <li>Inspectable FFmpeg plan construction.</li>
           <li>Playwright-backed browser capture, FFmpeg execution, and CLI rendering.</li>
+          <li>Opt-in deterministic React static-markup frames through the standard browser-overlay path.</li>
           <li>Batch workers reuse Chromium processes while isolating every job in a fresh context and harness.</li>
           <li>Deterministic PNG-sequence directories with zero-based frame names.</li>
           <li>Thresholded SSIM/PSNR video and selected-frame comparison gates.</li>
           <li>Finite audio looping and FFmpeg sidechain ducking.</li>
           <li>MVP demo rendering through the shared render pipeline.</li>
         </ul>
+      </section>
+
+      <section class="content-section">
+        <h2>React Frames</h2>
+        <p>
+          <code>@kitsra/kavio-react</code> renders a component to static markup
+          for each frame and captures it with the same Playwright and FFmpeg
+          pipeline. Kavio JSON still owns timing, dimensions, exports, base
+          media, and audio. Select <code>browser-overlay</code> explicitly;
+          effects, hydration, browser state, and Remotion APIs do not run.
+          See the <a href="react.html">React rendering guide</a> for the API,
+          determinism rules, and performance guidance.
+        </p>
       </section>
 
       <section class="content-section">

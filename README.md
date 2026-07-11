@@ -104,6 +104,8 @@ node packages/cli/dist/index.js render examples/kavio-promo/generated/all-motion
 - `@kitsra/kavio-ffmpeg`: inspectable FFmpeg plan construction.
 - `@kitsra/kavio-render`: render execution layer (PlaywrightDriver, FFmpeg runner,
   pure command assembly, single and batch rendering).
+- `@kitsra/kavio-react`: opt-in deterministic React components captured through
+  the standard Playwright and FFmpeg render pipeline.
 - `@kitsra/kavio-cli`: local command line for validation, inspection, migration,
   preview, and rendering.
 - `@kitsra/kavio-mcp`: Model Context Protocol server plus Anthropic/OpenAI/Gemini tool
@@ -165,6 +167,7 @@ packages/              npm workspace packages
   core/                Timeline evaluation primitives
   builder/             TypeScript builder SDK
   browser-renderer/    Browser runtime
+  react/               Opt-in React frame renderer
   render-worker/       Browser automation and frame capture contracts
   ffmpeg/              Media planning
   render/              Render execution (browser capture + FFmpeg)

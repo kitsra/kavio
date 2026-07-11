@@ -999,6 +999,52 @@ const transparentMp4Result = await renderComposition(transparentMp4Doc, {
 assert(transparentMp4Result.ok === false, "transparent mp4 output fails before rendering");
 assertEqual(transparentMp4Driver.renderedFrames.length, 0, "transparent mp4 output does not capture frames");
 
+// --- custom HTML frames ----------------------------------------------------
+
+const htmlShells: string[] = [];
+const htmlEvaluations: string[] = [];
+const htmlSession = new PlaywrightSession({
+  htmlStyles: "body{color:red}",
+  renderHtmlFrame: (frame) => `<main data-frame="${frame}">${frame}</main>`
+}, async () => ({
+  async newContext() {
+    return {
+      async newPage() {
+        return {
+          async goto() {},
+          async evaluate(expression: string) { htmlEvaluations.push(expression); },
+          async setContent(html: string) { htmlShells.push(html); },
+          async waitForFunction() {},
+          async screenshot() { return new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]); },
+          async close() {}
+        };
+      },
+      async newCDPSession() {
+        return {
+          async send(method: string) {
+            return method === "Page.captureScreenshot" ? { data: "iVBORw0KGgo=" } : undefined;
+          }
+        };
+      },
+      async close() {}
+    };
+  },
+  version() { return "fake-html-chromium"; },
+  async close() {}
+}));
+const htmlDriver = htmlSession.createDriver();
+await htmlDriver.open(templateDoc);
+await htmlDriver.renderFrame(2);
+const htmlFork = await htmlDriver.fork();
+await htmlFork.renderFrame(3);
+await htmlFork.close();
+await htmlDriver.close();
+await htmlSession.close();
+assertEqual(htmlShells.length, 2, "custom HTML initializes the main and forked page shells");
+assert(htmlShells.every((shell) => shell.includes("body{color:red}")), "custom HTML installs static styles");
+assert(htmlEvaluations.some((expression) => expression.includes('data-frame=\\"2\\"')), "custom HTML renders the requested frame");
+assert(htmlEvaluations.some((expression) => expression.includes('data-frame=\\"3\\"')), "custom HTML works in capture forks");
+
 // --- render-batch.ts -------------------------------------------------------
 
 let sessionLaunches = 0;
@@ -1013,6 +1059,7 @@ const reusableSession = new PlaywrightSession({}, async () => {
           return {
             async goto() {},
             async evaluate() {},
+            async setContent() {},
             async waitForFunction() {},
             async screenshot() { return new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]); },
             async close() {}
