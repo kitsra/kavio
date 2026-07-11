@@ -80,7 +80,10 @@ node packages/cli/dist/index.js render composition.json --render-mode ffmpeg-dir
   directional `wipe`, `slide`, and `push`, circular `iris` / `expandMask`, and
   the default clockwise `clockWipe`. It also supports default-strength `zoom`,
   `blurDissolve`, `squeeze`, and `letterboxReveal`, black/white `dip` and
-  `colorDissolve`, and explicitly white `filmFlash`.
+  `colorDissolve`, explicitly white `filmFlash`, directional `cover` / `reveal`,
+  corner-based `diagonalWipe`, `grayscaleDissolve`, and default-count `barWipe`.
+- Composition inspection reports browser and FFmpeg-direct support for every
+  transition window, including the selected `xfade` filter when native.
 - Optional image-layer `transitionIn` / `transitionOut` when the transition type
   is `fade`, the timing is linear, and `durationFrames` is present.
 - Optional image-layer `keyframes.scale` when it describes a simple linear

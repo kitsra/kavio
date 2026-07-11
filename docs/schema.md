@@ -170,11 +170,11 @@ Transitions may instead provide a `timing` object, whose duration is used when
 `wipe`, `crossfade`, `zoom`, `push`, `spin`, `rotate`, `flip`, `blurDissolve`,
 `colorDissolve`, `dip`, `iris`, `stretch`, `squeeze`, `clockWipe`, `barWipe`,
 `gridWipe`, `tileReveal`, `radialBlur`, `zoomBlur`, `bookFlip`,
-`pageCurlLite`, `skewSlide`, `expandMask`, `letterboxReveal`, `filmFlash`, and
-`cameraWhip`.
+`pageCurlLite`, `skewSlide`, `expandMask`, `letterboxReveal`, `filmFlash`,
+`cameraWhip`, `cover`, `reveal`, `diagonalWipe`, and `grayscaleDissolve`.
 
-Optional tuning fields include `direction`, `axis`, `shape`, `color`, `amount`,
-`intensity`, `rows`, `columns`, and `easing`; see [Animation](animation.md) for
+Optional tuning fields include `direction`, `axis`, `shape`, `corner`, `color`,
+`amount`, `intensity`, `rows`, `columns`, and `easing`; see [Animation](animation.md) for
 behavior details.
 
 Deterministic timing object types are:

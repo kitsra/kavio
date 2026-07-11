@@ -108,7 +108,11 @@ const ENUMS = {
     "expandMask",
     "letterboxReveal",
     "filmFlash",
-    "cameraWhip"
+    "cameraWhip",
+    "cover",
+    "reveal",
+    "diagonalWipe",
+    "grayscaleDissolve"
   ],
   cameraMotion: ["kenBurns", "pushIn", "pullBack", "pan", "tilt"],
   audioRole: ["music", "voiceover", "sfx", "source"],
@@ -128,7 +132,8 @@ const CURRENT_TRANSITION_SUPPORT = Object.fromEntries(
       pngSequenceRender: "unsupported",
       nativeRender: [
         "fade", "crossfade", "wipe", "slide", "push", "iris", "expandMask", "clockWipe",
-        "zoom", "blurDissolve", "dip", "colorDissolve", "filmFlash", "squeeze", "letterboxReveal"
+        "zoom", "blurDissolve", "dip", "colorDissolve", "filmFlash", "squeeze", "letterboxReveal",
+        "cover", "reveal", "diagonalWipe", "grayscaleDissolve", "barWipe"
       ].includes(transition)
         ? "stable"
         : "unsupported",

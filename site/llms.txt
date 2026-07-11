@@ -32,8 +32,14 @@ FFmpeg-direct image transition tracks support linear fade/crossfade,
 directional wipe/slide/push, circular iris/expandMask, and default clockwise
 clockWipe handoffs. Default-strength zoom, blurDissolve, squeeze, and
 letterboxReveal plus constrained black/white dip, colorDissolve, and filmFlash
-handoffs are also direct; unsupported variants fall back to browser-overlay in
+handoffs are also direct. Directional cover/reveal, corner diagonalWipe,
+grayscaleDissolve, and default-count barWipe are native too; unsupported variants fall back to browser-overlay in
 auto mode.
+Transition windows returned by CLI and MCP inspection include
+`renderSupport.browser.supported` and `renderSupport.ffmpegDirect`; supported
+native transitions expose the exact `xfade` filter, while fallbacks include a
+reason. `diagonalWipe` uses `corner`: `top-left`, `top-right`, `bottom-left`, or
+`bottom-right`.
 Opaque graphics-only Kavio browser renders paint the effective background into
 the captured stage and encode it as the primary stream, preserving intermediate
 transition frames during live capture. Hybrid video and custom React drivers
@@ -83,7 +89,8 @@ Important builder exports include `video`, `prop`, `validate`, `keyframes`,
 `transition.tileReveal`, `transition.radialBlur`, `transition.zoomBlur`,
 `transition.bookFlip`, `transition.pageCurlLite`, `transition.skewSlide`,
 `transition.expandMask`, `transition.letterboxReveal`,
-`transition.filmFlash`, `transition.cameraWhip`, `camera.kenBurns`,
+`transition.filmFlash`, `transition.cameraWhip`, `transition.cover`,
+`transition.reveal`, `transition.diagonalWipe`, `transition.grayscaleDissolve`, `camera.kenBurns`,
 `camera.pushIn`, `camera.pullBack`, `camera.pan`, `camera.tilt`,
 `camera.parallax`, `camera.orbitLite`, `camera.handheld`,
 `camera.crashZoom`, `camera.dollyZoomLite`, `cinematic.zoomPush`,

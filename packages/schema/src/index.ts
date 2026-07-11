@@ -282,10 +282,15 @@ export type KavioTransitionType =
   | "expandMask"
   | "letterboxReveal"
   | "filmFlash"
-  | "cameraWhip";
+  | "cameraWhip"
+  | "cover"
+  | "reveal"
+  | "diagonalWipe"
+  | "grayscaleDissolve";
 export type KavioTransitionDirection = "up" | "down" | "left" | "right";
 export type KavioTransitionAxis = "x" | "y";
 export type KavioTransitionShape = "circle" | "diamond";
+export type KavioTransitionCorner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 
 export interface KavioTransition {
   type: KavioTransitionType;
@@ -293,6 +298,7 @@ export interface KavioTransition {
   direction?: KavioTransitionDirection;
   axis?: KavioTransitionAxis;
   shape?: KavioTransitionShape;
+  corner?: KavioTransitionCorner;
   color?: KavioColor;
   amount?: number;
   intensity?: number;
@@ -307,6 +313,7 @@ export interface KavioTransitionPresentation {
   direction?: KavioTransitionDirection;
   axis?: KavioTransitionAxis;
   shape?: KavioTransitionShape;
+  corner?: KavioTransitionCorner;
   color?: KavioColor;
   amount?: number;
   intensity?: number;
@@ -697,11 +704,16 @@ const TRANSITION_TYPES = new Set<KavioTransitionType>([
   "expandMask",
   "letterboxReveal",
   "filmFlash",
-  "cameraWhip"
+  "cameraWhip",
+  "cover",
+  "reveal",
+  "diagonalWipe",
+  "grayscaleDissolve"
 ]);
 const TRANSITION_DIRECTIONS = new Set(["up", "down", "left", "right"]);
 const TRANSITION_AXES = new Set(["x", "y"]);
 const TRANSITION_SHAPES = new Set(["circle", "diamond"]);
+const TRANSITION_CORNERS = new Set(["top-left", "top-right", "bottom-left", "bottom-right"]);
 const ANCHOR_VALUES = new Set([
   "top-left",
   "top",
@@ -1668,6 +1680,7 @@ function validateTransitionPresentation(value: unknown, path: string, errors: Ka
   optionalEnum(value, "direction", propertyPath(path, "direction"), TRANSITION_DIRECTIONS, errors);
   optionalEnum(value, "axis", propertyPath(path, "axis"), TRANSITION_AXES, errors);
   optionalEnum(value, "shape", propertyPath(path, "shape"), TRANSITION_SHAPES, errors);
+  optionalEnum(value, "corner", propertyPath(path, "corner"), TRANSITION_CORNERS, errors);
   optionalString(value, "color", propertyPath(path, "color"), errors);
   optionalNumber(value, "amount", propertyPath(path, "amount"), 0, undefined, errors);
   optionalNumber(value, "intensity", propertyPath(path, "intensity"), 0, undefined, errors);
@@ -2531,6 +2544,7 @@ function validateTransition(value: unknown, path: string, errors: KavioError[]):
   optionalEnum(value, "direction", propertyPath(path, "direction"), TRANSITION_DIRECTIONS, errors);
   optionalEnum(value, "axis", propertyPath(path, "axis"), TRANSITION_AXES, errors);
   optionalEnum(value, "shape", propertyPath(path, "shape"), TRANSITION_SHAPES, errors);
+  optionalEnum(value, "corner", propertyPath(path, "corner"), TRANSITION_CORNERS, errors);
   optionalString(value, "color", propertyPath(path, "color"), errors);
   optionalNumber(value, "amount", propertyPath(path, "amount"), 0, undefined, errors);
   optionalNumber(value, "intensity", propertyPath(path, "intensity"), 0, undefined, errors);

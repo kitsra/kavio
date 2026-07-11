@@ -11,6 +11,7 @@ import {
   assembleDirectRenderCommand,
   assembleRenderCommand,
   getDirectRenderSupport,
+  getDirectTransitionSupport,
   renderBatch,
   type FfmpegRunner,
   type RenderBatchOptions
@@ -63,17 +64,24 @@ export function inspectComposition(input: unknown): ToolResult {
       tracks: {
         count: doc.tracks === undefined ? 0 : doc.tracks.length,
         clipCount: doc.tracks === undefined ? 0 : doc.tracks.reduce((total, track) => total + track.clips.length, 0),
-        transitionWindows: compileTransitionOverlapWindows(doc.tracks).map((window) => ({
-          trackId: window.trackId,
-          previousClipId: window.previousClipId,
-          previousLayerId: window.previousLayerId,
-          nextClipId: window.nextClipId,
-          nextLayerId: window.nextLayerId,
-          startFrame: window.startFrame,
-          endFrame: window.endFrame,
-          durationFrames: window.durationFrames,
-          transitionType: window.transition.type
-        }))
+        transitionWindows: compileTransitionOverlapWindows(doc.tracks).map((window) => {
+          const direct = getDirectTransitionSupport(window.transition);
+          return {
+            trackId: window.trackId,
+            previousClipId: window.previousClipId,
+            previousLayerId: window.previousLayerId,
+            nextClipId: window.nextClipId,
+            nextLayerId: window.nextLayerId,
+            startFrame: window.startFrame,
+            endFrame: window.endFrame,
+            durationFrames: window.durationFrames,
+            transitionType: window.transition.type,
+            renderSupport: {
+              browser: { supported: true },
+              ffmpegDirect: direct.ok ? { supported: true, filter: direct.filter } : { supported: false, reason: direct.reason }
+            }
+          };
+        })
       },
       audio: { count: doc.audio === undefined ? 0 : doc.audio.length },
       exports: {

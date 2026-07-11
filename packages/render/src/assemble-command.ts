@@ -60,6 +60,10 @@ export type DirectRenderSupport =
   | { ok: true }
   | { ok: false; reason: string; layerId?: string };
 
+export type DirectTransitionSupport =
+  | { ok: true; filter: string }
+  | { ok: false; reason: string };
+
 const VIDEO_OUT_LABEL = "video_out";
 const AUDIO_OUT_LABEL = "audio_out";
 const BASE_LABEL = "base_video";
@@ -365,7 +369,7 @@ function directImageSequence(
     transitionWindows.forEach((window, index) => {
       const rightLabel = labels[index + 1]!;
       const label = index === transitionWindows.length - 1 ? outputLabel : `direct_xfade_${index}`;
-      const transition = directImageTrackXfadeName(window);
+      const transition = directImageTrackXfadeName(window.transition);
       if (transition === null) {
         throw renderError({
           code: "RENDER_FAILED",
@@ -492,32 +496,40 @@ function getDirectImageTrackSupport(view: KavioDocument, imageLayers: KavioImage
 }
 
 function getUnsupportedDirectImageTrackTransitionReason(window: TransitionOverlapWindow): string | null {
-  if (window.transition.easing !== undefined && window.transition.easing !== "linear") {
-    return "image transition tracks only support linear FFmpeg-direct timing";
-  }
-  if (directImageTrackXfadeName(window) !== null) {
-    return null;
-  }
-  if ((window.transition.type === "iris" || window.transition.type === "expandMask") && window.transition.shape === "diamond") {
-    return "image transition tracks only support circular iris/expandMask in FFmpeg-direct mode";
-  }
-  if (window.transition.type === "clockWipe" && window.transition.direction !== undefined && window.transition.direction !== "right") {
-    return "image transition tracks only support the default clockwise clockWipe in FFmpeg-direct mode";
-  }
-  if (window.transition.type === "filmFlash") {
-    return "image transition tracks require an explicit white filmFlash color in FFmpeg-direct mode";
-  }
-  if (window.transition.type === "dip" || window.transition.type === "colorDissolve") {
-    return "image transition tracks only support black or white dip/colorDissolve in FFmpeg-direct mode";
-  }
-  if (window.transition.type === "zoom" || window.transition.type === "blurDissolve") {
-    return `image transition type "${window.transition.type}" only supports its default strength in FFmpeg-direct mode`;
-  }
-  return `image transition type "${window.transition.type}" requires browser rendering`;
+  const support = getDirectTransitionSupport(window.transition);
+  return support.ok ? null : support.reason;
 }
 
-function directImageTrackXfadeName(window: TransitionOverlapWindow): string | null {
-  const transition = window.transition;
+export function getDirectTransitionSupport(transition: TransitionOverlapWindow["transition"]): DirectTransitionSupport {
+  if (transition.easing !== undefined && transition.easing !== "linear") {
+    return { ok: false, reason: "image transition tracks only support linear FFmpeg-direct timing" };
+  }
+  const filter = directImageTrackXfadeName(transition);
+  if (filter !== null) {
+    return { ok: true, filter };
+  }
+  if ((transition.type === "iris" || transition.type === "expandMask") && transition.shape === "diamond") {
+    return { ok: false, reason: "image transition tracks only support circular iris/expandMask in FFmpeg-direct mode" };
+  }
+  if (transition.type === "clockWipe" && transition.direction !== undefined && transition.direction !== "right") {
+    return { ok: false, reason: "image transition tracks only support the default clockwise clockWipe in FFmpeg-direct mode" };
+  }
+  if (transition.type === "filmFlash") {
+    return { ok: false, reason: "image transition tracks require an explicit white filmFlash color in FFmpeg-direct mode" };
+  }
+  if (transition.type === "dip" || transition.type === "colorDissolve") {
+    return { ok: false, reason: "image transition tracks only support black or white dip/colorDissolve in FFmpeg-direct mode" };
+  }
+  if (transition.type === "zoom" || transition.type === "blurDissolve") {
+    return { ok: false, reason: `image transition type "${transition.type}" only supports its default strength in FFmpeg-direct mode` };
+  }
+  if (transition.type === "barWipe") {
+    return { ok: false, reason: "image barWipe only supports default row/column counts in FFmpeg-direct mode" };
+  }
+  return { ok: false, reason: `image transition type "${transition.type}" requires browser rendering` };
+}
+
+function directImageTrackXfadeName(transition: TransitionOverlapWindow["transition"]): string | null {
   switch (transition.type) {
     case "fade":
     case "crossfade":
@@ -547,6 +559,29 @@ function directImageTrackXfadeName(window: TransitionOverlapWindow): string | nu
       return hasDefaultTransitionStrength(transition) ? (transition.axis === "y" ? "squeezev" : "squeezeh") : null;
     case "letterboxReveal":
       return transition.axis === "x" ? "horzopen" : "vertopen";
+    case "cover":
+      return `cover${transition.direction ?? "left"}`;
+    case "reveal":
+      return `reveal${transition.direction ?? "left"}`;
+    case "diagonalWipe":
+      return {
+        "top-left": "wipetl",
+        "top-right": "wipetr",
+        "bottom-left": "wipebl",
+        "bottom-right": "wipebr"
+      }[transition.corner ?? "top-left"];
+    case "grayscaleDissolve":
+      return "fadegrays";
+    case "barWipe":
+      if (transition.rows !== undefined || transition.columns !== undefined) {
+        return null;
+      }
+      return {
+        left: "hlslice",
+        right: "hrslice",
+        up: "vuslice",
+        down: "vdslice"
+      }[transition.direction ?? "right"];
     default:
       return null;
   }

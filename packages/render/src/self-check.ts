@@ -414,7 +414,12 @@ const directTrackTransitionCases: Array<{ presentation: KavioTransitionPresentat
   { presentation: { type: "squeeze", axis: "x" }, xfade: "squeezeh" },
   { presentation: { type: "squeeze", axis: "y" }, xfade: "squeezev" },
   { presentation: { type: "letterboxReveal", axis: "x" }, xfade: "horzopen" },
-  { presentation: { type: "letterboxReveal", axis: "y" }, xfade: "vertopen" }
+  { presentation: { type: "letterboxReveal", axis: "y" }, xfade: "vertopen" },
+  { presentation: { type: "cover", direction: "left" }, xfade: "coverleft" },
+  { presentation: { type: "reveal", direction: "down" }, xfade: "revealdown" },
+  { presentation: { type: "diagonalWipe", corner: "top-right" }, xfade: "wipetr" },
+  { presentation: { type: "grayscaleDissolve" }, xfade: "fadegrays" },
+  { presentation: { type: "barWipe", direction: "right" }, xfade: "hrslice" }
 ];
 for (const { presentation, xfade } of directTrackTransitionCases) {
   const view = directTrackTransitionView(presentation);
@@ -425,6 +430,13 @@ for (const { presentation, xfade } of directTrackTransitionCases) {
     outputPath: `/tmp/image-direct-${presentation.type}.mp4`
   }).join(" ");
   assert(args.includes(`xfade=transition=${xfade}:duration=0.066667:offset=0.133333`), `${presentation.type} maps to FFmpeg ${xfade}`);
+}
+
+const directCustomBarWipeView = directTrackTransitionView({ type: "barWipe", direction: "right", columns: 12 });
+const directCustomBarWipeSupport = getDirectRenderSupport(directCustomBarWipeView);
+assert(!directCustomBarWipeSupport.ok, "custom bar counts stay on the browser renderer");
+if (!directCustomBarWipeSupport.ok) {
+  assert(directCustomBarWipeSupport.reason.includes("default row/column counts"), "custom bar counts report their direct-render limitation");
 }
 
 const directDiamondIrisView = directTrackTransitionView({ type: "iris", shape: "diamond" });

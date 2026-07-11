@@ -83,10 +83,15 @@ export type TransitionType =
   | "expandMask"
   | "letterboxReveal"
   | "filmFlash"
-  | "cameraWhip";
+  | "cameraWhip"
+  | "cover"
+  | "reveal"
+  | "diagonalWipe"
+  | "grayscaleDissolve";
 export type TransitionDirection = "up" | "down" | "left" | "right";
 export type TransitionAxis = "x" | "y";
 export type TransitionShape = "circle" | "diamond";
+export type TransitionCorner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 export type CameraMotionDirection = "up" | "down" | "left" | "right" | "center";
 export type TextMotionType = "typeOn" | "cascade" | "scramble" | "highlightSweep" | "trackingIn";
 export type TextMotionSplitMode = "none" | "word" | "char" | "line";
@@ -277,6 +282,7 @@ export interface TransitionDefinition {
   direction?: TransitionDirection | undefined;
   axis?: TransitionAxis | undefined;
   shape?: TransitionShape | undefined;
+  corner?: TransitionCorner | undefined;
   color?: string | undefined;
   amount?: number | undefined;
   intensity?: number | undefined;
@@ -1122,6 +1128,18 @@ export const transition = {
   },
   cameraWhip(options: TransitionOptions = { durationFrames: 8 }): TransitionDefinition {
     return transitionDefinition("cameraWhip", options);
+  },
+  cover(options: TransitionOptions & { direction: TransitionDirection }): TransitionDefinition {
+    return transitionDefinition("cover", options);
+  },
+  reveal(options: TransitionOptions & { direction: TransitionDirection }): TransitionDefinition {
+    return transitionDefinition("reveal", options);
+  },
+  diagonalWipe(options: TransitionOptions & { corner: TransitionCorner }): TransitionDefinition {
+    return transitionDefinition("diagonalWipe", options);
+  },
+  grayscaleDissolve(options: TransitionOptions = { durationFrames: 12 }): TransitionDefinition {
+    return transitionDefinition("grayscaleDissolve", options);
   }
 } as const;
 
@@ -2109,9 +2127,12 @@ function transitionDefinition(type: TransitionType, options: TransitionOptions):
     direction: options.direction,
     axis: options.axis,
     shape: options.shape,
+    corner: options.corner,
     color: options.color,
     amount: options.amount,
     intensity: options.intensity,
+    rows: options.rows,
+    columns: options.columns,
     easing: options.easing,
     timing: options.timing
   }) as unknown as TransitionDefinition;
@@ -2124,6 +2145,7 @@ function transitionSeriesDefinition(definition: TransitionDefinition): Transitio
       direction: definition.direction,
       axis: definition.axis,
       shape: definition.shape,
+      corner: definition.corner,
       color: definition.color,
       amount: definition.amount,
       intensity: definition.intensity,

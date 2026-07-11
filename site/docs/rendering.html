@@ -69,7 +69,7 @@
           <li>Deterministic PNG-sequence directories with zero-based frame names.</li>
           <li>Thresholded SSIM/PSNR video and selected-frame comparison gates.</li>
           <li>Finite audio looping and FFmpeg sidechain ducking.</li>
-          <li>FFmpeg-direct fade, directional wipe/slide/push, iris, clock, zoom, blur, squeeze, letterbox, and constrained color handoffs.</li>
+          <li>FFmpeg-direct fade, directional wipe/slide/push/cover/reveal, diagonal wipe, grayscale dissolve, default-count bar wipe, iris, clock, zoom, blur, squeeze, letterbox, and constrained color handoffs.</li>
           <li>MVP demo rendering through the shared render pipeline.</li>
         </ul>
       </section>
@@ -135,7 +135,10 @@
           for fade/crossfade, directional wipe, slide and push, circular iris
           and expand-mask, default clockwise clock-wipe, zoom, blur dissolve,
           squeeze, letterbox reveal, and constrained black/white color
-          handoffs. Other strengths, colors, shapes, directions, or easing
+          handoffs. Directional cover/reveal, corner diagonal wipes, grayscale
+          dissolves, and default-count bar wipes also stay native. Composition
+          inspection reports browser and FFmpeg support per transition window.
+          Other strengths, colors, shapes, directions, or easing
           continue through the browser-overlay renderer for fidelity.
         </p>
         <p>
@@ -145,6 +148,42 @@
           advance while a secondary overlay is still being produced. Hybrid
           source-video and custom React renders retain overlay compositing.
         </p>
+      </section>
+
+      <section class="content-section" id="transition-support">
+        <h2>Portable Transition Support</h2>
+        <p>
+          JSON stores semantic transition names rather than FFmpeg filter names.
+          Core evaluation and the browser renderer are the fidelity baseline;
+          <code>auto</code> selects FFmpeg-direct only when the complete image
+          track and transition parameters have an equivalent native path.
+        </p>
+        <div class="reference-table-wrap">
+          <table class="reference-table">
+            <thead>
+              <tr><th>JSON / builder</th><th>Browser behavior</th><th>FFmpeg-direct mapping</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>cover({ direction })</code></td><td>Incoming layer moves over a stationary outgoing layer.</td><td><code>coverleft</code>, <code>coverright</code>, <code>coverup</code>, or <code>coverdown</code>.</td></tr>
+              <tr><td><code>reveal({ direction })</code></td><td>Outgoing layer moves away from a stationary incoming layer.</td><td><code>revealleft</code>, <code>revealright</code>, <code>revealup</code>, or <code>revealdown</code>.</td></tr>
+              <tr><td><code>diagonalWipe({ corner })</code></td><td>Deterministic polygon reveal from one of four corners.</td><td><code>wipetl</code>, <code>wipetr</code>, <code>wipebl</code>, or <code>wipebr</code>.</td></tr>
+              <tr><td><code>grayscaleDissolve()</code></td><td>Opacity fade with a grayscale-to-color ramp.</td><td><code>fadegrays</code>.</td></tr>
+              <tr><td><code>barWipe()</code></td><td>Directional parallel bars with optional row/column counts.</td><td>Default counts use directional slice filters; custom counts use browser-overlay.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>
+          CLI and MCP inspection attach a capability object to every transition
+          window. The native result includes the exact filter; an unsupported
+          result explains why the browser fallback is required.
+        </p>
+        <pre><code>{
+  "transitionType": "diagonalWipe",
+  "renderSupport": {
+    "browser": { "supported": true },
+    "ffmpegDirect": { "supported": true, "filter": "wipetr" }
+  }
+}</code></pre>
       </section>
     </main>
 

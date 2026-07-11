@@ -93,8 +93,10 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
   export presets, or `--json presets <preset-id>` for copyable JSON.
 - Use `--render-mode ffmpeg-direct` only as a performance path for full-frame
   image sequences or supported shape-only compositions. Image sequences may use
-  limited production-style motion: linear fade in/out, exact linear
-  fade/crossfade `transitionFromPrevious` overlaps, and monotonic scale push-in.
+  production-style motion: linear fade in/out, exact linear transition-series
+  overlaps (including directional, diagonal, grayscale, and default-count bar
+  wipes), and monotonic scale push-in. Inspect transition windows to see the
+  resolved browser/FFmpeg support and native filter.
   `fit: "none"` is not supported. It skips browser PNG capture, so unsupported
   motion/layout features will be rejected instead of approximated.
 - For reel-style image handoffs, prefer one top-level `tracks` transition

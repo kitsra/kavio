@@ -87,7 +87,11 @@ test("inspectComposition includes transition series overlap windows", () => {
       startFrame: 48,
       endFrame: 60,
       durationFrames: 12,
-      transitionType: "push"
+      transitionType: "push",
+      renderSupport: {
+        browser: { supported: true },
+        ffmpegDirect: { supported: false, reason: "image transition tracks only support linear FFmpeg-direct timing" }
+      }
     }
   ]);
 });

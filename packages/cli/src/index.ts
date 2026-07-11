@@ -14,6 +14,7 @@ import {
 } from "@kitsra/kavio-schema";
 import {
   getDirectRenderSupport,
+  getDirectTransitionSupport,
   renderBatch,
   type RenderBatchInput,
   type RenderBatchOptions,
@@ -139,6 +140,10 @@ interface TransitionWindowSummary {
   endFrame: number;
   durationFrames: number;
   transitionType: string;
+  renderSupport: {
+    browser: { supported: true };
+    ffmpegDirect: { supported: true; filter: string } | { supported: false; reason: string };
+  };
 }
 
 interface InspectOutput {
@@ -963,17 +968,24 @@ function inspectDocument(filePath: string, document: KavioDocument): InspectSumm
     tracks: {
       count: document.tracks === undefined ? 0 : document.tracks.length,
       clipCount: document.tracks === undefined ? 0 : document.tracks.reduce((total, track) => total + track.clips.length, 0),
-      transitionWindows: compileTransitionOverlapWindows(document.tracks).map((window) => ({
-        trackId: window.trackId,
-        previousClipId: window.previousClipId,
-        previousLayerId: window.previousLayerId,
-        nextClipId: window.nextClipId,
-        nextLayerId: window.nextLayerId,
-        startFrame: window.startFrame,
-        endFrame: window.endFrame,
-        durationFrames: window.durationFrames,
-        transitionType: window.transition.type
-      }))
+      transitionWindows: compileTransitionOverlapWindows(document.tracks).map((window) => {
+        const direct = getDirectTransitionSupport(window.transition);
+        return {
+          trackId: window.trackId,
+          previousClipId: window.previousClipId,
+          previousLayerId: window.previousLayerId,
+          nextClipId: window.nextClipId,
+          nextLayerId: window.nextLayerId,
+          startFrame: window.startFrame,
+          endFrame: window.endFrame,
+          durationFrames: window.durationFrames,
+          transitionType: window.transition.type,
+          renderSupport: {
+            browser: { supported: true as const },
+            ffmpegDirect: direct.ok ? { supported: true as const, filter: direct.filter } : { supported: false as const, reason: direct.reason }
+          }
+        };
+      })
     },
     audio: {
       count: document.audio === undefined ? 0 : document.audio.length
@@ -1118,8 +1130,9 @@ function writeInspection(summary: InspectSummary): void {
   }
   writeStdout(`Tracks: ${summary.tracks.count} (${summary.tracks.clipCount} clips, ${summary.tracks.transitionWindows.length} transition windows)\n`);
   for (const window of summary.tracks.transitionWindows) {
+    const direct = window.renderSupport.ffmpegDirect;
     writeStdout(
-      `  - ${window.trackId}: ${window.previousClipId} -> ${window.nextClipId}, ${window.transitionType}, frames ${window.startFrame}-${window.endFrame - 1}\n`
+      `  - ${window.trackId}: ${window.previousClipId} -> ${window.nextClipId}, ${window.transitionType}, frames ${window.startFrame}-${window.endFrame - 1} (${direct.supported ? `FFmpeg ${direct.filter}` : "browser only"})\n`
     );
   }
   writeStdout(`Audio: ${summary.audio.count}\n`);

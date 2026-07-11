@@ -710,6 +710,8 @@ function applyLayerReveal(element: HTMLElement, evaluation: EvaluatedLayer): voi
 
   if (evaluation.revealPattern?.kind === "clock") {
     element.style.clipPath = clockWipeClipPath(evaluation.revealPattern);
+  } else if (evaluation.revealPattern?.kind === "diagonal") {
+    element.style.clipPath = diagonalWipeClipPath(evaluation.revealPattern);
   } else if (evaluation.revealPattern) {
     applyRevealPatternMask(element, evaluation.revealPattern);
   }
@@ -719,6 +721,9 @@ function applyLayerFilter(element: HTMLElement, evaluation: EvaluatedLayer): voi
   const filters: string[] = [];
   if (evaluation.filter?.blur !== undefined && evaluation.filter.blur > 0) {
     filters.push(`blur(${evaluation.filter.blur}px)`);
+  }
+  if (evaluation.filter?.grayscale !== undefined && evaluation.filter.grayscale > 0) {
+    filters.push(`grayscale(${formatUnit(evaluation.filter.grayscale)})`);
   }
 
   if (filters.length > 0) {
@@ -899,6 +904,27 @@ function clockWipeClipPath(reveal: NonNullable<EvaluatedLayer["revealPattern"]>)
   return `polygon(${points.join(", ")})`;
 }
 
+function diagonalWipeClipPath(reveal: NonNullable<EvaluatedLayer["revealPattern"]>): string {
+  const progress = Math.max(0, Math.min(1, reveal.progress));
+  if (progress <= 0) {
+    return "inset(100%)";
+  }
+  if (progress >= 1) {
+    return "inset(0%)";
+  }
+
+  const extent = progress * 2;
+  const points = extent <= 1
+    ? [{ x: 0, y: 0 }, { x: extent * 100, y: 0 }, { x: 0, y: extent * 100 }]
+    : [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: (extent - 1) * 100 }, { x: (extent - 1) * 100, y: 100 }, { x: 0, y: 100 }];
+  const corner = reveal.corner ?? "top-left";
+  const transformed = points.map(({ x, y }) => ({
+    x: corner === "top-right" || corner === "bottom-right" ? 100 - x : x,
+    y: corner === "bottom-left" || corner === "bottom-right" ? 100 - y : y
+  }));
+  return `polygon(${transformed.map(({ x, y }) => `${formatUnit(x)}% ${formatUnit(y)}%`).join(", ")})`;
+}
+
 function squareEdgePoint(angleDegrees: number): { x: number; y: number } {
   const angle = (angleDegrees * Math.PI) / 180;
   const dx = Math.cos(angle);
@@ -912,7 +938,7 @@ function squareEdgePoint(angleDegrees: number): { x: number; y: number } {
 }
 
 function applyRevealPatternMask(element: HTMLElement, reveal: NonNullable<EvaluatedLayer["revealPattern"]>): void {
-  if (reveal.kind === "clock") {
+  if (reveal.kind === "clock" || reveal.kind === "diagonal") {
     return;
   }
 

@@ -5,9 +5,11 @@ export {
   assembleDirectRenderCommand,
   assembleRenderCommand,
   getDirectRenderSupport,
+  getDirectTransitionSupport,
   type AssembleDirectRenderCommandOptions,
   type AssembleRenderCommandOptions,
-  type DirectRenderSupport
+  type DirectRenderSupport,
+  type DirectTransitionSupport
 } from "./assemble-command.js";
 export {
   resolveFfmpegDiagnostics,

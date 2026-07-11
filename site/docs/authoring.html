@@ -230,8 +230,8 @@ composition
               </tr>
               <tr>
                 <td>Transition</td>
-                <td><code>type</code>, <code>durationFrames</code>, <code>direction</code>, <code>axis</code>, <code>shape</code>, <code>color</code>, <code>amount</code>, <code>intensity</code>, <code>rows</code>, <code>columns</code>, <code>easing</code>, <code>timing</code></td>
-                <td>Transition types include fade, slide, wipe, crossfade, zoom, push, spin, rotate, flip, blur dissolve, color dissolve, dip, iris, stretch, squeeze, clock wipe, bar wipe, grid wipe, tile reveal, radial blur, zoom blur, book flip, page curl, skew slide, expand mask, letterbox reveal, film flash, and camera whip.</td>
+                <td><code>type</code>, <code>durationFrames</code>, <code>direction</code>, <code>axis</code>, <code>shape</code>, <code>corner</code>, <code>color</code>, <code>amount</code>, <code>intensity</code>, <code>rows</code>, <code>columns</code>, <code>easing</code>, <code>timing</code></td>
+                <td>Transition types include fade, slide, wipe, crossfade, zoom, push, spin, rotate, flip, blur dissolve, color dissolve, dip, iris, stretch, squeeze, clock wipe, bar wipe, grid wipe, tile reveal, radial blur, zoom blur, book flip, page curl, skew slide, expand mask, letterbox reveal, film flash, camera whip, cover, reveal, diagonal wipe, and grayscale dissolve. Diagonal wipes use <code>corner</code>: <code>top-left</code>, <code>top-right</code>, <code>bottom-left</code>, or <code>bottom-right</code>.</td>
               </tr>
               <tr>
                 <td>Text motion</td>
@@ -302,15 +302,33 @@ track("main", [
     layerId: "scene-b",
     startFrame: 48,
     durationFrames: 60,
-    transitionFromPrevious: transition.push({
-      direction: "left",
+    transitionFromPrevious: transition.diagonalWipe({
+      corner: "top-right",
       durationFrames: 12,
-      easing: "outCubic"
+      easing: "linear"
     })
   })
 ]);
 
 cinematic.glitchCut({ durationFrames: 8 });</code></pre>
+        <p>
+          <code>cover</code>, <code>reveal</code>, <code>diagonalWipe</code>,
+          and <code>grayscaleDissolve</code> have deterministic browser behavior
+          and native FFmpeg mappings for exact linear full-frame image-track
+          overlaps. Default-count <code>barWipe</code> is native; custom
+          <code>rows</code> or <code>columns</code> keep the browser renderer.
+        </p>
+        <pre><code>{
+  "presentation": {
+    "type": "diagonalWipe",
+    "corner": "bottom-right"
+  },
+  "timing": {
+    "type": "tween",
+    "durationFrames": 12,
+    "easing": "linear"
+  }
+}</code></pre>
       </section>
     </main>
 

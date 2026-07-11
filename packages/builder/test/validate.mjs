@@ -127,7 +127,11 @@ const expandedTransitions = [
   transition.expandMask({ durationFrames: 10, shape: "circle" }),
   transition.letterboxReveal({ durationFrames: 10, axis: "y" }),
   transition.filmFlash({ durationFrames: 6, color: "#fff7dd" }),
-  transition.cameraWhip({ durationFrames: 8, direction: "left", amount: 14, intensity: 10 })
+  transition.cameraWhip({ durationFrames: 8, direction: "left", amount: 14, intensity: 10 }),
+  transition.cover({ durationFrames: 10, direction: "left" }),
+  transition.reveal({ durationFrames: 10, direction: "down" }),
+  transition.diagonalWipe({ durationFrames: 10, corner: "top-right" }),
+  transition.grayscaleDissolve({ durationFrames: 10 })
 ];
 assert.deepEqual(
   expandedTransitions.map((definition) => definition.type),
@@ -155,9 +159,15 @@ assert.deepEqual(
     "expandMask",
     "letterboxReveal",
     "filmFlash",
-    "cameraWhip"
+    "cameraWhip",
+    "cover",
+    "reveal",
+    "diagonalWipe",
+    "grayscaleDissolve"
   ]
 );
+assert.equal(expandedTransitions[12]?.columns, 8);
+assert.equal(expandedTransitions[26]?.corner, "top-right");
 assert.equal(presetNamespaces.transition, transition);
 assert.equal(presetNamespaces.camera, camera);
 assert.equal(presetNamespaces.cinematic, cinematic);

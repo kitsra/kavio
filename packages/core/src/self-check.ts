@@ -187,6 +187,36 @@ const cameraWhipTransition = evaluateLayerTransitions(
 assertClose(cameraWhipTransition.filter?.blur ?? 0, 14, "camera whip entrances ramp blur");
 assertClose(cameraWhipTransition.transform.skewY, -10, "camera whip entrances expose directional skew");
 
+const coverTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "cover", direction: "left", durationFrames: 5 } },
+  0,
+  dimensions
+);
+assertClose(coverTransition.offset.x, dimensions.width, "cover entrances move the incoming layer over the outgoing layer");
+
+const revealTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionOut: { type: "reveal", direction: "left", durationFrames: 5 } },
+  9,
+  dimensions
+);
+assertClose(revealTransition.offset.x, -dimensions.width, "reveal exits move the outgoing layer away from the incoming layer");
+
+const diagonalTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "diagonalWipe", corner: "top-right", durationFrames: 5 } },
+  0,
+  dimensions
+);
+assertEqual(diagonalTransition.revealPattern?.kind, "diagonal", "diagonal wipes expose a polygon reveal pattern");
+assertEqual(diagonalTransition.revealPattern?.corner, "top-right", "diagonal wipes preserve their requested corner");
+
+const grayscaleTransition = evaluateLayerTransitions(
+  { durationFrames: 10, transitionIn: { type: "grayscaleDissolve", durationFrames: 5 } },
+  0,
+  dimensions
+);
+assertClose(grayscaleTransition.opacity, 0, "grayscale dissolves start transparent");
+assertClose(grayscaleTransition.filter?.grayscale ?? 0, 1, "grayscale dissolves start fully desaturated");
+
 const transitionSeriesDocument: KavioDocument = {
   version: "0.1",
   composition: { width: 1000, height: 500, fps: 30, durationFrames: 90 },
@@ -230,6 +260,18 @@ assert(activeSeriesWindow.next.layer.visible, "incoming clip layer is visible du
 assertClose(activeSeriesWindow.previous.layer.position.x, 500, "outgoing push starts at its resting x position");
 assertClose(activeSeriesWindow.next.layer.position.x, 1500, "incoming push starts offscreen before moving in");
 assertEqual(evaluateTransitionSeries(transitionSeriesDocument, 60, dimensions).length, 0, "transition series endFrame is exclusive");
+
+const coverSeriesDocument = structuredClone(transitionSeriesDocument);
+coverSeriesDocument.tracks![0]!.clips[1]!.transitionFromPrevious!.presentation = { type: "cover", direction: "left" };
+const coverSeries = evaluateTransitionSeries(coverSeriesDocument, 48, dimensions)[0]!;
+assertClose(coverSeries.previous.layer.position.x, 500, "cover keeps the outgoing clip stationary");
+assertClose(coverSeries.next.layer.position.x, 1500, "cover moves the incoming clip over it");
+
+const revealSeriesDocument = structuredClone(transitionSeriesDocument);
+revealSeriesDocument.tracks![0]!.clips[1]!.transitionFromPrevious!.presentation = { type: "reveal", direction: "left" };
+const revealSeries = evaluateTransitionSeries(revealSeriesDocument, 48, dimensions)[0]!;
+assertClose(revealSeries.previous.layer.position.x, 500, "reveal starts with the outgoing clip in place");
+assertClose(revealSeries.next.layer.position.x, 500, "reveal keeps the incoming clip stationary");
 
 const linearTransitionSeriesDocument: KavioDocument = {
   ...transitionSeriesDocument,

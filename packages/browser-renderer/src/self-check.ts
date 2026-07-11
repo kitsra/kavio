@@ -487,6 +487,28 @@ const composition: KavioDocument = {
       size: { width: 120, height: 80 },
       fill: "#cc3366",
       transitionIn: { type: "cameraWhip", direction: "left", durationFrames: 5, amount: 14, intensity: 10 }
+    },
+    {
+      id: "diagonalTransition",
+      type: "shape",
+      shape: "rect",
+      startFrame: 30,
+      durationFrames: 10,
+      position: { x: 700, y: 340 },
+      size: { width: 120, height: 80 },
+      fill: "#7c3aed",
+      transitionIn: { type: "diagonalWipe", corner: "top-right", durationFrames: 5 }
+    },
+    {
+      id: "grayscaleTransition",
+      type: "shape",
+      shape: "rect",
+      startFrame: 30,
+      durationFrames: 10,
+      position: { x: 840, y: 340 },
+      size: { width: 120, height: 80 },
+      fill: "#f97316",
+      transitionIn: { type: "grayscaleDissolve", durationFrames: 5 }
     }
   ],
   tracks: [
@@ -623,6 +645,12 @@ const whipTransition = whipTransitionFrame.layers.find((entry) => entry.id === "
 assert(whipTransition !== undefined, "camera whip layer renders at its first frame");
 assert(styleValue(whipTransition, "filter").includes("blur(14px)"), "camera whip applies blur at the first frame");
 assert(styleValue(whipTransition, "transform").includes("skewY(-10deg)"), "camera whip applies directional skew");
+const diagonalTransition = maskTransitionFrame.layers.find((entry) => entry.id === "diagonalTransition")?.element;
+assert(diagonalTransition !== undefined, "diagonal wipe layer renders during its entrance");
+assert(styleValue(diagonalTransition, "clipPath").startsWith("polygon("), "diagonal wipe applies a deterministic polygon clip");
+const grayscaleTransition = whipTransitionFrame.layers.find((entry) => entry.id === "grayscaleTransition")?.element;
+assert(grayscaleTransition !== undefined, "grayscale dissolve layer renders at its first frame");
+assert(styleValue(grayscaleTransition, "filter").includes("grayscale(1)"), "grayscale dissolve applies a deterministic CSS filter");
 
 const seriesFrame = await renderer.renderFrame(24);
 const seriesPrevious = renderedElement(seriesFrame.layers.find((entry) => entry.id === "seriesA")?.element);

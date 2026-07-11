@@ -114,7 +114,9 @@ Top-level helpers:
   `transition.zoomBlur(...)`, `transition.bookFlip(...)`,
   `transition.pageCurlLite(...)`, `transition.skewSlide(...)`,
   `transition.expandMask(...)`, `transition.letterboxReveal(...)`,
-  `transition.filmFlash(...)`, and `transition.cameraWhip(...)`: create native
+  `transition.filmFlash(...)`, `transition.cameraWhip(...)`,
+  `transition.cover(...)`, `transition.reveal(...)`,
+  `transition.diagonalWipe(...)`, and `transition.grayscaleDissolve(...)`: create native
   transition definitions.
 - `track(id, clips?)`, `trackClip(id, options)`, and
   `transitionSeries.fromPrevious(...)`: create composition-level transition

@@ -66,11 +66,11 @@
           <div><dt>@kitsra/kavio-schema</dt><dd>JSON Schema, shared types, validation, and migration scaffold.</dd></div>
           <div><dt>@kitsra/kavio-core</dt><dd>Timeline evaluation, transition-series overlap windows, timing, prop resolution, layout, captions, masks, and resource limits.</dd></div>
           <div><dt>@kitsra/kavio-builder</dt><dd>TypeScript authoring helpers for canonical JSON, native transitions, cinematic recipes, camera moves, and text motion.</dd></div>
-          <div><dt>@kitsra/kavio-browser-renderer</dt><dd>Browser preview and DOM rendering runtime for layers, masks, text motion, and transition series.</dd></div>
+          <div><dt>@kitsra/kavio-browser-renderer</dt><dd>Browser preview and deterministic DOM rendering runtime for layers, masks, text motion, transition series, polygon wipes, and filter-backed dissolves.</dd></div>
           <div><dt>@kitsra/kavio-render-worker</dt><dd>Browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.</dd></div>
           <div><dt>@kitsra/kavio-ffmpeg</dt><dd>Inspectable FFmpeg plan construction.</dd></div>
-          <div><dt>@kitsra/kavio-cli</dt><dd>Local commands for validation, inspection, migration, and preview.</dd></div>
-          <div><dt>@kitsra/kavio-render</dt><dd>Render execution layer that owns real browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.</dd></div>
+          <div><dt>@kitsra/kavio-cli</dt><dd>Local commands for validation, per-transition browser/FFmpeg inspection, migration, preview, and rendering.</dd></div>
+          <div><dt>@kitsra/kavio-render</dt><dd>Render execution layer that owns browser capture, FFmpeg orchestration, native transition selection, outputs, metadata, cleanup, and cancellation.</dd></div>
           <div><dt>@kitsra/kavio-react</dt><dd>Opt-in deterministic React frame hooks and a Playwright driver for static-markup capture through the standard render pipeline.</dd></div>
           <div><dt>@kitsra/kavio-mcp</dt><dd>MCP server, provider tool adapters, portable skill, and plugin manifests for agent-facing Kavio workflows. It calls <code>@kitsra/kavio-render</code> instead of spawning binaries itself.</dd></div>
         </dl>
@@ -177,6 +177,14 @@
             </tbody>
           </table>
         </div>
+        <p>
+          <code>TransitionDefinition</code> accepts semantic fields shared by
+          JSON and browser rendering. The new <code>corner</code> field uses
+          <code>top-left</code>, <code>top-right</code>,
+          <code>bottom-left</code>, or <code>bottom-right</code> and is required
+          by <code>diagonalWipe()</code>. Directional <code>cover()</code> and
+          <code>reveal()</code> require <code>direction</code>.
+        </p>
       </section>
 
       <section class="content-section" id="motion-methods">
@@ -194,7 +202,7 @@
             <tbody>
               <tr>
                 <td><code>transition</code></td>
-                <td><code>fade()</code>, <code>slide()</code>, <code>wipe()</code>, <code>crossfade()</code>, <code>zoom()</code>, <code>push()</code>, <code>spin()</code>, <code>rotate()</code>, <code>flip()</code>, <code>blurDissolve()</code>, <code>colorDissolve()</code>, <code>dip()</code>, <code>iris()</code>, <code>stretch()</code>, <code>squeeze()</code>, <code>clockWipe()</code>, <code>barWipe()</code>, <code>gridWipe()</code>, <code>tileReveal()</code>, <code>radialBlur()</code>, <code>zoomBlur()</code>, <code>bookFlip()</code>, <code>pageCurlLite()</code>, <code>skewSlide()</code>, <code>expandMask()</code>, <code>letterboxReveal()</code>, <code>filmFlash()</code>, <code>cameraWhip()</code></td>
+                <td><code>fade()</code>, <code>slide()</code>, <code>wipe()</code>, <code>crossfade()</code>, <code>zoom()</code>, <code>push()</code>, <code>spin()</code>, <code>rotate()</code>, <code>flip()</code>, <code>blurDissolve()</code>, <code>colorDissolve()</code>, <code>dip()</code>, <code>iris()</code>, <code>stretch()</code>, <code>squeeze()</code>, <code>clockWipe()</code>, <code>barWipe()</code>, <code>gridWipe()</code>, <code>tileReveal()</code>, <code>radialBlur()</code>, <code>zoomBlur()</code>, <code>bookFlip()</code>, <code>pageCurlLite()</code>, <code>skewSlide()</code>, <code>expandMask()</code>, <code>letterboxReveal()</code>, <code>filmFlash()</code>, <code>cameraWhip()</code>, <code>cover()</code>, <code>reveal()</code>, <code>diagonalWipe()</code>, <code>grayscaleDissolve()</code></td>
                 <td>Native transition definitions for <code>transitionIn</code>, <code>transitionOut</code>, and transition series.</td>
               </tr>
               <tr>
