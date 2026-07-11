@@ -504,6 +504,15 @@ function getUnsupportedDirectImageTrackTransitionReason(window: TransitionOverla
   if (window.transition.type === "clockWipe" && window.transition.direction !== undefined && window.transition.direction !== "right") {
     return "image transition tracks only support the default clockwise clockWipe in FFmpeg-direct mode";
   }
+  if (window.transition.type === "filmFlash") {
+    return "image transition tracks require an explicit white filmFlash color in FFmpeg-direct mode";
+  }
+  if (window.transition.type === "dip" || window.transition.type === "colorDissolve") {
+    return "image transition tracks only support black or white dip/colorDissolve in FFmpeg-direct mode";
+  }
+  if (window.transition.type === "zoom" || window.transition.type === "blurDissolve") {
+    return `image transition type "${window.transition.type}" only supports its default strength in FFmpeg-direct mode`;
+  }
   return `image transition type "${window.transition.type}" requires browser rendering`;
 }
 
@@ -524,9 +533,42 @@ function directImageTrackXfadeName(window: TransitionOverlapWindow): string | nu
       return transition.shape === undefined || transition.shape === "circle" ? "circleopen" : null;
     case "clockWipe":
       return transition.direction === undefined || transition.direction === "right" ? "radial" : null;
+    case "zoom":
+      return hasDefaultTransitionStrength(transition) ? "zoomin" : null;
+    case "blurDissolve":
+      return hasDefaultTransitionStrength(transition) ? "hblur" : null;
+    case "dip":
+      return hasDefaultTransitionStrength(transition) ? directFadeColorName(transition.color ?? "#000000") : null;
+    case "colorDissolve":
+      return hasDefaultTransitionStrength(transition) ? directFadeColorName(transition.color ?? "#ffffff") : null;
+    case "filmFlash":
+      return hasDefaultTransitionStrength(transition) && isWhite(transition.color) ? "fadewhite" : null;
+    case "squeeze":
+      return hasDefaultTransitionStrength(transition) ? (transition.axis === "y" ? "squeezev" : "squeezeh") : null;
+    case "letterboxReveal":
+      return transition.axis === "x" ? "horzopen" : "vertopen";
     default:
       return null;
   }
+}
+
+function hasDefaultTransitionStrength(transition: TransitionOverlapWindow["transition"]): boolean {
+  return transition.amount === undefined && transition.intensity === undefined;
+}
+
+function directFadeColorName(color: string): "fadeblack" | "fadewhite" | null {
+  if (isBlack(color)) {
+    return "fadeblack";
+  }
+  return isWhite(color) ? "fadewhite" : null;
+}
+
+function isBlack(color: string | undefined): boolean {
+  return color !== undefined && ["#000", "#000000", "black"].includes(color.toLowerCase());
+}
+
+function isWhite(color: string | undefined): boolean {
+  return color !== undefined && ["#fff", "#ffffff", "white"].includes(color.toLowerCase());
 }
 
 function oppositeDirection(direction: "up" | "down" | "left" | "right"): "up" | "down" | "left" | "right" {

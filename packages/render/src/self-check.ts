@@ -405,10 +405,51 @@ const directTrackTransitionCases: Array<{ presentation: KavioTransitionPresentat
   { presentation: { type: "push", direction: "left" }, xfade: "slideleft" },
   { presentation: { type: "iris", shape: "circle" }, xfade: "circleopen" },
   { presentation: { type: "expandMask" }, xfade: "circleopen" },
-  { presentation: { type: "clockWipe" }, xfade: "radial" }
+  { presentation: { type: "clockWipe" }, xfade: "radial" },
+  { presentation: { type: "zoom" }, xfade: "zoomin" },
+  { presentation: { type: "blurDissolve" }, xfade: "hblur" },
+  { presentation: { type: "dip" }, xfade: "fadeblack" },
+  { presentation: { type: "colorDissolve" }, xfade: "fadewhite" },
+  { presentation: { type: "filmFlash", color: "#ffffff" }, xfade: "fadewhite" },
+  { presentation: { type: "squeeze", axis: "x" }, xfade: "squeezeh" },
+  { presentation: { type: "squeeze", axis: "y" }, xfade: "squeezev" },
+  { presentation: { type: "letterboxReveal", axis: "x" }, xfade: "horzopen" },
+  { presentation: { type: "letterboxReveal", axis: "y" }, xfade: "vertopen" }
 ];
 for (const { presentation, xfade } of directTrackTransitionCases) {
-  const view: KavioDocument = {
+  const view = directTrackTransitionView(presentation);
+  assert(getDirectRenderSupport(view).ok, `${presentation.type} image transition is eligible for FFmpeg-direct render`);
+  const args = assembleDirectRenderCommand({
+    view,
+    preset: view.exports[0]!,
+    outputPath: `/tmp/image-direct-${presentation.type}.mp4`
+  }).join(" ");
+  assert(args.includes(`xfade=transition=${xfade}:duration=0.066667:offset=0.133333`), `${presentation.type} maps to FFmpeg ${xfade}`);
+}
+
+const directDiamondIrisView = directTrackTransitionView({ type: "iris", shape: "diamond" });
+const directDiamondIrisSupport = getDirectRenderSupport(directDiamondIrisView);
+assert(!directDiamondIrisSupport.ok, "diamond iris stays on the browser renderer");
+if (!directDiamondIrisSupport.ok) {
+  assert(directDiamondIrisSupport.reason.includes("circular iris"), "diamond iris reports its direct-render limitation");
+}
+
+const directCustomBlurView = directTrackTransitionView({ type: "blurDissolve", amount: 24 });
+const directCustomBlurSupport = getDirectRenderSupport(directCustomBlurView);
+assert(!directCustomBlurSupport.ok, "custom blur strength stays on the browser renderer");
+if (!directCustomBlurSupport.ok) {
+  assert(directCustomBlurSupport.reason.includes("default strength"), "custom blur reports its direct-render limitation");
+}
+
+const directCustomDipView = directTrackTransitionView({ type: "dip", color: "#ff0000" });
+const directCustomDipSupport = getDirectRenderSupport(directCustomDipView);
+assert(!directCustomDipSupport.ok, "custom dip color stays on the browser renderer");
+if (!directCustomDipSupport.ok) {
+  assert(directCustomDipSupport.reason.includes("black or white"), "custom dip reports its direct-render limitation");
+}
+
+function directTrackTransitionView(presentation: KavioTransitionPresentation): KavioDocument {
+  return {
     ...directImageTransitionView,
     tracks: [{
       id: "main",
@@ -427,38 +468,6 @@ for (const { presentation, xfade } of directTrackTransitionCases) {
       ]
     }]
   };
-  assert(getDirectRenderSupport(view).ok, `${presentation.type} image transition is eligible for FFmpeg-direct render`);
-  const args = assembleDirectRenderCommand({
-    view,
-    preset: view.exports[0]!,
-    outputPath: `/tmp/image-direct-${presentation.type}.mp4`
-  }).join(" ");
-  assert(args.includes(`xfade=transition=${xfade}:duration=0.066667:offset=0.133333`), `${presentation.type} maps to FFmpeg ${xfade}`);
-}
-
-const directDiamondIrisView: KavioDocument = {
-  ...directImageTransitionView,
-  tracks: [{
-    id: "main",
-    clips: [
-      { id: "first", layerId: "first", startFrame: 0, durationFrames: 6 },
-      {
-        id: "second",
-        layerId: "second",
-        startFrame: 4,
-        durationFrames: 6,
-        transitionFromPrevious: {
-          presentation: { type: "iris", shape: "diamond" },
-          timing: { type: "tween", durationFrames: 2, easing: "linear" }
-        }
-      }
-    ]
-  }]
-};
-const directDiamondIrisSupport = getDirectRenderSupport(directDiamondIrisView);
-assert(!directDiamondIrisSupport.ok, "diamond iris stays on the browser renderer");
-if (!directDiamondIrisSupport.ok) {
-  assert(directDiamondIrisSupport.reason.includes("circular iris"), "diamond iris reports its direct-render limitation");
 }
 
 const directImageWithEasedTransition: KavioDocument = {

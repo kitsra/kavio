@@ -34,7 +34,8 @@ Current limits:
 - Performance measurement against PRD throughput targets and GetPint quality
   baselines.
 - Quality comparison and careful expansion beyond the direct renderer's linear
-  fade, directional wipe/slide/push, circular iris, and clock-wipe variants.
+  fade, directional wipe/slide/push, circular iris, clock wipe, zoom, blur,
+  squeeze, letterbox, and constrained color-transition variants.
 
 ## End-To-End Flow
 

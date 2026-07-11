@@ -30,8 +30,10 @@ bundle, and MVP demo fixtures.
 later archive render path.
 FFmpeg-direct image transition tracks support linear fade/crossfade,
 directional wipe/slide/push, circular iris/expandMask, and default clockwise
-clockWipe handoffs; unsupported variants fall back to browser-overlay in auto
-mode.
+clockWipe handoffs. Default-strength zoom, blurDissolve, squeeze, and
+letterboxReveal plus constrained black/white dip, colorDissolve, and filmFlash
+handoffs are also direct; unsupported variants fall back to browser-overlay in
+auto mode.
 Opaque graphics-only Kavio browser renders paint the effective background into
 the captured stage and encode it as the primary stream, preserving intermediate
 transition frames during live capture. Hybrid video and custom React drivers

@@ -126,10 +126,13 @@ const CURRENT_TRANSITION_SUPPORT = Object.fromEntries(
       transparentVideoRender: "stable",
       gifRender: "stable",
       pngSequenceRender: "unsupported",
-      nativeRender: ["fade", "crossfade", "wipe", "slide", "push", "iris", "expandMask", "clockWipe"].includes(transition)
+      nativeRender: [
+        "fade", "crossfade", "wipe", "slide", "push", "iris", "expandMask", "clockWipe",
+        "zoom", "blurDissolve", "dip", "colorDissolve", "filmFlash", "squeeze", "letterboxReveal"
+      ].includes(transition)
         ? "stable"
         : "unsupported",
-      nativeRenderNote: "FFmpeg-direct transition support requires a linear, exactly overlapped, full-frame image transition track; iris and expandMask require a circle shape."
+      nativeRenderNote: "FFmpeg-direct transition support requires a linear, exactly overlapped, full-frame image transition track. Some native filters only support default strength, circle shapes, black/white colors, or default direction."
     }
   ])
 );

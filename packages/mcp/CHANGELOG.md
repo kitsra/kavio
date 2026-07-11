@@ -6,7 +6,8 @@
 
 - Report FFmpeg-direct eligibility for linear full-frame image transition tracks
   using fade/crossfade, directional wipe/slide/push, circular iris/expand-mask,
-  and default clockwise clock-wipe handoffs.
+  default clockwise clock-wipe, zoom, blur dissolve, squeeze, letterbox reveal,
+  and constrained dip/color/flash handoffs.
 
 ## 0.4.0
 

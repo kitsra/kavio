@@ -75,7 +75,9 @@ node packages/cli/dist/index.js render composition.json --render-mode ffmpeg-dir
 - Transition-track image handoffs when the overlap exactly matches a linear
   `transitionFromPrevious`. FFmpeg `xfade` supports `fade`, `crossfade`,
   directional `wipe`, `slide`, and `push`, circular `iris` / `expandMask`, and
-  the default clockwise `clockWipe`.
+  the default clockwise `clockWipe`. It also supports default-strength `zoom`,
+  `blurDissolve`, `squeeze`, and `letterboxReveal`, black/white `dip` and
+  `colorDissolve`, and explicitly white `filmFlash`.
 - Optional image-layer `transitionIn` / `transitionOut` when the transition type
   is `fade`, the timing is linear, and `durationFrames` is present.
 - Optional image-layer `keyframes.scale` when it describes a simple linear
@@ -96,9 +98,10 @@ retain explicit overlay compositing.
 
 It intentionally rejects other image keyframes, unlisted transitions,
 non-linear timing, diamond iris masks, non-default clock-wipe directions,
-ambiguous overlaps, masks, opacity changes, mixed image/text/shape layouts,
-`fit: "none"`, and other browser-only features. If it rejects a composition,
-use the default `browser-overlay` mode.
+custom native-filter strength, unsupported wash colors, ambiguous overlaps,
+masks, opacity changes, mixed image/text/shape layouts, `fit: "none"`, and
+other browser-only features. If it rejects a composition, use the default
+`browser-overlay` mode.
 
 The render API records both `requestedRenderMode` and the resolved `renderMode`
 in stage timings. CLI JSON and text output report the resolved mode.

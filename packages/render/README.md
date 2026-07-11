@@ -56,7 +56,8 @@ any false claim that the pinned `ffmpeg-static` package provides FFmpeg 8.
 - Resolves FFmpeg binaries.
 - Assembles render commands.
 - Maps linear full-frame image transition tracks to FFmpeg-direct fade,
-  directional wipe/slide/push, circular iris, and clock-wipe filters.
+  directional wipe/slide/push, circular iris, clock-wipe, zoom, blur, squeeze,
+  letterbox, and constrained black/white color filters.
 - Renders a single composition/export.
 - Streams `png-sequence` captures to deterministic `frame-%05d.png` files in a
   new output directory without invoking FFmpeg.

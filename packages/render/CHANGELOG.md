@@ -6,8 +6,10 @@
 
 - Expand FFmpeg-direct image transition tracks beyond fade/crossfade with
   directional wipe, slide, and push; circular iris and expand-mask; and default
-  clockwise clock-wipe mappings. Unsupported shapes, directions, and easing
-  continue to fall back to browser rendering.
+  clockwise clock-wipe mappings. Default-strength zoom, blur dissolve, squeeze,
+  and letterbox reveals plus constrained black/white dip, color-dissolve, and
+  film-flash mappings are also supported. Unsupported strength, color, shape,
+  direction, and easing continue to fall back to browser rendering.
 
 - Preserve browser-rendered transition frames in opaque graphics-only videos
   by encoding the background-painted Kavio stage as the primary PNG stream.
