@@ -1,5 +1,39 @@
 # @kitsra/kavio-mcp
 
+## 0.4.1
+
+### Patch Changes
+
+- 8683091: Expand linear FFmpeg-direct image transition tracks with directional wipes,
+  slides, pushes, circular iris reveals, and clockwise clock wipes, and expose the
+  new eligibility through agent-facing motion support metadata. Add native
+  default-strength zoom, blur-dissolve, squeeze, and letterbox reveals plus
+  constrained black/white dip, color-dissolve, and film-flash mappings. Preserve
+  every captured transition frame in opaque graphics-only browser renders by
+  encoding the background-painted Kavio stage as the primary video stream.
+- 8683091: Add first-class responsive picture-in-picture authoring with corner placement,
+  proportional sizing, edge inset, muted playback, stacking defaults, and agent
+  guidance for explicit audio handling.
+- 8683091: Add portable cover, reveal, diagonal-wipe, and grayscale-dissolve transitions
+  with deterministic browser rendering and equivalent FFmpeg-direct mappings.
+  Default-count bar wipes can now use FFmpeg-direct, while custom grids retain the
+  browser fallback. Composition inspection reports browser and native support for
+  each transition window.
+- 8683091: Improve rendering performance and quality with automatic direct-render selection,
+  capture and batch browser reuse, PNG-sequence export, FFmpeg 8 diagnostics,
+  direct-render discovery, transition fixes, quality gates, and executable audio
+  loop/sidechain behavior.
+- Updated dependencies [8683091]
+- Updated dependencies [8683091]
+- Updated dependencies [8683091]
+- Updated dependencies [8683091]
+- Updated dependencies [8683091]
+  - @kitsra/kavio-render@0.4.1
+  - @kitsra/kavio-builder@0.4.1
+  - @kitsra/kavio-schema@0.4.1
+  - @kitsra/kavio-core@0.4.1
+  - @kitsra/kavio-render-worker@0.4.1
+
 ## Unreleased
 
 ### Patch Changes

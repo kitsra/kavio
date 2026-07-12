@@ -1,6 +1,6 @@
 {
   "name": "@kitsra/kavio-react",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Opt-in React frame rendering for Kavio's Playwright and FFmpeg pipeline.",
   "license": "Elastic-2.0",
   "repository": {

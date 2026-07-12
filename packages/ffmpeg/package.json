@@ -1,6 +1,6 @@
 {
   "name": "@kitsra/kavio-ffmpeg",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "FFmpeg planning primitives for Kavio rendering.",
   "license": "Elastic-2.0",
   "repository": {
