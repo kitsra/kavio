@@ -230,8 +230,8 @@ composition
               </tr>
               <tr>
                 <td>Transition</td>
-                <td><code>type</code>, <code>durationFrames</code>, <code>direction</code>, <code>axis</code>, <code>shape</code>, <code>color</code>, <code>amount</code>, <code>intensity</code>, <code>rows</code>, <code>columns</code>, <code>easing</code>, <code>timing</code></td>
-                <td>Transition types include fade, slide, wipe, crossfade, zoom, push, spin, rotate, flip, blur dissolve, color dissolve, dip, iris, stretch, squeeze, clock wipe, bar wipe, grid wipe, tile reveal, radial blur, zoom blur, book flip, page curl, skew slide, expand mask, letterbox reveal, film flash, and camera whip.</td>
+                <td><code>type</code>, <code>durationFrames</code>, <code>direction</code>, <code>axis</code>, <code>shape</code>, <code>corner</code>, <code>color</code>, <code>amount</code>, <code>intensity</code>, <code>rows</code>, <code>columns</code>, <code>easing</code>, <code>timing</code></td>
+                <td>Transition types include fade, slide, wipe, crossfade, zoom, push, spin, rotate, flip, blur dissolve, color dissolve, dip, iris, stretch, squeeze, clock wipe, bar wipe, grid wipe, tile reveal, radial blur, zoom blur, book flip, page curl, skew slide, expand mask, letterbox reveal, film flash, camera whip, cover, reveal, diagonal wipe, and grayscale dissolve. Diagonal wipes use <code>corner</code>: <code>top-left</code>, <code>top-right</code>, <code>bottom-left</code>, or <code>bottom-right</code>.</td>
               </tr>
               <tr>
                 <td>Text motion</td>
@@ -259,6 +259,27 @@ composition
       </section>
 
       <section class="content-section">
+        <h2>Picture In Picture</h2>
+        <p>
+          Add the full-frame video first, then use
+          <code>pictureInPicture(...)</code> for a responsive overlapping inset.
+          Choose a corner with <code>placement</code> and tune
+          <code>widthPercent</code>, <code>insetPercent</code>, and
+          <code>aspectRatio</code>. The inset defaults to muted playback and
+          elevated stacking; mix its audio only through an explicit audio track.
+        </p>
+        <pre><code>pictureInPicture("guest", {
+  asset: guestVideo,
+  startFrame: 30,
+  durationFrames: 240,
+  placement: "bottom-right",
+  widthPercent: 30,
+  insetPercent: 4,
+  aspectRatio: 4 / 3
+});</code></pre>
+      </section>
+
+      <section class="content-section">
         <h2>Motion</h2>
         <p>
           Kavio supports timeline-safe motion through frame-based timing,
@@ -281,15 +302,33 @@ track("main", [
     layerId: "scene-b",
     startFrame: 48,
     durationFrames: 60,
-    transitionFromPrevious: transition.push({
-      direction: "left",
+    transitionFromPrevious: transition.diagonalWipe({
+      corner: "top-right",
       durationFrames: 12,
-      easing: "outCubic"
+      easing: "linear"
     })
   })
 ]);
 
 cinematic.glitchCut({ durationFrames: 8 });</code></pre>
+        <p>
+          <code>cover</code>, <code>reveal</code>, <code>diagonalWipe</code>,
+          and <code>grayscaleDissolve</code> have deterministic browser behavior
+          and native FFmpeg mappings for exact linear full-frame image-track
+          overlaps. Default-count <code>barWipe</code> is native; custom
+          <code>rows</code> or <code>columns</code> keep the browser renderer.
+        </p>
+        <pre><code>{
+  "presentation": {
+    "type": "diagonalWipe",
+    "corner": "bottom-right"
+  },
+  "timing": {
+    "type": "tween",
+    "durationFrames": 12,
+    "easing": "linear"
+  }
+}</code></pre>
       </section>
     </main>
 

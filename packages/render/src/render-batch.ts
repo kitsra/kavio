@@ -1,6 +1,7 @@
 import { expandRenderBatch, type BrowserDriver, type RenderBatchInput } from "@kitsra/kavio-render-worker";
 import { renderComposition, type RenderCompositionOptions, type RenderCompositionResult } from "./render-composition.js";
 import type { FfmpegRunner } from "./ffmpeg-runner.js";
+import { PlaywrightSession } from "./playwright-driver.js";
 
 export interface RenderBatchOptions {
   outDir?: string;
@@ -8,6 +9,7 @@ export interface RenderBatchOptions {
   driver?: BrowserDriver;
   ffmpegRunner?: FfmpegRunner;
   concurrency?: number;
+  captureParallelism?: number;
   failFast?: boolean;
   signal?: AbortSignal;
   continueOnFrameError?: boolean;
@@ -33,21 +35,27 @@ export async function renderBatch(
   let aborted = false;
 
   const worker = async (): Promise<void> => {
-    while (!aborted) {
-      const index = nextIndex;
-      nextIndex += 1;
-      const job = jobs[index];
-      if (job === undefined) {
-        return;
-      }
+    const session = options.driver === undefined ? new PlaywrightSession() : undefined;
+    try {
+      while (!aborted) {
+        const index = nextIndex;
+        nextIndex += 1;
+        const job = jobs[index];
+        if (job === undefined) {
+          return;
+        }
 
-      const result = await renderComposition(job.document, buildRenderOptions(job, options));
-      results.set(index, { id: job.id, outputName: job.outputName, result });
+        const driver = options.driver ?? session!.createDriver();
+        const result = await renderComposition(job.document, buildRenderOptions(job, options, driver));
+        results.set(index, { id: job.id, outputName: job.outputName, result });
 
-      if (!result.ok && options.failFast === true) {
-        aborted = true;
-        return;
+        if (!result.ok && options.failFast === true) {
+          aborted = true;
+          return;
+        }
       }
+    } finally {
+      await session?.close();
     }
   };
 
@@ -59,7 +67,8 @@ export async function renderBatch(
 
 function buildRenderOptions(
   job: ReturnType<typeof expandRenderBatch>[number],
-  options: RenderBatchOptions
+  options: RenderBatchOptions,
+  driver: BrowserDriver
 ): RenderCompositionOptions {
   return {
     preset: job.preset,
@@ -67,7 +76,8 @@ function buildRenderOptions(
     outputName: job.outputName,
     ...(options.outDir !== undefined && { outDir: options.outDir }),
     ...(options.renderMode !== undefined && { renderMode: options.renderMode }),
-    ...(options.driver !== undefined && { driver: options.driver }),
+    ...(options.captureParallelism !== undefined && { captureParallelism: options.captureParallelism }),
+    driver,
     ...(options.ffmpegRunner !== undefined && { ffmpegRunner: options.ffmpegRunner }),
     ...(options.signal !== undefined && { signal: options.signal }),
     ...(options.continueOnFrameError !== undefined && { continueOnFrameError: options.continueOnFrameError })

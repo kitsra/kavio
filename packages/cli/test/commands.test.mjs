@@ -15,6 +15,7 @@ test("prints help for the default command", async () => {
   assert.match(result.stdout, /presets\s+List social media export presets/);
   assert.match(result.stdout, /preview\s+Start a local browser preview server/);
   assert.match(result.stdout, /--render-mode <mode>/);
+  assert.match(result.stdout, /--capture-parallelism <n>/);
   assert.equal(result.stderr, "");
 });
 
@@ -74,6 +75,8 @@ test("inspects a valid composition in text and JSON modes", async () => {
   assert.match(textResult.stdout, /Assets: 2 \(video: 1, image: 1\)/);
   assert.match(textResult.stdout, /Layers: 2 \(video: 1, text: 1\)/);
   assert.match(textResult.stdout, /Tracks: 0 \(0 clips, 0 transition windows\)/);
+  assert.match(textResult.stdout, /Direct render: ineligible \(browser-overlay\)/);
+  assert.match(textResult.stdout, /layer "headline".*text.*browser rendering/i);
   assert.match(textResult.stdout, /  - social/);
   assert.equal(textResult.stderr, "");
 
@@ -86,7 +89,20 @@ test("inspects a valid composition in text and JSON modes", async () => {
   assert.equal(payload.ok, true);
   assert.equal(payload.summary.file, validFile);
   assert.equal(payload.summary.composition.durationSeconds, 3);
+  assert.equal(payload.summary.directRender.eligible, false);
+  assert.equal(payload.summary.directRender.recommendedMode, "browser-overlay");
+  assert.match(payload.summary.directRender.reason, /browser-overlay/);
   assert.deepEqual(payload.summary.exports.names, ["social"]);
+});
+
+test("inspect recommends FFmpeg-direct for eligible compositions", async () => {
+  const result = await runCli(["--json", "inspect", fixturePath("direct-render-composition.json")]);
+  const payload = JSON.parse(result.stdout);
+
+  assert.equal(result.status, 0);
+  assert.equal(payload.summary.directRender.eligible, true);
+  assert.equal(payload.summary.directRender.recommendedMode, "ffmpeg-direct");
+  assert.match(payload.summary.directRender.reason, /eligible.*--render-mode ffmpeg-direct/i);
 });
 
 test("inspect reports transition series overlap windows", async () => {
@@ -113,7 +129,11 @@ test("inspect reports transition series overlap windows", async () => {
       startFrame: 48,
       endFrame: 60,
       durationFrames: 12,
-      transitionType: "push"
+      transitionType: "push",
+      renderSupport: {
+        browser: { supported: true },
+        ffmpegDirect: { supported: false, reason: "image transition tracks only support linear FFmpeg-direct timing" }
+      }
     }
   ]);
 });
@@ -293,6 +313,30 @@ test("render rejects a missing flag value", async () => {
   assert.notEqual(status, 0);
   const payload = JSON.parse(stdout);
   assert.equal(payload.errors[0].code, "CLI_UNKNOWN_FLAG");
+});
+
+test("render accepts auto mode and validates capture parallelism", async () => {
+  const autoResult = await runCli([
+    "--json",
+    "render",
+    fixturePath("invalid-composition.json"),
+    "--render-mode",
+    "auto",
+    "--capture-parallelism",
+    "2"
+  ]);
+  assert.notEqual(autoResult.status, 0);
+  assert.equal(JSON.parse(autoResult.stdout).outputs[0].errors[0].code.startsWith("CLI_"), false);
+
+  const invalidResult = await runCli([
+    "--json",
+    "render",
+    fixturePath("valid-composition.json"),
+    "--capture-parallelism",
+    "0"
+  ]);
+  assert.notEqual(invalidResult.status, 0);
+  assert.match(JSON.parse(invalidResult.stdout).errors[0].message, /--capture-parallelism must be a positive integer/);
 });
 
 function escapeRegExp(value) {

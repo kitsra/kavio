@@ -42,6 +42,8 @@ export interface AssembleRenderCommandOptions {
    * stdin as an image2pipe PNG stream so capture and encode can overlap.
    */
   framePattern?: string;
+  /** Captured frames already include the effective opaque background. */
+  flattenedBrowserFrames?: boolean;
   /** Output file path. Defaults to `<preset.name>.<ext>`. */
   outputPath?: string;
 }
@@ -57,6 +59,10 @@ export interface AssembleDirectRenderCommandOptions {
 export type DirectRenderSupport =
   | { ok: true }
   | { ok: false; reason: string; layerId?: string };
+
+export type DirectTransitionSupport =
+  | { ok: true; filter: string }
+  | { ok: false; reason: string };
 
 const VIDEO_OUT_LABEL = "video_out";
 const AUDIO_OUT_LABEL = "audio_out";
@@ -95,6 +101,19 @@ export function assembleRenderCommand(options: AssembleRenderCommandOptions): st
       filters: ["format=rgba"],
       outputLabel: VIDEO_OUT_LABEL,
       expression: `[${inputIndex}:v]format=rgba[${VIDEO_OUT_LABEL}]`
+    });
+    inputIndex += 1;
+  } else if (options.flattenedBrowserFrames === true) {
+    if (framePattern === undefined) {
+      inputArgs.push("-f", "image2pipe", "-framerate", String(fps), "-i", "-");
+    } else {
+      inputArgs.push("-framerate", String(fps), "-start_number", "0", "-i", framePattern);
+    }
+    chains.push({
+      inputLabels: [`${inputIndex}:v`],
+      filters: ["format=yuv420p"],
+      outputLabel: VIDEO_OUT_LABEL,
+      expression: `[${inputIndex}:v]format=yuv420p[${VIDEO_OUT_LABEL}]`
     });
     inputIndex += 1;
   } else {
@@ -350,8 +369,16 @@ function directImageSequence(
     transitionWindows.forEach((window, index) => {
       const rightLabel = labels[index + 1]!;
       const label = index === transitionWindows.length - 1 ? outputLabel : `direct_xfade_${index}`;
+      const transition = directImageTrackXfadeName(window.transition);
+      if (transition === null) {
+        throw renderError({
+          code: "RENDER_FAILED",
+          stage: "ffmpeg",
+          message: `Unsupported FFmpeg-direct transition "${window.transition.type}".`
+        });
+      }
       const filters = [
-        `xfade=transition=fade:duration=${formatSeconds(window.durationFrames / fps)}:offset=${formatSeconds(window.startFrame / fps)}`,
+        `xfade=transition=${transition}:duration=${formatSeconds(window.durationFrames / fps)}:offset=${formatSeconds(window.startFrame / fps)}`,
         "format=yuv420p"
       ];
       chains.push({
@@ -469,13 +496,127 @@ function getDirectImageTrackSupport(view: KavioDocument, imageLayers: KavioImage
 }
 
 function getUnsupportedDirectImageTrackTransitionReason(window: TransitionOverlapWindow): string | null {
-  if (window.transition.type !== "fade" && window.transition.type !== "crossfade") {
-    return "image transition tracks only support linear fade/crossfade transitions";
+  const support = getDirectTransitionSupport(window.transition);
+  return support.ok ? null : support.reason;
+}
+
+export function getDirectTransitionSupport(transition: TransitionOverlapWindow["transition"]): DirectTransitionSupport {
+  if (transition.easing !== undefined && transition.easing !== "linear") {
+    return { ok: false, reason: "image transition tracks only support linear FFmpeg-direct timing" };
   }
-  if (window.transition.easing !== undefined && window.transition.easing !== "linear") {
-    return "image transition tracks only support linear fade/crossfade timing";
+  const filter = directImageTrackXfadeName(transition);
+  if (filter !== null) {
+    return { ok: true, filter };
   }
-  return null;
+  if ((transition.type === "iris" || transition.type === "expandMask") && transition.shape === "diamond") {
+    return { ok: false, reason: "image transition tracks only support circular iris/expandMask in FFmpeg-direct mode" };
+  }
+  if (transition.type === "clockWipe" && transition.direction !== undefined && transition.direction !== "right") {
+    return { ok: false, reason: "image transition tracks only support the default clockwise clockWipe in FFmpeg-direct mode" };
+  }
+  if (transition.type === "filmFlash") {
+    return { ok: false, reason: "image transition tracks require an explicit white filmFlash color in FFmpeg-direct mode" };
+  }
+  if (transition.type === "dip" || transition.type === "colorDissolve") {
+    return { ok: false, reason: "image transition tracks only support black or white dip/colorDissolve in FFmpeg-direct mode" };
+  }
+  if (transition.type === "zoom" || transition.type === "blurDissolve") {
+    return { ok: false, reason: `image transition type "${transition.type}" only supports its default strength in FFmpeg-direct mode` };
+  }
+  if (transition.type === "barWipe") {
+    return { ok: false, reason: "image barWipe only supports default row/column counts in FFmpeg-direct mode" };
+  }
+  return { ok: false, reason: `image transition type "${transition.type}" requires browser rendering` };
+}
+
+function directImageTrackXfadeName(transition: TransitionOverlapWindow["transition"]): string | null {
+  switch (transition.type) {
+    case "fade":
+    case "crossfade":
+      return "fade";
+    case "wipe":
+      return `wipe${oppositeDirection(transition.direction ?? "up")}`;
+    case "slide":
+      return `slide${transition.direction ?? "up"}`;
+    case "push":
+      return `slide${transition.direction ?? "left"}`;
+    case "iris":
+    case "expandMask":
+      return transition.shape === undefined || transition.shape === "circle" ? "circleopen" : null;
+    case "clockWipe":
+      return transition.direction === undefined || transition.direction === "right" ? "radial" : null;
+    case "zoom":
+      return hasDefaultTransitionStrength(transition) ? "zoomin" : null;
+    case "blurDissolve":
+      return hasDefaultTransitionStrength(transition) ? "hblur" : null;
+    case "dip":
+      return hasDefaultTransitionStrength(transition) ? directFadeColorName(transition.color ?? "#000000") : null;
+    case "colorDissolve":
+      return hasDefaultTransitionStrength(transition) ? directFadeColorName(transition.color ?? "#ffffff") : null;
+    case "filmFlash":
+      return hasDefaultTransitionStrength(transition) && isWhite(transition.color) ? "fadewhite" : null;
+    case "squeeze":
+      return hasDefaultTransitionStrength(transition) ? (transition.axis === "y" ? "squeezev" : "squeezeh") : null;
+    case "letterboxReveal":
+      return transition.axis === "x" ? "horzopen" : "vertopen";
+    case "cover":
+      return `cover${transition.direction ?? "left"}`;
+    case "reveal":
+      return `reveal${transition.direction ?? "left"}`;
+    case "diagonalWipe":
+      return {
+        "top-left": "wipetl",
+        "top-right": "wipetr",
+        "bottom-left": "wipebl",
+        "bottom-right": "wipebr"
+      }[transition.corner ?? "top-left"];
+    case "grayscaleDissolve":
+      return "fadegrays";
+    case "barWipe":
+      if (transition.rows !== undefined || transition.columns !== undefined) {
+        return null;
+      }
+      return {
+        left: "hlslice",
+        right: "hrslice",
+        up: "vuslice",
+        down: "vdslice"
+      }[transition.direction ?? "right"];
+    default:
+      return null;
+  }
+}
+
+function hasDefaultTransitionStrength(transition: TransitionOverlapWindow["transition"]): boolean {
+  return transition.amount === undefined && transition.intensity === undefined;
+}
+
+function directFadeColorName(color: string): "fadeblack" | "fadewhite" | null {
+  if (isBlack(color)) {
+    return "fadeblack";
+  }
+  return isWhite(color) ? "fadewhite" : null;
+}
+
+function isBlack(color: string | undefined): boolean {
+  return color !== undefined && ["#000", "#000000", "black"].includes(color.toLowerCase());
+}
+
+function isWhite(color: string | undefined): boolean {
+  return color !== undefined && ["#fff", "#ffffff", "white"].includes(color.toLowerCase());
+}
+
+function oppositeDirection(direction: "up" | "down" | "left" | "right"): "up" | "down" | "left" | "right" {
+  switch (direction) {
+    case "up":
+      return "down";
+    case "down":
+      return "up";
+    case "left":
+      return "right";
+    case "right":
+      return "left";
+  }
 }
 
 function directImageLayerOrder(view: KavioDocument, layers: KavioImageLayer[]): KavioImageLayer[] {

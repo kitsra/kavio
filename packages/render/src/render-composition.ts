@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { availableParallelism } from "node:os";
 import { dirname, join } from "node:path";
 import { applyExportPreset, collectCompositionResourceLimitInputs, collectResourceLimitViolations, resolveDocumentProps } from "@kitsra/kavio-core";
@@ -17,14 +17,15 @@ import {
   type RenderChecksum,
   type RenderOutputMetadata
 } from "@kitsra/kavio-render-worker";
-import { assembleDirectRenderCommand, assembleRenderCommand } from "./assemble-command.js";
+import { assembleDirectRenderCommand, assembleRenderCommand, getDirectRenderSupport } from "./assemble-command.js";
 import { createFfmpegRunner, type FfmpegRunner } from "./ffmpeg-runner.js";
 import { createFrameByteQueue } from "./frame-stream.js";
 import { isRenderError, renderError } from "./errors.js";
 import { PlaywrightDriver } from "./playwright-driver.js";
 import { withEffectiveCodecs } from "./encoding.js";
 
-export type RenderCompositionMode = "browser-overlay" | "ffmpeg-direct";
+export type RenderCompositionMode = "auto" | "browser-overlay" | "ffmpeg-direct";
+export type ResolvedRenderCompositionMode = Exclude<RenderCompositionMode, "auto">;
 
 export interface RenderCompositionOptions {
   preset: string | import("@kitsra/kavio-schema").KavioExportPreset;
@@ -32,8 +33,8 @@ export interface RenderCompositionOptions {
   outDir?: string;
   outputName?: string;
   /**
-   * Experimental: "ffmpeg-direct" skips browser PNG capture for compositions
-   * that can be compiled directly into FFmpeg filters.
+   * "auto" selects FFmpeg-direct for eligible video compositions and falls
+   * back to browser-overlay. Explicit FFmpeg-direct rejects unsupported views.
    */
   renderMode?: RenderCompositionMode;
   /**
@@ -50,10 +51,16 @@ export interface RenderCompositionOptions {
 }
 
 export interface RenderStageTimings {
+  /** Requested mode, including auto when used. */
+  requestedRenderMode: RenderCompositionMode;
+  /** Renderer actually used for this export. */
+  renderMode: ResolvedRenderCompositionMode;
   /** Browser launch + frame capture wall time; absent for ffmpeg-direct renders. */
   captureMs?: number;
   /** Driver open wall time (browser launch + harness ready) within captureMs. */
   browserOpenMs?: number;
+  /** Chromium processes launched during this render; zero means a batch session reused them. */
+  browserLaunches?: number;
   /** Summed per-frame seek/evaluate time, when the driver reports it. */
   captureEvaluateMs?: number;
   /** Summed per-frame screenshot time, when the driver reports it. */
@@ -67,7 +74,7 @@ export interface RenderStageTimings {
 }
 
 export type RenderCompositionResult =
-  | { ok: true; outputPath: string; metadata: RenderOutputMetadata; timings: RenderStageTimings }
+  | { ok: true; outputPath: string; outputPattern?: string; metadata: RenderOutputMetadata; timings: RenderStageTimings }
   | { ok: false; errors: KavioError[] };
 
 /** End-to-end render for one (composition × export): props → view → validate → capture → encode. */
@@ -76,6 +83,20 @@ export async function renderComposition(
   options: RenderCompositionOptions
 ): Promise<RenderCompositionResult> {
   const totalStart = performance.now();
+  if (options.captureParallelism !== undefined && (!Number.isInteger(options.captureParallelism) || options.captureParallelism < 1)) {
+    return {
+      ok: false,
+      errors: [
+        renderError({
+          code: "RENDER_FAILED",
+          stage: "render",
+          path: "captureParallelism",
+          message: "captureParallelism must be a positive integer."
+        })
+      ]
+    };
+  }
+
   // resolveDocumentProps merges declared prop defaults before substitution.
   const resolution = resolveDocumentProps(doc, options.propValues ?? {});
   if (!resolution.ok) {
@@ -112,15 +133,42 @@ export async function renderComposition(
     return { ok: false, errors: [renderabilityError] };
   }
 
-  const outputName = options.outputName ?? `${preset.name}.${extensionForFormat(preset.format)}`;
+  const pngSequence = preset.format === "png-sequence";
+  if (pngSequence && options.continueOnFrameError === true) {
+    return {
+      ok: false,
+      errors: [
+        renderError({
+          code: "RENDER_FAILED",
+          stage: "render",
+          path: "continueOnFrameError",
+          message: "png-sequence exports require every frame and do not support continueOnFrameError.",
+          hint: "Remove continueOnFrameError so a missing frame fails and cleans up the incomplete sequence."
+        })
+      ]
+    };
+  }
+  const requestedOutputName = options.outputName ?? `${preset.name}.${extensionForFormat(preset.format)}`;
+  const sequenceOutput = pngSequence ? resolvePngSequenceOutputName(requestedOutputName) : null;
+  if (sequenceOutput !== null && !sequenceOutput.ok) {
+    return { ok: false, errors: [sequenceOutput.error] };
+  }
+  const outputName = sequenceOutput?.name ?? requestedOutputName;
   const outputPath = options.outDir === undefined ? outputName : join(options.outDir, outputName);
   const stillImage = preset.format === "png";
-  const metadataPreset = stillImage ? preset : withEffectiveCodecs(preset);
-  const renderMode = options.renderMode ?? "browser-overlay";
+  const browserImageOutput = stillImage || pngSequence;
+  const metadataPreset = browserImageOutput ? preset : withEffectiveCodecs(preset);
+  const requestedRenderMode = options.renderMode ?? "browser-overlay";
+  const renderMode: ResolvedRenderCompositionMode = browserImageOutput
+    ? "browser-overlay"
+    : requestedRenderMode === "auto"
+      ? getDirectRenderSupport(view).ok ? "ffmpeg-direct" : "browser-overlay"
+      : requestedRenderMode;
 
   try {
     let captureMs: number | undefined;
     let browserOpenMs: number | undefined;
+    let browserLaunches: number | undefined;
     let captureEvaluateMs: number | undefined;
     let captureScreenshotMs: number | undefined;
     let encodeMs = 0;
@@ -128,12 +176,15 @@ export async function renderComposition(
     await mkdir(dirname(outputPath), { recursive: true });
     const ffmpegRunner = options.ffmpegRunner ?? createFfmpegRunner();
     let browserDriver: BrowserDriver | undefined;
+    let sequenceChecksum: RenderChecksum | undefined;
+    let outputPattern: string | undefined;
 
     if (stillImage) {
       // Still images bypass ffmpeg entirely: capture one frame and write the
       // PNG bytes. The stage paints the effective background in-browser, so
       // opaque and transparent exports both match the preview exactly.
       browserDriver = options.driver ?? new PlaywrightDriver();
+      const launchesBefore = browserLaunchCountOf(browserDriver);
       const captureStart = performance.now();
       const captureResult = await captureFrames({
         driver: browserDriver,
@@ -144,6 +195,7 @@ export async function renderComposition(
       });
       captureMs = performance.now() - captureStart;
       browserOpenMs = captureResult.openMs;
+      browserLaunches = browserLaunchDelta(browserDriver, launchesBefore);
       captureEvaluateMs = captureResult.evaluateMs;
       captureScreenshotMs = captureResult.screenshotMs;
       const bytes = captureResult.captures[0]?.bytes;
@@ -155,6 +207,36 @@ export async function renderComposition(
         });
       }
       await writeFile(outputPath, bytes);
+    } else if (pngSequence) {
+      await createPngSequenceDirectory(outputPath);
+      browserDriver = options.driver ?? new PlaywrightDriver();
+      const launchesBefore = browserLaunchCountOf(browserDriver);
+      const hash = createHash("sha256");
+      let bytes = 0;
+      outputPattern = join(outputPath, "frame-%05d.png");
+      const captureStart = performance.now();
+      try {
+        const captureResult = await captureFrames({
+          driver: browserDriver,
+          composition: withStillImageBackground(view, preset),
+          parallelism: options.captureParallelism ?? defaultCaptureParallelism(),
+          continueOnFrameError: options.continueOnFrameError === true,
+          onFrame: async (capture) => {
+            hash.update(capture.bytes);
+            bytes += capture.bytes.byteLength;
+            await writeFile(join(outputPath, pngSequenceFrameName(capture.frame)), capture.bytes);
+          }
+        });
+        captureMs = performance.now() - captureStart;
+        browserOpenMs = captureResult.openMs;
+        browserLaunches = browserLaunchDelta(browserDriver, launchesBefore);
+        captureEvaluateMs = captureResult.evaluateMs;
+        captureScreenshotMs = captureResult.screenshotMs;
+        sequenceChecksum = { algorithm: "sha256", value: hash.digest("hex"), bytes };
+      } catch (error) {
+        await rm(outputPath, { recursive: true, force: true });
+        throw error;
+      }
     } else if (renderMode === "ffmpeg-direct") {
       const args = assembleDirectRenderCommand({ view, preset, outputPath });
       const encodeStart = performance.now();
@@ -164,15 +246,19 @@ export async function renderComposition(
       // Overlay frames stream straight into ffmpeg stdin so capture and encode
       // overlap; the bounded queue applies backpressure instead of buffering
       // the render or round-tripping PNG files through a temp directory.
-      const args = assembleRenderCommand({ view, preset, outputPath });
       browserDriver = options.driver ?? new PlaywrightDriver();
+      const captureDriver = browserDriver;
+      const flattenedBrowserFrames = canFlattenBrowserFrames(captureDriver, view, preset);
+      const captureView = flattenedBrowserFrames ? withStillImageBackground(view, preset) : view;
+      const args = assembleRenderCommand({ view, preset, outputPath, flattenedBrowserFrames });
+      const launchesBefore = browserLaunchCountOf(captureDriver);
       const frames = createFrameByteQueue();
 
       const captureStart = performance.now();
       // captureFrames manages browser-context cleanup (open → capture → close).
       const capturePromise = captureFrames({
-        driver: browserDriver,
-        composition: view,
+        driver: captureDriver,
+        composition: captureView,
         parallelism: options.captureParallelism ?? defaultCaptureParallelism(),
         continueOnFrameError: options.continueOnFrameError === true,
         onFrame: async (capture) => {
@@ -182,6 +268,7 @@ export async function renderComposition(
         (captureResult) => {
           captureMs = performance.now() - captureStart;
           browserOpenMs = captureResult.openMs;
+          browserLaunches = browserLaunchDelta(captureDriver, launchesBefore);
           captureEvaluateMs = captureResult.evaluateMs;
           captureScreenshotMs = captureResult.screenshotMs;
           frames.end();
@@ -219,7 +306,7 @@ export async function renderComposition(
     }
 
     const checksumStart = performance.now();
-    const checksum = await sha256File(outputPath);
+    const checksum = sequenceChecksum ?? await sha256File(outputPath);
     const checksumMs = performance.now() - checksumStart;
 
     const metadata = createRenderMetadata({
@@ -228,20 +315,23 @@ export async function renderComposition(
       outputName,
       outputPath,
       checksums: checksum,
-      ffmpegVersion: options.ffmpegVersion ?? (stillImage ? "not-used" : "ffmpeg-static"),
+      ffmpegVersion: options.ffmpegVersion ?? (browserImageOutput ? "not-used" : "ffmpeg-static"),
       chromiumRevision: options.chromiumRevision ?? (renderMode === "ffmpeg-direct" ? "not-used" : chromiumRevisionOf(browserDriver))
     });
 
     const timings: RenderStageTimings = {
+      requestedRenderMode,
+      renderMode,
       ...(captureMs !== undefined && { captureMs }),
       ...(browserOpenMs !== undefined && { browserOpenMs }),
+      ...(browserLaunches !== undefined && { browserLaunches }),
       ...(captureEvaluateMs !== undefined && { captureEvaluateMs }),
       ...(captureScreenshotMs !== undefined && { captureScreenshotMs }),
       encodeMs,
       checksumMs,
       totalMs: performance.now() - totalStart
     };
-    return { ok: true, outputPath, metadata, timings };
+    return { ok: true, outputPath, ...(outputPattern !== undefined && { outputPattern }), metadata, timings };
   } catch (error) {
     return { ok: false, errors: [toKavioError(error)] };
   }
@@ -258,6 +348,15 @@ function chromiumRevisionOf(driver: BrowserDriver | undefined): string {
   return "unknown";
 }
 
+function browserLaunchCountOf(driver: BrowserDriver): number | undefined {
+  return "browserLaunches" in driver && typeof driver.browserLaunches === "number" ? driver.browserLaunches : undefined;
+}
+
+function browserLaunchDelta(driver: BrowserDriver, before: number | undefined): number | undefined {
+  const after = browserLaunchCountOf(driver);
+  return before === undefined || after === undefined ? undefined : after - before;
+}
+
 async function sha256File(path: string): Promise<RenderChecksum> {
   const bytes = await readFile(path);
   const value = createHash("sha256").update(bytes).digest("hex");
@@ -265,28 +364,60 @@ async function sha256File(path: string): Promise<RenderChecksum> {
 }
 
 function validateRenderablePreset(preset: KavioExportPreset, compositionBackground: string | undefined): KavioError | null {
-  if (preset.format === "png-sequence") {
-    return renderError({
-      code: "RENDER_FAILED",
-      stage: "render",
-      path: "exports.0.format",
-      message: `kavio render does not yet support ${preset.format} exports.`,
-      hint: "Use gif, mp4, webm, or mov for the current render pipeline."
-    });
-  }
-
   const background = preset.background ?? compositionBackground;
-  if (background === "transparent" && preset.format !== "webm" && preset.format !== "mov" && preset.format !== "png") {
+  if (background === "transparent" && preset.format !== "webm" && preset.format !== "mov" && preset.format !== "png-sequence" && preset.format !== "png") {
     return renderError({
       code: "RENDER_FAILED",
       stage: "render",
       path: "exports.0.background",
       message: `kavio render does not support transparent ${preset.format} outputs.`,
-      hint: "Use transparent webm, mov, or png exports for alpha output."
+      hint: "Use transparent webm, mov, png-sequence, or png exports for alpha output."
     });
   }
 
   return null;
+}
+
+function resolvePngSequenceOutputName(outputName: string): { ok: true; name: string } | { ok: false; error: KavioError } {
+  const name = outputName.toLowerCase().endsWith(".zip") ? outputName.slice(0, -4) : outputName;
+  if (name.length === 0 || name === "." || name === ".." || /[\\/]/u.test(name)) {
+    return {
+      ok: false,
+      error: renderError({
+        code: "RENDER_FAILED",
+        stage: "render",
+        path: "outputName",
+        message: "png-sequence outputName must name one new directory and cannot contain path separators.",
+        hint: "Pass the parent directory with outDir and a directory name such as frames with outputName."
+      })
+    };
+  }
+  return { ok: true, name };
+}
+
+async function createPngSequenceDirectory(outputPath: string): Promise<void> {
+  try {
+    await mkdir(outputPath);
+  } catch (error) {
+    if (isNodeError(error) && error.code === "EEXIST") {
+      throw renderError({
+        code: "RENDER_FAILED",
+        stage: "render",
+        path: "outputName",
+        message: `png-sequence output path already exists: ${outputPath}`,
+        hint: "Choose a new outputName or remove the existing directory before rendering."
+      });
+    }
+    throw error;
+  }
+}
+
+function pngSequenceFrameName(frame: number): string {
+  return `frame-${String(frame).padStart(5, "0")}.png`;
+}
+
+function isNodeError(error: unknown): error is Error & { code: string } {
+  return error instanceof Error && "code" in error && typeof error.code === "string";
 }
 
 /**
@@ -301,6 +432,16 @@ function withStillImageBackground(view: KavioDocument, preset: KavioExportPreset
     return view;
   }
   return { ...view, exports: [{ ...first, background }, ...rest] };
+}
+
+function canFlattenBrowserFrames(driver: BrowserDriver, view: KavioDocument, preset: KavioExportPreset): boolean {
+  const background = preset.background ?? view.composition.background ?? "#000000";
+  return (
+    driver instanceof PlaywrightDriver &&
+    driver.usesKavioRenderHarness &&
+    background !== "transparent" &&
+    !view.layers.some((layer) => layer.type === "video")
+  );
 }
 
 function toKavioError(error: unknown): KavioError {

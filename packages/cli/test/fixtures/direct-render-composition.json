@@ -1,0 +1,33 @@
+{
+  "version": "0.1",
+  "composition": {
+    "width": 640,
+    "height": 360,
+    "fps": 30,
+    "durationFrames": 30,
+    "background": "#000000"
+  },
+  "assets": {},
+  "layers": [
+    {
+      "id": "background",
+      "type": "shape",
+      "shape": "rect",
+      "fill": "#ff3366",
+      "startFrame": 0,
+      "durationFrames": 30,
+      "position": { "x": 0, "y": 0 },
+      "size": { "width": 640, "height": 360 }
+    }
+  ],
+  "audio": [],
+  "exports": [
+    {
+      "name": "direct",
+      "format": "mp4",
+      "codec": "h264",
+      "width": 640,
+      "height": 360
+    }
+  ]
+}

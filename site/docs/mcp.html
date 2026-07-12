@@ -185,13 +185,26 @@
         </p>
         <div class="resource-grid">
           <a href="concepts.html"><strong>validate_composition</strong><span>Return structured schema, prop, timing, asset, and export errors.</span></a>
-          <a href="cli.html"><strong>inspect_composition</strong><span>Summarize duration, dimensions, layers, assets, audio, and export presets.</span></a>
+          <a href="cli.html"><strong>inspect_composition</strong><span>Summarize duration, dimensions, layers, assets, audio, exports, transition windows, and browser/FFmpeg support with native filter names or fallback reasons.</span></a>
           <a href="authoring.html"><strong>migrate_composition</strong><span>No-op current schema documents and fail clearly for unsupported versions.</span></a>
           <a href="authoring.html"><strong>resolve_props</strong><span>Resolve template placeholders from supplied prop values.</span></a>
           <a href="../examples.html#mvp-demo"><strong>list_export_presets</strong><span>Return standard reels, square, and landscape presets.</span></a>
-          <a href="rendering.html"><strong>plan_render</strong><span>Expand jobs and assemble FFmpeg arguments without touching binaries.</span></a>
+          <a href="rendering.html"><strong>plan_render</strong><span>Expand jobs, report direct-render eligibility and reasons, then assemble the matching FFmpeg-direct or browser-overlay plan without touching binaries.</span></a>
           <a href="rendering.html"><strong>render</strong><span>Call the render package for local video output when binaries are available.</span></a>
         </div>
+        <p>
+          <code>inspect_composition</code> keeps transition names portable while
+          exposing renderer capability per overlap window. Agents can select
+          the native path when a filter is present or preserve browser fidelity
+          when a reason is returned.
+        </p>
+        <pre><code>{
+  "transitionType": "cover",
+  "renderSupport": {
+    "browser": { "supported": true },
+    "ffmpegDirect": { "supported": true, "filter": "coverleft" }
+  }
+}</code></pre>
       </section>
 
       <section class="content-section">
@@ -238,7 +251,7 @@
       <section class="content-section">
         <h2>Related Pages</h2>
         <div class="resource-grid">
-          <a href="rendering.html"><strong>Rendering status</strong><span>Implemented render pieces and current limits.</span></a>
+          <a href="rendering.html"><strong>Rendering</strong><span>Render modes, quality gates, and browser-overlay fidelity.</span></a>
           <a href="api.html"><strong>API overview</strong><span>Package contracts used by MCP handlers.</span></a>
           <a href="../packages.html"><strong>Packages</strong><span>Workspace package ownership and MCP boundary.</span></a>
           <a href="https://github.com/kitsra/kavio"><strong>GitHub repository</strong><span>Source code for the MCP server, portable skill, plugins, and renderer packages.</span></a>

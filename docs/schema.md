@@ -170,11 +170,11 @@ Transitions may instead provide a `timing` object, whose duration is used when
 `wipe`, `crossfade`, `zoom`, `push`, `spin`, `rotate`, `flip`, `blurDissolve`,
 `colorDissolve`, `dip`, `iris`, `stretch`, `squeeze`, `clockWipe`, `barWipe`,
 `gridWipe`, `tileReveal`, `radialBlur`, `zoomBlur`, `bookFlip`,
-`pageCurlLite`, `skewSlide`, `expandMask`, `letterboxReveal`, `filmFlash`, and
-`cameraWhip`.
+`pageCurlLite`, `skewSlide`, `expandMask`, `letterboxReveal`, `filmFlash`,
+`cameraWhip`, `cover`, `reveal`, `diagonalWipe`, and `grayscaleDissolve`.
 
-Optional tuning fields include `direction`, `axis`, `shape`, `color`, `amount`,
-`intensity`, `rows`, `columns`, and `easing`; see [Animation](animation.md) for
+Optional tuning fields include `direction`, `axis`, `shape`, `corner`, `color`,
+`amount`, `intensity`, `rows`, `columns`, and `easing`; see [Animation](animation.md) for
 behavior details.
 
 Deterministic timing object types are:
@@ -275,7 +275,9 @@ active cue, line text, active word, and highlight state for any frame.
 
 `audio` contains timeline-level audio tracks. Tracks reference audio or video
 assets and can define role, start frame, duration, volume, fades, loop behavior,
-and basic ducking metadata.
+and ducking behavior. Supported finite loops execute through FFmpeg whole-asset
+or trimmed-range repeat paths; ambiguous source ranges remain non-looping with
+planner diagnostics. Ducking executes through FFmpeg sidechain compression.
 
 ## Exports
 
@@ -285,9 +287,11 @@ layer layout overrides.
 
 Formats are `mp4`, `webm`, `mov`, `gif`, `png-sequence`, and `png`. The `png`
 format renders a single still image: the optional `frame` field selects which
-composition frame to capture (default 0, validated against `durationFrames`),
-codecs do not apply, and `background: "transparent"` produces a real alpha
-channel.
+composition frame to capture (default 0, validated against `durationFrames`).
+The `png-sequence` format renders every composition frame into a directory as
+zero-based, five-digit files (`frame-00000.png`, `frame-00001.png`, ...). For
+both PNG formats codecs do not apply, and `background: "transparent"` preserves
+the alpha channel.
 
 The builder SDK provides helpers for common presets:
 

@@ -49,8 +49,9 @@
         <p class="eyebrow">Docs</p>
         <h1>Kavio CLI reference.</h1>
         <p>
-          The local CLI validates compositions, inspects timelines, migrates
-          supported formats, and starts browser previews.
+          The local CLI validates compositions, inspects render eligibility,
+          migrates supported formats, starts browser previews, and renders
+          export jobs.
         </p>
       </section>
 
@@ -58,7 +59,7 @@
         <h2>Commands</h2>
         <dl class="definition-list">
           <div><dt>validate</dt><dd>Validate a Kavio composition file and report schema or composition errors.</dd></div>
-          <div><dt>inspect</dt><dd>Print duration, dimensions, asset counts, layer counts, audio, and export presets.</dd></div>
+          <div><dt>inspect</dt><dd>Print duration, dimensions, asset counts, layer counts, audio, exports, whole-composition eligibility, and browser/FFmpeg support for every transition window.</dd></div>
           <div><dt>migrate</dt><dd>Run supported migration scaffolding for composition documents.</dd></div>
           <div><dt>preview</dt><dd>Start a local preview server for scrubbing, playback, safe zones, and export-aspect overrides.</dd></div>
         </dl>
@@ -70,17 +71,32 @@
 node packages/cli/dist/index.js inspect examples/basic-json/composition.json
 node packages/cli/dist/index.js preview examples/basic-json/composition.json</code></pre>
         <p>Use <code>--json</code> for machine-readable output where supported.</p>
-        <pre><code>node packages/cli/dist/index.js --json validate examples/basic-json/composition.json</code></pre>
+        <pre><code>node packages/cli/dist/index.js --json validate examples/basic-json/composition.json
+node packages/cli/dist/index.js --json inspect examples/transition-series/composition.json</code></pre>
+        <p>
+          Text inspection labels each transition as an FFmpeg filter or
+          <code>browser only</code>. JSON includes the complete support object:
+        </p>
+        <pre><code>{
+  "transitionType": "grayscaleDissolve",
+  "renderSupport": {
+    "browser": { "supported": true },
+    "ffmpegDirect": { "supported": true, "filter": "fadegrays" }
+  }
+}</code></pre>
       </section>
 
       <section class="content-section">
         <h2>Render</h2>
         <p>
-          The general <code>kavio render</code> command supports opaque
-          <code>mp4</code>, <code>webm</code>, and <code>mov</code> outputs. It
-          can render every export by default, or one named export with
-          <code>--export</code>, and supports props, batch rows, output
-          directories, concurrency, fail-fast, and JSON output.
+          The general <code>kavio render</code> command supports video, still,
+          and PNG-sequence exports. Use <code>--render-mode auto</code> to pick
+          FFmpeg-direct for eligible compositions and browser-overlay otherwise.
+          <code>--capture-parallelism</code> controls browser pages per job,
+          while <code>--concurrency</code> controls batch jobs. It can render
+          every export by default, or one named export with <code>--export</code>,
+          and supports props, batch rows, output directories, fail-fast, and
+          JSON output.
         </p>
       </section>
     </main>

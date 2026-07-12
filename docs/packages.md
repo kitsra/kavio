@@ -120,6 +120,7 @@ Capabilities include:
 - `video(...)` composition builder.
 - Asset helpers for video, image, audio, and font assets.
 - Layer helpers for video, image, text, shape, and captions.
+- Responsive `pictureInPicture(...)` authoring for overlapping video layers.
 - `prop(...)` references and metadata.
 - `keyframes(...)` and easing helpers.
 - Native `transition.*`, `camera.*`, `cinematic.*`, and `textMotion.*`
@@ -187,6 +188,20 @@ Capabilities include:
 - `renderComposition(...)` for one composition/export.
 - `renderBatch(...)` for prop rows times export presets.
 - Test fakes for binary-free orchestration coverage.
+
+## @kitsra/kavio-react
+
+Owns opt-in React static-markup frame rendering.
+
+Capabilities include:
+
+- `useCurrentFrame()` and `useVideoConfig()` frame hooks.
+- `createReactFrameRenderer(...)` for deterministic HTML generation.
+- `createReactPlaywrightDriver(...)` for capture and video encoding through the
+  standard render pipeline.
+
+Use this package when component authoring is useful. Kavio JSON remains the
+timeline and media contract, and React rendering must use `browser-overlay`.
 
 This package is the only workspace package that should launch Chromium or spawn
 FFmpeg.

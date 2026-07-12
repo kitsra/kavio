@@ -71,6 +71,7 @@ Layer helpers:
 
 - `clip(id, options)`
 - `videoLayer(id, options)`
+- `pictureInPicture(id, options)`
 - `image(id, options)`
 - `text(id, options)`
 - `shape(id, options)`
@@ -143,6 +144,22 @@ Key exports and concepts:
 - cleanup task helpers
 
 The concrete Playwright driver is exposed by `@kitsra/kavio-render`.
+
+## @kitsra/kavio-react
+
+Use this package to render deterministic React component markup for each frame.
+
+Key exports:
+
+- `createReactFrameRenderer(options)`
+- `createReactPlaywrightDriver(options)`
+- `useCurrentFrame()`
+- `useVideoConfig()`
+- `ReactFrameComponent<Props>`
+
+The driver plugs into `renderComposition(document, options)` and requires
+`renderMode: "browser-overlay"`. React effects, hydration, event handlers, and
+Remotion APIs are outside this server-rendered frame model.
 
 ## @kitsra/kavio-ffmpeg
 

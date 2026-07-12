@@ -69,7 +69,8 @@ node packages/cli/dist/index.js render examples/quote-card/composition.json --ex
           <p>
             Video-in-video: two time-overlapping video layers (a full-frame base
             and a picture-in-picture inset) with a text caption composited over
-            both, straight from JSON.
+            both, straight from JSON. TypeScript authors can generate responsive
+            inset geometry with <code>pictureInPicture(...)</code>.
           </p>
           <pre><code>node packages/cli/dist/index.js validate examples/video-pip/composition.json
 node packages/cli/dist/index.js render examples/video-pip/composition.json --export pip-landscape --out renders/video-pip</code></pre>
@@ -201,16 +202,37 @@ text("hook", {
               </figcaption>
             </figure>
           </div>
+          <p>
+            The portable transition API also includes directional
+            <code>cover</code> and <code>reveal</code>, corner-based
+            <code>diagonalWipe</code>, and <code>grayscaleDissolve</code>.
+            They render deterministically in the browser and map to native
+            FFmpeg filters for exact linear full-frame image-track overlaps.
+          </p>
+          <pre><code>track("main", [
+  trackClip("a", { layerId: "scene-a", startFrame: 0, durationFrames: 60 }),
+  trackClip("b", {
+    layerId: "scene-b",
+    startFrame: 48,
+    durationFrames: 60,
+    transitionFromPrevious: transition.diagonalWipe({
+      corner: "bottom-right",
+      durationFrames: 12,
+      easing: "linear"
+    })
+  })
+]);</code></pre>
         </div>
 
         <div class="example-detail" id="kavio-all-motions-demo">
           <h2>kavio-promo all motions</h2>
           <p>
             Vertical and landscape self-promo renders built from the Kavio website
-            screenshots. They lay out every native transition family, camera
+            screenshots. They lay out the original native transition families, camera
             helper, text motion preset, mask type, timing primitive,
             transition-series overlap, and cinematic recipe in sequential
-            non-overlapping sections.
+            non-overlapping sections; the portable-transition code above covers
+            the newer browser/FFmpeg additions.
           </p>
           <video
             class="landscape-demo-video"

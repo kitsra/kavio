@@ -1,4 +1,4 @@
-import type { KavioDocument } from "@kitsra/kavio-schema";
+import type { KavioDocument, KavioTransitionPresentation } from "@kitsra/kavio-schema";
 import { assembleDirectRenderCommand, assembleRenderCommand, getDirectRenderSupport } from "./assemble-command.js";
 import { renderError, RENDER_ERROR_CODES } from "./errors.js";
 import { createRenderHarnessServer } from "./harness-server.js";
@@ -6,6 +6,7 @@ import { createFfmpegRunner, type FfmpegChildProcess, type FfmpegSpawn } from ".
 import { createFrameByteQueue } from "./frame-stream.js";
 import { renderComposition } from "./render-composition.js";
 import { renderBatch } from "./render-batch.js";
+import { PlaywrightSession } from "./playwright-driver.js";
 import { FakeBrowserDriver, createFakeFfmpegRunner } from "./testing.js";
 import { mkdtemp } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -102,6 +103,15 @@ assert(piped.includes("shortest=0"), "piped overlay does not shorten the timelin
 assert(piped.includes("[video_out]"), "piped render still maps the composited video stream");
 assertEqual(pipedArgs.filter((arg) => arg === "-filter_complex").length, 1, "piped render emits a single -filter_complex");
 
+const flattenedArgs = assembleRenderCommand({
+  view: graphicsOnlyView,
+  preset: graphicsOnlyView.exports[0]!,
+  flattenedBrowserFrames: true
+}).join(" ");
+assert(flattenedArgs.includes("-f image2pipe -framerate 30 -i -"), "flattened browser render reads captured frames as its primary video");
+assert(!flattenedArgs.includes("color=c="), "flattened browser render does not synthesize a racing background input");
+assert(!flattenedArgs.includes("overlay="), "flattened browser render does not framesync captured transitions as a secondary overlay");
+
 const unsafeBackgroundView: KavioDocument = {
   ...graphicsOnlyView,
   composition: {
@@ -129,6 +139,36 @@ assert(hybridArgs.includes("-i clip.mp4"), "declares the source video input");
 assert(hybridArgs.includes("overlay="), "composites the overlay over the base");
 assert(hybridArgs.includes("amix="), "mixes the declared audio track");
 assert(hybridArgs.includes("-i music.mp3"), "declares the audio input");
+
+const loopedDuckingView: KavioDocument = {
+  ...hybridView,
+  composition: { ...hybridView.composition, durationFrames: 90 },
+  assets: {
+    ...hybridView.assets,
+    music: { type: "audio", src: "music.mp3", loop: true },
+    voiceover: { type: "audio", src: "voiceover.wav" }
+  },
+  layers: [{ ...hybridView.layers[0]!, durationFrames: 90 }],
+  audio: [
+    {
+      id: "music",
+      asset: "music",
+      role: "music",
+      startFrame: 0,
+      durationFrames: 90,
+      duck: { against: "voiceover", amountDb: -12, attackFrames: 3, releaseFrames: 9 }
+    },
+    { id: "voiceover", asset: "voiceover", role: "voiceover", startFrame: 30, durationFrames: 30 }
+  ]
+};
+const loopedDuckingArgs = assembleRenderCommand({
+  view: loopedDuckingView,
+  preset: loopedDuckingView.exports[0]!,
+  framePattern: "/tmp/work/overlay-%05d.png"
+}).join(" ");
+assert(loopedDuckingArgs.includes("-stream_loop -1 -t 3 -i music.mp3"), "render command emits planned audio looping");
+assert(loopedDuckingArgs.includes("sidechaincompress="), "render command emits planned FFmpeg sidechain ducking");
+assert(loopedDuckingArgs.includes("[voiceover_audio]asplit=outputs=2"), "render command preserves voiceover for ducking and mixing");
 
 const pipView: KavioDocument = {
   version: "0.1",
@@ -358,6 +398,89 @@ const directImageTransitionArgs = assembleDirectRenderCommand({
 }).join(" ");
 assert(directImageTransitionArgs.includes("xfade=transition=fade:duration=0.066667:offset=0.133333"), "direct image transition track uses FFmpeg xfade");
 assert(!directImageTransitionArgs.includes("concat=n=2:v=1:a=0"), "direct image transition track does not concatenate overlapped stills");
+
+const directTrackTransitionCases: Array<{ presentation: KavioTransitionPresentation; xfade: string }> = [
+  { presentation: { type: "wipe", direction: "right" }, xfade: "wipeleft" },
+  { presentation: { type: "slide", direction: "down" }, xfade: "slidedown" },
+  { presentation: { type: "push", direction: "left" }, xfade: "slideleft" },
+  { presentation: { type: "iris", shape: "circle" }, xfade: "circleopen" },
+  { presentation: { type: "expandMask" }, xfade: "circleopen" },
+  { presentation: { type: "clockWipe" }, xfade: "radial" },
+  { presentation: { type: "zoom" }, xfade: "zoomin" },
+  { presentation: { type: "blurDissolve" }, xfade: "hblur" },
+  { presentation: { type: "dip" }, xfade: "fadeblack" },
+  { presentation: { type: "colorDissolve" }, xfade: "fadewhite" },
+  { presentation: { type: "filmFlash", color: "#ffffff" }, xfade: "fadewhite" },
+  { presentation: { type: "squeeze", axis: "x" }, xfade: "squeezeh" },
+  { presentation: { type: "squeeze", axis: "y" }, xfade: "squeezev" },
+  { presentation: { type: "letterboxReveal", axis: "x" }, xfade: "horzopen" },
+  { presentation: { type: "letterboxReveal", axis: "y" }, xfade: "vertopen" },
+  { presentation: { type: "cover", direction: "left" }, xfade: "coverleft" },
+  { presentation: { type: "reveal", direction: "down" }, xfade: "revealdown" },
+  { presentation: { type: "diagonalWipe", corner: "top-right" }, xfade: "wipetr" },
+  { presentation: { type: "grayscaleDissolve" }, xfade: "fadegrays" },
+  { presentation: { type: "barWipe", direction: "right" }, xfade: "hrslice" }
+];
+for (const { presentation, xfade } of directTrackTransitionCases) {
+  const view = directTrackTransitionView(presentation);
+  assert(getDirectRenderSupport(view).ok, `${presentation.type} image transition is eligible for FFmpeg-direct render`);
+  const args = assembleDirectRenderCommand({
+    view,
+    preset: view.exports[0]!,
+    outputPath: `/tmp/image-direct-${presentation.type}.mp4`
+  }).join(" ");
+  assert(args.includes(`xfade=transition=${xfade}:duration=0.066667:offset=0.133333`), `${presentation.type} maps to FFmpeg ${xfade}`);
+}
+
+const directCustomBarWipeView = directTrackTransitionView({ type: "barWipe", direction: "right", columns: 12 });
+const directCustomBarWipeSupport = getDirectRenderSupport(directCustomBarWipeView);
+assert(!directCustomBarWipeSupport.ok, "custom bar counts stay on the browser renderer");
+if (!directCustomBarWipeSupport.ok) {
+  assert(directCustomBarWipeSupport.reason.includes("default row/column counts"), "custom bar counts report their direct-render limitation");
+}
+
+const directDiamondIrisView = directTrackTransitionView({ type: "iris", shape: "diamond" });
+const directDiamondIrisSupport = getDirectRenderSupport(directDiamondIrisView);
+assert(!directDiamondIrisSupport.ok, "diamond iris stays on the browser renderer");
+if (!directDiamondIrisSupport.ok) {
+  assert(directDiamondIrisSupport.reason.includes("circular iris"), "diamond iris reports its direct-render limitation");
+}
+
+const directCustomBlurView = directTrackTransitionView({ type: "blurDissolve", amount: 24 });
+const directCustomBlurSupport = getDirectRenderSupport(directCustomBlurView);
+assert(!directCustomBlurSupport.ok, "custom blur strength stays on the browser renderer");
+if (!directCustomBlurSupport.ok) {
+  assert(directCustomBlurSupport.reason.includes("default strength"), "custom blur reports its direct-render limitation");
+}
+
+const directCustomDipView = directTrackTransitionView({ type: "dip", color: "#ff0000" });
+const directCustomDipSupport = getDirectRenderSupport(directCustomDipView);
+assert(!directCustomDipSupport.ok, "custom dip color stays on the browser renderer");
+if (!directCustomDipSupport.ok) {
+  assert(directCustomDipSupport.reason.includes("black or white"), "custom dip reports its direct-render limitation");
+}
+
+function directTrackTransitionView(presentation: KavioTransitionPresentation): KavioDocument {
+  return {
+    ...directImageTransitionView,
+    tracks: [{
+      id: "main",
+      clips: [
+        { id: "first", layerId: "first", startFrame: 0, durationFrames: 6 },
+        {
+          id: "second",
+          layerId: "second",
+          startFrame: 4,
+          durationFrames: 6,
+          transitionFromPrevious: {
+            presentation,
+            timing: { type: "tween", durationFrames: 2, easing: "linear" }
+          }
+        }
+      ]
+    }]
+  };
+}
 
 const directImageWithEasedTransition: KavioDocument = {
   ...directImageTransitionView,
@@ -687,6 +810,8 @@ if (successResult.ok) {
   assert(successResult.metadata.checksums.length === 1, "records an output checksum");
   assertEqual(successResult.metadata.codecs.video, "h264", "mp4 metadata records the effective video codec");
   assertEqual(successResult.metadata.codecs.audio, "aac", "mp4 metadata records the effective audio codec");
+  assertEqual(successResult.timings.requestedRenderMode, "browser-overlay", "browser render reports its requested mode");
+  assertEqual(successResult.timings.renderMode, "browser-overlay", "browser render reports its resolved mode");
   assert(successResult.timings.captureMs !== undefined && successResult.timings.captureMs >= 0, "browser render reports capture timing");
   assert(successResult.timings.browserOpenMs !== undefined && successResult.timings.browserOpenMs >= 0, "browser render reports driver open timing");
   assert(successResult.timings.captureEvaluateMs !== undefined && successResult.timings.captureEvaluateMs >= 0, "browser render reports summed evaluate timing");
@@ -719,7 +844,38 @@ assert(!directRunner.calls[0]?.join(" ").includes("overlay-%05d.png"), "ffmpeg-d
 if (directRenderResult.ok) {
   assertEqual(directRenderResult.metadata.tools.chromium.revision, "not-used", "ffmpeg-direct metadata records no Chromium use");
   assertEqual(directRenderResult.timings.captureMs, undefined, "ffmpeg-direct render reports no capture timing");
+  assertEqual(directRenderResult.timings.renderMode, "ffmpeg-direct", "ffmpeg-direct render reports its resolved mode");
   assert(directRenderResult.timings.encodeMs >= 0, "ffmpeg-direct render reports encode timing");
+}
+
+const autoDirectDriver = new FakeBrowserDriver();
+const autoDirectResult = await renderComposition(directShapeView, {
+  preset: "direct",
+  outDir,
+  renderMode: "auto",
+  driver: autoDirectDriver,
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(autoDirectResult.ok === true, "auto render succeeds for a directly supported composition");
+assertEqual(autoDirectDriver.opens, 0, "auto render selects FFmpeg-direct when supported");
+if (autoDirectResult.ok) {
+  assertEqual(autoDirectResult.timings.requestedRenderMode, "auto", "auto render reports its requested mode");
+  assertEqual(autoDirectResult.timings.renderMode, "ffmpeg-direct", "auto render reports its direct resolution");
+}
+
+const autoFallbackDriver = new FakeBrowserDriver();
+const autoFallbackResult = await renderComposition(templateDoc, {
+  preset: "reels",
+  propValues: { headline: "Fallback" },
+  outDir,
+  renderMode: "auto",
+  driver: autoFallbackDriver,
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(autoFallbackResult.ok === true, "auto render falls back for an unsupported composition");
+assertEqual(autoFallbackDriver.opens, 1, "auto render selects browser-overlay when direct rendering is unsupported");
+if (autoFallbackResult.ok) {
+  assertEqual(autoFallbackResult.timings.renderMode, "browser-overlay", "auto render reports its browser fallback");
 }
 
 const directImageDriver = new FakeBrowserDriver();
@@ -751,6 +907,18 @@ assertEqual(parallelRenderDriver.renderedFrames.length, 6, "parallel capture ren
 assertEqual(parallelRenderRunner.stdinChunks.length, 6, "parallel capture still streams every frame to ffmpeg in order");
 assert(parallelRenderDriver.forks >= 1, "parallel capture forks the browser driver");
 assertEqual(parallelRenderDriver.forkCloses, parallelRenderDriver.forks, "parallel capture closes every fork");
+
+const invalidParallelismResult = await renderComposition(templateDoc, {
+  preset: "reels",
+  outDir,
+  captureParallelism: 0,
+  driver: new FakeBrowserDriver(),
+  ffmpegRunner: createFakeFfmpegRunner()
+});
+assert(invalidParallelismResult.ok === false, "capture parallelism must be a positive integer");
+if (!invalidParallelismResult.ok) {
+  assertEqual(invalidParallelismResult.errors[0]?.path, "captureParallelism", "capture parallelism error identifies the option");
+}
 
 const webmRenderDoc: KavioDocument = {
   ...templateDoc,
@@ -853,22 +1021,22 @@ const pngSequenceDoc: KavioDocument = {
   ...templateDoc,
   exports: [{ name: "frames", format: "png-sequence", width: 1080, height: 1920 }]
 };
-const unsupportedDriver = new FakeBrowserDriver();
-const unsupportedResult = await renderComposition(pngSequenceDoc, {
+const pngSequenceDriver = new FakeBrowserDriver();
+const pngSequenceResult = await renderComposition(pngSequenceDoc, {
   preset: "frames",
   propValues: { headline: "Frames" },
   outDir,
-  driver: unsupportedDriver,
+  driver: pngSequenceDriver,
   ffmpegRunner: createFakeFfmpegRunner()
 });
-assert(unsupportedResult.ok === false, "unsupported export formats fail before rendering");
-if (!unsupportedResult.ok) {
-  assert(
-    unsupportedResult.errors.some((error) => error.message.includes("does not yet support png-sequence")),
-    "unsupported export format returns a clear render error"
-  );
+assert(pngSequenceResult.ok === true, "png-sequence export renders with fakes");
+if (pngSequenceResult.ok) {
+  assert(pngSequenceResult.outputPath.endsWith("frames"), "png-sequence output path names its directory");
+  assert(pngSequenceResult.outputPattern?.endsWith("frame-%05d.png") === true, "png-sequence exposes its numbered output pattern");
+  assertEqual(pngSequenceResult.metadata.checksums[0]?.bytes, 48, "png-sequence checksum covers all frame bytes");
+  assertEqual(pngSequenceResult.timings.encodeMs, 0, "png-sequence skips encoding");
 }
-assertEqual(unsupportedDriver.renderedFrames.length, 0, "unsupported export format does not capture frames");
+assertEqual(pngSequenceDriver.renderedFrames.length, 6, "png-sequence captures every frame");
 
 const gifDoc: KavioDocument = {
   ...templateDoc,
@@ -923,7 +1091,132 @@ const transparentMp4Result = await renderComposition(transparentMp4Doc, {
 assert(transparentMp4Result.ok === false, "transparent mp4 output fails before rendering");
 assertEqual(transparentMp4Driver.renderedFrames.length, 0, "transparent mp4 output does not capture frames");
 
+// --- custom HTML frames ----------------------------------------------------
+
+const htmlShells: string[] = [];
+const htmlEvaluations: string[] = [];
+const htmlSession = new PlaywrightSession({
+  htmlStyles: "body{color:red}",
+  renderHtmlFrame: (frame) => `<main data-frame="${frame}">${frame}</main>`
+}, async () => ({
+  async newContext() {
+    return {
+      async newPage() {
+        return {
+          async goto() {},
+          async evaluate(expression: string) { htmlEvaluations.push(expression); },
+          async setContent(html: string) { htmlShells.push(html); },
+          async waitForFunction() {},
+          async screenshot() { return new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]); },
+          async close() {}
+        };
+      },
+      async newCDPSession() {
+        return {
+          async send(method: string) {
+            return method === "Page.captureScreenshot" ? { data: "iVBORw0KGgo=" } : undefined;
+          }
+        };
+      },
+      async close() {}
+    };
+  },
+  version() { return "fake-html-chromium"; },
+  async close() {}
+}));
+const htmlDriver = htmlSession.createDriver();
+assertEqual(htmlDriver.usesKavioRenderHarness, false, "custom HTML driver does not claim flattened Kavio stage frames");
+await htmlDriver.open(templateDoc);
+await htmlDriver.renderFrame(2);
+const htmlFork = await htmlDriver.fork();
+await htmlFork.renderFrame(3);
+await htmlFork.close();
+await htmlDriver.close();
+await htmlSession.close();
+assertEqual(htmlShells.length, 2, "custom HTML initializes the main and forked page shells");
+assert(htmlShells.every((shell) => shell.includes("body{color:red}")), "custom HTML installs static styles");
+assert(htmlEvaluations.some((expression) => expression.includes('data-frame=\\"2\\"')), "custom HTML renders the requested frame");
+assert(htmlEvaluations.some((expression) => expression.includes('data-frame=\\"3\\"')), "custom HTML works in capture forks");
+
 // --- render-batch.ts -------------------------------------------------------
+
+let sessionLaunches = 0;
+let sessionBrowserCloses = 0;
+let sessionContextCloses = 0;
+const reusableSession = new PlaywrightSession({}, async () => {
+  sessionLaunches += 1;
+  return {
+    async newContext() {
+      return {
+        async newPage() {
+          return {
+            async goto() {},
+            async evaluate() {},
+            async setContent() {},
+            async waitForFunction() {},
+            async screenshot() { return new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]); },
+            async close() {}
+          };
+        },
+        async newCDPSession() {
+          return {
+            async send(method: string) {
+              return method === "Page.captureScreenshot" ? { data: "iVBORw0KGgo=" } : undefined;
+            }
+          };
+        },
+        async close() { sessionContextCloses += 1; }
+      };
+    },
+    version() { return "fake-session-chromium"; },
+    async close() { sessionBrowserCloses += 1; }
+  };
+});
+
+const firstSessionRunner = createFakeFfmpegRunner();
+const firstSessionDriver = reusableSession.createDriver();
+assertEqual(firstSessionDriver.usesKavioRenderHarness, true, "default Playwright driver identifies Kavio stage captures");
+const firstSessionRender = await renderComposition(templateDoc, {
+  preset: "reels",
+  propValues: { headline: "Session A" },
+  outputName: "session-a.mp4",
+  outDir,
+  driver: firstSessionDriver,
+  ffmpegRunner: firstSessionRunner,
+  captureParallelism: 3
+});
+const secondSessionRender = await renderComposition(templateDoc, {
+  preset: "reels",
+  propValues: { headline: "Session B" },
+  outputName: "session-b.mp4",
+  outDir,
+  driver: reusableSession.createDriver(),
+  ffmpegRunner: createFakeFfmpegRunner(),
+  captureParallelism: 3
+});
+assert(firstSessionRender.ok && secondSessionRender.ok, "reusable browser session renders isolated jobs");
+assert(!firstSessionRunner.calls[0]?.includes("color=c="), "opaque graphics-only Kavio capture does not race a synthesized FFmpeg background");
+assert(!firstSessionRunner.calls[0]?.includes("overlay="), "opaque graphics-only Kavio capture is the primary encoded video stream");
+if (firstSessionRender.ok && secondSessionRender.ok) {
+  assertEqual(firstSessionRender.timings.browserLaunches, 3, "first session render launches its capture browsers");
+  assertEqual(secondSessionRender.timings.browserLaunches, 0, "compatible next render reuses browser launches without wall-clock assertions");
+}
+assertEqual(sessionLaunches, 3, "session launches once per capture worker rather than once per job");
+assertEqual(sessionContextCloses, 6, "session closes every job and fork context while retaining browsers");
+const failedSessionRender = await renderComposition(templateDoc, {
+  preset: "reels",
+  propValues: { headline: "Session failure" },
+  outputName: "session-failure.mp4",
+  outDir,
+  driver: reusableSession.createDriver(),
+  ffmpegRunner: createFakeFfmpegRunner({ fail: true }),
+  captureParallelism: 3
+});
+assert(failedSessionRender.ok === false, "reusable browser session reports an encode failure");
+assertEqual(sessionLaunches, 3, "failed compatible render still reuses retained browsers");
+assertEqual(sessionContextCloses, 9, "failed render closes every job and fork context");
+await reusableSession.close();
+assertEqual(sessionBrowserCloses, 3, "session closes every retained browser");
 
 const batchTemplate: KavioDocument = {
   ...templateDoc,
@@ -933,6 +1226,7 @@ const batchTemplate: KavioDocument = {
   ]
 };
 
+const batchDriver = new FakeBrowserDriver();
 const batchResults = await renderBatch(
   {
     template: batchTemplate,
@@ -942,7 +1236,7 @@ const batchResults = await renderBatch(
     ],
     presets: ["reels", "square"]
   },
-  { outDir, driver: new FakeBrowserDriver(), ffmpegRunner: createFakeFfmpegRunner() }
+  { outDir, driver: batchDriver, ffmpegRunner: createFakeFfmpegRunner(), captureParallelism: 2 }
 );
 assertEqual(batchResults.length, 4, "batch expands rows x presets");
 assert(
@@ -951,6 +1245,7 @@ assert(
 );
 const batchPaths = batchResults.map((item) => (item.result.ok ? item.result.outputPath : ""));
 assertEqual(new Set(batchPaths).size, 4, "batch produces distinct output paths");
+assert(batchDriver.forks >= 1, "batch passes capture parallelism to each browser render");
 
 const failFastResults = await renderBatch(
   {

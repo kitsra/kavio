@@ -27,6 +27,9 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
    ```bash
    node packages/cli/dist/index.js --json inspect path/to/composition.json
    ```
+   Read `summary.directRender.eligible`, `recommendedMode`, and `reason`. The
+   result describes the base composition; export overrides applied later can
+   change eligibility for an individual render job.
 6. Preview locally when layout, timing, or motion needs visual review:
    ```bash
    node packages/cli/dist/index.js preview path/to/composition.json
@@ -34,11 +37,13 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
 7. Render only when the user wants files produced and the optional browser and
    FFmpeg binaries are already available, or after the user agrees to install
    them through the repo's reviewed commands.
-8. For simple static image slideshows, prefer the explicit direct render path:
+8. When inspection reports `directRender.eligible: true`, use its explicit
+   recommendation:
    ```bash
    node packages/cli/dist/index.js render path/to/composition.json --render-mode ffmpeg-direct
    ```
-   Use it only for image-only compositions where every image layer is
+   Direct rendering currently supports eligible shape/video compositions and
+   image-only compositions where every image layer is
    full-frame and either contiguous or represented by one transition track that
    covers the full duration. Supported image motion is limited to linear `fade`
    transition-in/out, exact linear `fade` / `crossfade`
@@ -88,8 +93,10 @@ and examples when an MCP host is unavailable or the user prefers a plain skill.
   export presets, or `--json presets <preset-id>` for copyable JSON.
 - Use `--render-mode ffmpeg-direct` only as a performance path for full-frame
   image sequences or supported shape-only compositions. Image sequences may use
-  limited production-style motion: linear fade in/out, exact linear
-  fade/crossfade `transitionFromPrevious` overlaps, and monotonic scale push-in.
+  production-style motion: linear fade in/out, exact linear transition-series
+  overlaps (including directional, diagonal, grayscale, and default-count bar
+  wipes), and monotonic scale push-in. Inspect transition windows to see the
+  resolved browser/FFmpeg support and native filter.
   `fit: "none"` is not supported. It skips browser PNG capture, so unsupported
   motion/layout features will be rejected instead of approximated.
 - For reel-style image handoffs, prefer one top-level `tracks` transition
@@ -123,3 +130,9 @@ When an MCP host is available, `docs/mcp.md` describes the richer MCP path:
 `validate_composition`, `inspect_composition`, `list_export_presets`,
 `plan_render`, and `render`. This skill exists for agents and vendors that can
 load portable skills but do not want to configure MCP.
+
+`plan_render` evaluates eligibility after props and export overrides. For each
+job, follow its machine-readable `renderMode` and `reason`: `ffmpeg-direct`
+arguments skip browser capture, while `browser-overlay` arguments require the
+normal browser frame path. Prefer this per-job result over the base CLI inspect
+summary when both are available.

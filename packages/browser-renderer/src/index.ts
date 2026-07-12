@@ -1,4 +1,12 @@
-import { evaluateEasing, evaluateLayer, evaluateTransitionSeries, getCanvasDimensions, isLayerActive, resolvePoint } from "@kitsra/kavio-core";
+import {
+  compileTransitionOverlapWindows,
+  evaluateEasing,
+  evaluateLayer,
+  evaluateTransitionSeries,
+  getCanvasDimensions,
+  isLayerActive,
+  resolvePoint
+} from "@kitsra/kavio-core";
 import type { CanvasDimensions, EvaluatedCaptionState, EvaluatedLayer, EvaluatedTransitionOverlap, Size } from "@kitsra/kavio-core";
 import type {
   KavioCaptionLayer,
@@ -127,6 +135,11 @@ interface TransitionRenderState {
   evaluation: EvaluatedLayer;
 }
 
+interface BrowserRenderState {
+  readonly staticLayers: Map<string, RenderedLayer>;
+  readonly transitionLayerIds: Set<string>;
+}
+
 interface TextMotionFragment {
   text: string;
   animatable: boolean;
@@ -142,6 +155,7 @@ declare global {
 export function createBrowserRenderer(options: BrowserRendererOptions = {}): BrowserRenderer {
   let loaded: KavioDocument | undefined;
   let resources: CompositionResources = emptyCompositionResources();
+  let renderState = createBrowserRenderState();
 
   return {
     get ready() {
@@ -150,6 +164,7 @@ export function createBrowserRenderer(options: BrowserRendererOptions = {}): Bro
     async loadComposition(composition) {
       releaseCompositionResources(resources);
       loaded = cloneComposition(composition);
+      renderState = createBrowserRenderState(loaded);
       resources = prepareCompositionResources(loaded, options);
       resources.ready.catch(() => undefined);
       return getLoadedComposition(loaded);
@@ -161,7 +176,7 @@ export function createBrowserRenderer(options: BrowserRendererOptions = {}): Bro
 
       assertRenderableFrame(frame, loaded);
       await resources.ready;
-      return renderCompositionFrame(loaded, frame, options);
+      return renderCompositionFrame(loaded, frame, options, renderState);
     }
   };
 }
@@ -507,12 +522,14 @@ export function createPreviewSafeZoneOverlay(document: Document, width: number, 
 function renderCompositionFrame(
   composition: KavioDocument,
   frame: number,
-  options: BrowserRendererOptions
+  options: BrowserRendererOptions,
+  state: BrowserRenderState
 ): Promise<RenderedFrame> {
   const dimensions = getCanvasDimensions(composition.composition);
   const root = getRenderRoot(options);
   const stage = createStage(root, dimensions, composition.exports[0]?.background);
   const transitionStates = activeTransitionRenderStates(composition, frame, dimensions);
+  const transitionedOutLayers = completedTransitionOutgoingLayers(composition, frame);
   const renderableLayers =
     options.renderVideoLayers === false ? composition.layers.filter((layer) => layer.type !== "video") : composition.layers;
   const layerPromises = renderableLayers.flatMap((layer, index) => {
@@ -526,7 +543,13 @@ function renderCompositionFrame(
       ];
     }
 
-    return isLayerActive(layer, frame) ? [renderLayer(stage.ownerDocument, composition, layer, index, frame, dimensions)] : [];
+    if (!isLayerActive(layer, frame) || transitionedOutLayers.has(layer.id)) {
+      return [];
+    }
+
+    return isStaticLayer(layer, state.transitionLayerIds)
+      ? [renderStaticLayer(stage.ownerDocument, composition, layer, index, frame, dimensions, state)]
+      : [renderLayer(stage.ownerDocument, composition, layer, index, frame, dimensions)];
   });
 
   return Promise.all(layerPromises).then(async (layers) => {
@@ -541,6 +564,49 @@ function renderCompositionFrame(
       layers
     };
   });
+}
+
+function createBrowserRenderState(composition?: KavioDocument): BrowserRenderState {
+  const transitionLayerIds = new Set<string>();
+  for (const window of compileTransitionOverlapWindows(composition?.tracks)) {
+    transitionLayerIds.add(window.previousLayerId);
+    transitionLayerIds.add(window.nextLayerId);
+  }
+
+  return { staticLayers: new Map(), transitionLayerIds };
+}
+
+async function renderStaticLayer(
+  document: Document,
+  composition: KavioDocument,
+  layer: KavioLayer,
+  index: number,
+  frame: number,
+  dimensions: CanvasDimensions,
+  state: BrowserRenderState
+): Promise<RenderedLayer> {
+  const evaluation = evaluateLayer(layer, frame, dimensions);
+  const cached = state.staticLayers.get(layer.id);
+  if (cached !== undefined) {
+    return { ...cached, localFrame: evaluation.localFrame, evaluation };
+  }
+
+  const rendered = await renderLayer(document, composition, layer, index, frame, dimensions, { evaluation });
+  state.staticLayers.set(layer.id, rendered);
+  return rendered;
+}
+
+function isStaticLayer(layer: KavioLayer, transitionLayerIds: ReadonlySet<string>): boolean {
+  if (layer.type === "video" || layer.type === "caption" || transitionLayerIds.has(layer.id)) {
+    return false;
+  }
+  if (layer.type === "text" && layer.textMotion !== undefined) {
+    return false;
+  }
+  if (layer.transitionIn != null || layer.transitionOut != null) {
+    return false;
+  }
+  return layer.keyframes === undefined || Object.values(layer.keyframes).every((keyframes) => (keyframes?.length ?? 0) === 0);
 }
 
 async function renderLayer(
@@ -613,6 +679,22 @@ function activeTransitionRenderStates(
   return states;
 }
 
+function completedTransitionOutgoingLayers(composition: KavioDocument, frame: number): Set<string> {
+  const layerIds = new Set<string>();
+  for (const window of compileTransitionOverlapWindows(composition.tracks)) {
+    if (frame < window.endFrame) {
+      continue;
+    }
+
+    const track = composition.tracks?.find((entry) => entry.id === window.trackId);
+    const previous = track?.clips.find((clip) => clip.id === window.previousClipId);
+    if (previous && previous.layerId !== window.nextLayerId && frame < previous.startFrame + previous.durationFrames) {
+      layerIds.add(previous.layerId);
+    }
+  }
+  return layerIds;
+}
+
 function applyLayerReveal(element: HTMLElement, evaluation: EvaluatedLayer): void {
   if (!evaluation.reveal && !evaluation.revealShape && !evaluation.revealPattern) {
     return;
@@ -628,6 +710,8 @@ function applyLayerReveal(element: HTMLElement, evaluation: EvaluatedLayer): voi
 
   if (evaluation.revealPattern?.kind === "clock") {
     element.style.clipPath = clockWipeClipPath(evaluation.revealPattern);
+  } else if (evaluation.revealPattern?.kind === "diagonal") {
+    element.style.clipPath = diagonalWipeClipPath(evaluation.revealPattern);
   } else if (evaluation.revealPattern) {
     applyRevealPatternMask(element, evaluation.revealPattern);
   }
@@ -637,6 +721,9 @@ function applyLayerFilter(element: HTMLElement, evaluation: EvaluatedLayer): voi
   const filters: string[] = [];
   if (evaluation.filter?.blur !== undefined && evaluation.filter.blur > 0) {
     filters.push(`blur(${evaluation.filter.blur}px)`);
+  }
+  if (evaluation.filter?.grayscale !== undefined && evaluation.filter.grayscale > 0) {
+    filters.push(`grayscale(${formatUnit(evaluation.filter.grayscale)})`);
   }
 
   if (filters.length > 0) {
@@ -817,6 +904,27 @@ function clockWipeClipPath(reveal: NonNullable<EvaluatedLayer["revealPattern"]>)
   return `polygon(${points.join(", ")})`;
 }
 
+function diagonalWipeClipPath(reveal: NonNullable<EvaluatedLayer["revealPattern"]>): string {
+  const progress = Math.max(0, Math.min(1, reveal.progress));
+  if (progress <= 0) {
+    return "inset(100%)";
+  }
+  if (progress >= 1) {
+    return "inset(0%)";
+  }
+
+  const extent = progress * 2;
+  const points = extent <= 1
+    ? [{ x: 0, y: 0 }, { x: extent * 100, y: 0 }, { x: 0, y: extent * 100 }]
+    : [{ x: 0, y: 0 }, { x: 100, y: 0 }, { x: 100, y: (extent - 1) * 100 }, { x: (extent - 1) * 100, y: 100 }, { x: 0, y: 100 }];
+  const corner = reveal.corner ?? "top-left";
+  const transformed = points.map(({ x, y }) => ({
+    x: corner === "top-right" || corner === "bottom-right" ? 100 - x : x,
+    y: corner === "bottom-left" || corner === "bottom-right" ? 100 - y : y
+  }));
+  return `polygon(${transformed.map(({ x, y }) => `${formatUnit(x)}% ${formatUnit(y)}%`).join(", ")})`;
+}
+
 function squareEdgePoint(angleDegrees: number): { x: number; y: number } {
   const angle = (angleDegrees * Math.PI) / 180;
   const dx = Math.cos(angle);
@@ -830,7 +938,7 @@ function squareEdgePoint(angleDegrees: number): { x: number; y: number } {
 }
 
 function applyRevealPatternMask(element: HTMLElement, reveal: NonNullable<EvaluatedLayer["revealPattern"]>): void {
-  if (reveal.kind === "clock") {
+  if (reveal.kind === "clock" || reveal.kind === "diagonal") {
     return;
   }
 

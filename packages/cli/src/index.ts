@@ -12,7 +12,14 @@ import {
   type KavioError,
   type ValidationResult
 } from "@kitsra/kavio-schema";
-import { renderBatch, type RenderBatchInput, type RenderBatchOptions, type RenderBatchRow } from "@kitsra/kavio-render";
+import {
+  getDirectRenderSupport,
+  getDirectTransitionSupport,
+  renderBatch,
+  type RenderBatchInput,
+  type RenderBatchOptions,
+  type RenderBatchRow
+} from "@kitsra/kavio-render";
 import type { RenderCompositionMode } from "@kitsra/kavio-render";
 
 declare const process: {
@@ -35,6 +42,7 @@ interface ParsedArgs {
   batchFile?: string;
   outDir?: string;
   concurrency?: number;
+  captureParallelism?: number;
   renderMode?: RenderCompositionMode;
   failFast: boolean;
   continueOnFrameError: boolean;
@@ -90,6 +98,11 @@ interface InspectSummary {
     count: number;
     names: string[];
   };
+  directRender: {
+    eligible: boolean;
+    recommendedMode: "ffmpeg-direct" | "browser-overlay";
+    reason: string;
+  };
 }
 
 interface MaskSummary {
@@ -127,6 +140,10 @@ interface TransitionWindowSummary {
   endFrame: number;
   durationFrames: number;
   transitionType: string;
+  renderSupport: {
+    browser: { supported: true };
+    ffmpegDirect: { supported: true; filter: string } | { supported: false; reason: string };
+  };
 }
 
 interface InspectOutput {
@@ -184,7 +201,7 @@ interface LoadedJson {
 }
 
 const commands = new Set(["validate", "inspect", "migrate", "preview", "render", "presets"]);
-const VALUE_FLAGS = new Set(["--export", "--props", "--batch", "--out", "--concurrency", "--render-mode"]);
+const VALUE_FLAGS = new Set(["--export", "--props", "--batch", "--out", "--concurrency", "--capture-parallelism", "--render-mode"]);
 
 async function main(argv: readonly string[]): Promise<number> {
   const parsed = parseArgs(argv);
@@ -289,6 +306,7 @@ function parseArgs(argv: readonly string[]): ParsedArgs | CliFailure {
   let batchFile: string | undefined;
   let outDir: string | undefined;
   let concurrency: number | undefined;
+  let captureParallelism: number | undefined;
   let renderMode: RenderCompositionMode | undefined;
   const positional: string[] = [];
 
@@ -335,16 +353,20 @@ function parseArgs(argv: readonly string[]): ParsedArgs | CliFailure {
       } else if (arg === "--out") {
         outDir = value;
       } else if (arg === "--render-mode") {
-        if (value !== "browser-overlay" && value !== "ffmpeg-direct") {
-          return flagFailure("--render-mode must be browser-overlay or ffmpeg-direct.");
+        if (value !== "auto" && value !== "browser-overlay" && value !== "ffmpeg-direct") {
+          return flagFailure("--render-mode must be auto, browser-overlay, or ffmpeg-direct.");
         }
         renderMode = value;
       } else {
         const parsed = Number(value);
         if (!Number.isInteger(parsed) || parsed < 1) {
-          return flagFailure("--concurrency must be a positive integer.");
+          return flagFailure(`${arg} must be a positive integer.`);
         }
-        concurrency = parsed;
+        if (arg === "--capture-parallelism") {
+          captureParallelism = parsed;
+        } else {
+          concurrency = parsed;
+        }
       }
       continue;
     }
@@ -410,6 +432,9 @@ function parseArgs(argv: readonly string[]): ParsedArgs | CliFailure {
   }
   if (concurrency !== undefined) {
     parsed.concurrency = concurrency;
+  }
+  if (captureParallelism !== undefined) {
+    parsed.captureParallelism = captureParallelism;
   }
   if (renderMode !== undefined) {
     parsed.renderMode = renderMode;
@@ -681,6 +706,9 @@ async function runRender(parsed: ParsedArgs): Promise<number> {
   if (parsed.concurrency !== undefined) {
     options.concurrency = parsed.concurrency;
   }
+  if (parsed.captureParallelism !== undefined) {
+    options.captureParallelism = parsed.captureParallelism;
+  }
 
   let results;
   try {
@@ -708,14 +736,20 @@ async function runRender(parsed: ParsedArgs): Promise<number> {
       succeeded,
       outputs: results.map((item) =>
         item.result.ok
-          ? { id: item.id, outputName: item.outputName, ok: true, outputPath: item.result.outputPath }
+          ? {
+              id: item.id,
+              outputName: item.outputName,
+              ok: true,
+              outputPath: item.result.outputPath,
+              renderMode: item.result.timings.renderMode
+            }
           : { id: item.id, outputName: item.outputName, ok: false, errors: item.result.errors }
       )
     });
   } else {
     for (const item of results) {
       if (item.result.ok) {
-        writeStdout(`Rendered ${item.result.outputPath}\n`);
+        writeStdout(`Rendered ${item.result.outputPath} (${item.result.timings.renderMode})\n`);
       } else {
         writeStderr(`Failed ${item.outputName}:\n`);
         for (const error of item.result.errors) {
@@ -914,6 +948,7 @@ function inspectDocument(filePath: string, document: KavioDocument): InspectSumm
     composition.colorSpace = document.composition.colorSpace;
   }
 
+  const directSupport = getDirectRenderSupport(document);
   return {
     file: filePath,
     version: document.version,
@@ -933,17 +968,24 @@ function inspectDocument(filePath: string, document: KavioDocument): InspectSumm
     tracks: {
       count: document.tracks === undefined ? 0 : document.tracks.length,
       clipCount: document.tracks === undefined ? 0 : document.tracks.reduce((total, track) => total + track.clips.length, 0),
-      transitionWindows: compileTransitionOverlapWindows(document.tracks).map((window) => ({
-        trackId: window.trackId,
-        previousClipId: window.previousClipId,
-        previousLayerId: window.previousLayerId,
-        nextClipId: window.nextClipId,
-        nextLayerId: window.nextLayerId,
-        startFrame: window.startFrame,
-        endFrame: window.endFrame,
-        durationFrames: window.durationFrames,
-        transitionType: window.transition.type
-      }))
+      transitionWindows: compileTransitionOverlapWindows(document.tracks).map((window) => {
+        const direct = getDirectTransitionSupport(window.transition);
+        return {
+          trackId: window.trackId,
+          previousClipId: window.previousClipId,
+          previousLayerId: window.previousLayerId,
+          nextClipId: window.nextClipId,
+          nextLayerId: window.nextLayerId,
+          startFrame: window.startFrame,
+          endFrame: window.endFrame,
+          durationFrames: window.durationFrames,
+          transitionType: window.transition.type,
+          renderSupport: {
+            browser: { supported: true as const },
+            ffmpegDirect: direct.ok ? { supported: true as const, filter: direct.filter } : { supported: false as const, reason: direct.reason }
+          }
+        };
+      })
     },
     audio: {
       count: document.audio === undefined ? 0 : document.audio.length
@@ -951,7 +993,18 @@ function inspectDocument(filePath: string, document: KavioDocument): InspectSumm
     exports: {
       count: document.exports.length,
       names: document.exports.map((entry, index) => readName(entry) ?? `export-${index + 1}`)
-    }
+    },
+    directRender: directSupport.ok
+      ? {
+          eligible: true,
+          recommendedMode: "ffmpeg-direct",
+          reason: "Eligible for FFmpeg-direct rendering; use --render-mode ffmpeg-direct to skip browser capture."
+        }
+      : {
+          eligible: false,
+          recommendedMode: "browser-overlay",
+          reason: `Use browser-overlay because FFmpeg-direct is unavailable${directSupport.layerId === undefined ? "" : ` at layer "${directSupport.layerId}"`}: ${directSupport.reason}.`
+        }
   };
 }
 
@@ -1077,11 +1130,15 @@ function writeInspection(summary: InspectSummary): void {
   }
   writeStdout(`Tracks: ${summary.tracks.count} (${summary.tracks.clipCount} clips, ${summary.tracks.transitionWindows.length} transition windows)\n`);
   for (const window of summary.tracks.transitionWindows) {
+    const direct = window.renderSupport.ffmpegDirect;
     writeStdout(
-      `  - ${window.trackId}: ${window.previousClipId} -> ${window.nextClipId}, ${window.transitionType}, frames ${window.startFrame}-${window.endFrame - 1}\n`
+      `  - ${window.trackId}: ${window.previousClipId} -> ${window.nextClipId}, ${window.transitionType}, frames ${window.startFrame}-${window.endFrame - 1} (${direct.supported ? `FFmpeg ${direct.filter}` : "browser only"})\n`
     );
   }
   writeStdout(`Audio: ${summary.audio.count}\n`);
+  writeStdout(
+    `Direct render: ${summary.directRender.eligible ? "eligible" : "ineligible"} (${summary.directRender.recommendedMode}) — ${summary.directRender.reason}\n`
+  );
   writeStdout(`Exports: ${summary.exports.count}\n`);
 
   for (const exportName of summary.exports.names) {
@@ -1398,7 +1455,8 @@ Render options:
   --batch <file.json>        Array of prop rows -> rows x presets.
   --out <dir>                Output directory (default: renders).
   --concurrency <n>          Parallel jobs (default: 1).
-  --render-mode <mode>       browser-overlay or ffmpeg-direct.
+  --capture-parallelism <n>  Parallel browser capture pages per job.
+  --render-mode <mode>       auto, browser-overlay, or ffmpeg-direct.
   --fail-fast                Abort the batch on first job failure.
   --continue-on-frame-error  Tolerate per-frame capture failures.
 

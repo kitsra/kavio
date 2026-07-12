@@ -7,7 +7,15 @@ import {
   resolveTemplateProps
 } from "@kitsra/kavio-core";
 import { socialMediaPresets } from "@kitsra/kavio-builder";
-import { assembleRenderCommand, renderBatch, type FfmpegRunner, type RenderBatchOptions } from "@kitsra/kavio-render";
+import {
+  assembleDirectRenderCommand,
+  assembleRenderCommand,
+  getDirectRenderSupport,
+  getDirectTransitionSupport,
+  renderBatch,
+  type FfmpegRunner,
+  type RenderBatchOptions
+} from "@kitsra/kavio-render";
 import { expandRenderBatch, type BrowserDriver, type RenderBatchInput, type RenderBatchRow } from "@kitsra/kavio-render-worker";
 import { schemaVersion, validateComposition as schemaValidate, type KavioDocument, type KavioError } from "@kitsra/kavio-schema";
 import type { ToolResult } from "./types.js";
@@ -56,17 +64,24 @@ export function inspectComposition(input: unknown): ToolResult {
       tracks: {
         count: doc.tracks === undefined ? 0 : doc.tracks.length,
         clipCount: doc.tracks === undefined ? 0 : doc.tracks.reduce((total, track) => total + track.clips.length, 0),
-        transitionWindows: compileTransitionOverlapWindows(doc.tracks).map((window) => ({
-          trackId: window.trackId,
-          previousClipId: window.previousClipId,
-          previousLayerId: window.previousLayerId,
-          nextClipId: window.nextClipId,
-          nextLayerId: window.nextLayerId,
-          startFrame: window.startFrame,
-          endFrame: window.endFrame,
-          durationFrames: window.durationFrames,
-          transitionType: window.transition.type
-        }))
+        transitionWindows: compileTransitionOverlapWindows(doc.tracks).map((window) => {
+          const direct = getDirectTransitionSupport(window.transition);
+          return {
+            trackId: window.trackId,
+            previousClipId: window.previousClipId,
+            previousLayerId: window.previousLayerId,
+            nextClipId: window.nextClipId,
+            nextLayerId: window.nextLayerId,
+            startFrame: window.startFrame,
+            endFrame: window.endFrame,
+            durationFrames: window.durationFrames,
+            transitionType: window.transition.type,
+            renderSupport: {
+              browser: { supported: true },
+              ffmpegDirect: direct.ok ? { supported: true, filter: direct.filter } : { supported: false, reason: direct.reason }
+            }
+          };
+        })
       },
       audio: { count: doc.audio === undefined ? 0 : doc.audio.length },
       exports: {
@@ -199,7 +214,14 @@ export function planRender(input: unknown): ToolResult {
     return { ok: false, errors: [parsed.error] };
   }
 
-  const jobs: Array<{ id: string; outputName: string; preset: unknown; ffmpegArgs: string[] }> = [];
+  const jobs: Array<{
+    id: string;
+    outputName: string;
+    preset: unknown;
+    renderMode: "ffmpeg-direct" | "browser-overlay";
+    reason: string;
+    ffmpegArgs: string[];
+  }> = [];
   let expanded;
   try {
     expanded = expandRenderBatch(parsed.batchInput);
@@ -218,13 +240,20 @@ export function planRender(input: unknown): ToolResult {
       if (violations.length > 0) {
         return { ok: false, errors: violations };
       }
-      const ffmpegArgs = assembleRenderCommand({
-        view,
-        preset: job.preset,
-        framePattern: "overlay-%05d.png",
-        outputPath: job.outputName
-      });
-      jobs.push({ id: job.id, outputName: job.outputName, preset: job.preset, ffmpegArgs });
+      const directSupport = getDirectRenderSupport(view);
+      const renderMode = directSupport.ok ? "ffmpeg-direct" : "browser-overlay";
+      const reason = directSupport.ok
+        ? "Eligible for FFmpeg-direct rendering; use ffmpeg-direct to skip browser capture."
+        : `Use browser-overlay because FFmpeg-direct is unavailable${directSupport.layerId === undefined ? "" : ` at layer "${directSupport.layerId}"`}: ${directSupport.reason}.`;
+      const ffmpegArgs = directSupport.ok
+        ? assembleDirectRenderCommand({ view, preset: job.preset, outputPath: job.outputName })
+        : assembleRenderCommand({
+            view,
+            preset: job.preset,
+            framePattern: "overlay-%05d.png",
+            outputPath: job.outputName
+          });
+      jobs.push({ id: job.id, outputName: job.outputName, preset: job.preset, renderMode, reason, ffmpegArgs });
     } catch (error) {
       return { ok: false, errors: toErrors(error, "MCP_PLAN_FAILED") };
     }

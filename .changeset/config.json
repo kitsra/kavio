@@ -10,6 +10,7 @@
       "@kitsra/kavio-render-worker",
       "@kitsra/kavio-ffmpeg",
       "@kitsra/kavio-render",
+      "@kitsra/kavio-react",
       "@kitsra/kavio-builder",
       "@kitsra/kavio-cli",
       "@kitsra/kavio-mcp"

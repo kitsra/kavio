@@ -6,7 +6,7 @@
     <title>Kavio Packages</title>
     <meta
       name="description"
-      content="Package boundaries for the Kavio TypeScript monorepo, including schema, core, builder, browser-renderer, render-worker, ffmpeg, render, CLI, and MCP packages."
+      content="Package boundaries for the Kavio TypeScript monorepo, including schema, core, builder, browser-renderer, React rendering, render-worker, ffmpeg, render, CLI, and MCP packages."
     />
     <meta property="og:title" content="Kavio Packages" />
     <meta
@@ -67,7 +67,7 @@
           </div>
           <div>
             <dt>@kitsra/kavio-browser-renderer</dt>
-            <dd>Browser preview and DOM rendering runtime for text, video, image, shape, captions, masks, and transition series.</dd>
+            <dd>Browser preview and DOM rendering runtime for text, video, image, shape, captions, masks, transition series, polygon wipes, and filter-backed dissolves.</dd>
           </div>
           <div>
             <dt>@kitsra/kavio-render-worker</dt>
@@ -79,11 +79,15 @@
           </div>
           <div>
             <dt>@kitsra/kavio-cli</dt>
-            <dd>Local command line for validation, inspection, migration, preview, presets, and rendering.</dd>
+            <dd>Local command line for validation, per-transition browser/FFmpeg inspection, migration, preview, presets, and rendering.</dd>
           </div>
           <div>
             <dt>@kitsra/kavio-render</dt>
-            <dd>Render execution layer for browser capture, FFmpeg orchestration, MP4 output, metadata, cleanup, and cancellation.</dd>
+            <dd>Render execution layer for browser capture, FFmpeg orchestration, native transition selection, output metadata, cleanup, and cancellation.</dd>
+          </div>
+          <div>
+            <dt>@kitsra/kavio-react</dt>
+            <dd>Opt-in deterministic React frame components captured through the standard Playwright and FFmpeg pipeline.</dd>
           </div>
           <div>
             <dt>@kitsra/kavio-mcp</dt>

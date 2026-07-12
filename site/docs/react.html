@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kavio React Rendering</title>
+    <meta name="description" content="Render deterministic React frame components through Kavio's Playwright and FFmpeg pipeline." />
+    <link rel="icon" href="../assets/brand/kavio-frame-stack-icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../styles.css" />
+  </head>
+  <body>
+    <header class="site-header page-header" aria-label="Primary">
+      <a class="brand" href="../index.html" aria-label="Kavio home"><span class="brand-mark" aria-hidden="true"></span><span>Kavio</span></a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="../project.html">Project</a><a href="../docs.html" aria-current="page">Docs</a><a href="../examples.html">Examples</a><a href="../packages.html">Packages</a><a href="https://github.com/kitsra/kavio">GitHub</a>
+      </nav>
+    </header>
+    <main>
+      <section class="page-hero">
+        <p class="eyebrow">React Rendering</p>
+        <h1>Components become deterministic video frames.</h1>
+        <p><code>@kitsra/kavio-react</code> adds component authoring while Kavio JSON continues to own the timeline, media, audio, and exports.</p>
+      </section>
+      <section class="content-section">
+        <h2>Frame API</h2>
+        <ul class="check-list">
+          <li><code>useCurrentFrame()</code> returns the zero-based frame.</li>
+          <li><code>useVideoConfig()</code> returns dimensions, FPS, duration, and the resolved composition.</li>
+          <li><code>createReactFrameRenderer(...)</code> creates deterministic static markup.</li>
+          <li><code>createReactPlaywrightDriver(...)</code> plugs markup into browser capture and video encoding.</li>
+        </ul>
+      </section>
+      <section class="content-section">
+        <h2>Execution Rules</h2>
+        <p>
+          Pass the React driver to <code>renderComposition</code> and select
+          <code>browser-overlay</code>. Components render through
+          <code>react-dom/server</code> for every frame, so effects, hydration,
+          events, browser state, and Remotion APIs are not available. Derive
+          visuals from frame hooks, stable props, and static CSS. Images and
+          fonts are awaited before each capture.
+        </p>
+      </section>
+      <section class="content-section">
+        <h2>Performance</h2>
+        <p>
+          React markup generation and DOM replacement add per-frame work. Use
+          FFmpeg-direct for eligible JSON-only compositions. React capture still
+          supports capture parallelism through the standard Playwright driver
+          contract. Injected React drivers currently make batch rendering
+          sequential.
+        </p>
+      </section>
+    </main>
+    <footer class="footer"><a href="../docs.html">Docs</a><a href="rendering.html">Rendering</a><a href="https://github.com/kitsra/kavio">GitHub</a></footer>
+  </body>
+</html>

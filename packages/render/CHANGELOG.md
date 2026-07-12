@@ -1,5 +1,39 @@
 # @kitsra/kavio-render
 
+## Unreleased
+
+### Patch Changes
+
+- Expand FFmpeg-direct image transition tracks beyond fade/crossfade with
+  directional wipe, slide, and push; circular iris and expand-mask; and default
+  clockwise clock-wipe mappings. Default-strength zoom, blur dissolve, squeeze,
+  and letterbox reveals plus constrained black/white dip, color-dissolve, and
+  film-flash mappings are also supported. Unsupported strength, color, shape,
+  direction, and easing continue to fall back to browser rendering.
+
+- Preserve browser-rendered transition frames in opaque graphics-only videos
+  by encoding the background-painted Kavio stage as the primary PNG stream.
+  This removes secondary-overlay starvation that could collapse a smooth
+  transition into a hard cut while capture was still producing frames.
+
+- Add deterministic custom HTML frame callbacks to `PlaywrightDriver`, including
+  parallel capture forks, for opt-in renderers such as `@kitsra/kavio-react`.
+
+- Reuse worker-local Chromium processes across compatible browser-overlay batch
+  jobs while creating fresh contexts and harnesses per job. Render timings now
+  include `browserLaunches`, so launch reuse is observable without inferring it
+  from wall-clock duration.
+
+- Add browser-captured `png-sequence` export as deterministic
+  `frame-%05d.png` files in a new output directory. Frames write as they are
+  captured without FFmpeg or full-sequence buffering, and render results expose
+  the directory plus exact output pattern.
+
+- Add validated `KAVIO_FFMPEG_PATH` support ahead of system and
+  `ffmpeg-static` resolution, plus `resolveFfmpegDiagnostics()` for recording
+  the selected binary source, path, and version. FFmpeg 8 remains a
+  caller/system runtime choice; no dependency version changed.
+
 ## 0.4.0
 
 ### Minor Changes

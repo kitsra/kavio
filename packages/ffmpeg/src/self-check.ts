@@ -179,9 +179,70 @@ const audioPlan = planAudioMix({
 const audioArgs = renderFfmpegArgs(audioPlan).join(" ");
 assert(audioArgs.includes("afade=t=in:st=0:d=0.5"), "audio plan includes fade-in filters");
 assert(audioArgs.includes("afade=t=out:st=7:d=1"), "audio plan includes fade-out filters");
-assert(audioArgs.includes("volume='if"), "audio plan includes ducking volume envelope");
+assert(audioArgs.includes("asplit=outputs=2"), "audio plan splits the sidechain track for compression and mixing");
+assert(audioArgs.includes("apad"), "audio plan pads the compressor sidechain so it cannot truncate the ducked track");
+assert(
+  audioArgs.includes(
+    "sidechaincompress=threshold=0.233572:ratio=20:attack=100:release=300:knee=1:link=maximum:detection=peak"
+  ),
+  "audio plan emits deterministic FFmpeg sidechain compression"
+);
+assert(!audioArgs.includes("volume='if"), "audio plan no longer represents ducking as a timeline-only volume envelope");
 assert(audioArgs.includes("amix=inputs=3:duration=longest"), "audio plan mixes all MVP audio roles");
 assert(audioArgs.includes("loudnorm=I=-14"), "audio plan includes default loudness normalization");
+
+const wholeAssetLoopPlan = planAudioMix({
+  fps: 30,
+  normalizeLoudness: false,
+  tracks: [
+    {
+      asset: { src: "bed.wav", loop: true },
+      track: { id: "looped bed", asset: "bed", role: "music", startFrame: 0, durationFrames: 90 }
+    }
+  ]
+});
+assert(
+  renderFfmpegArgs(wholeAssetLoopPlan).join(" ").includes("-stream_loop -1 -t 3 -i bed.wav"),
+  "finite whole-asset audio loops emit FFmpeg stream looping"
+);
+
+const trimmedLoopPlan = planAudioMix({
+  fps: 30,
+  normalizeLoudness: false,
+  tracks: [
+    {
+      asset: { src: "bed.wav", trimStartFrames: 30, trimEndFrames: 60, loop: true },
+      track: { id: "trimmed bed", asset: "bed", role: "music", startFrame: 0, durationFrames: 90 }
+    }
+  ]
+});
+const trimmedLoopArgs = renderFfmpegArgs(trimmedLoopPlan).join(" ");
+assert(trimmedLoopArgs.includes("-ss 1 -t 1 -i bed.wav"), "trimmed loops read exactly one source segment");
+assert(
+  trimmedLoopArgs.includes("aresample=48000:async=1,aloop=loop=-1:size=48000,atrim=duration=3"),
+  "trimmed loops repeat the source segment and bound it to the requested duration"
+);
+
+const unsupportedOffsetLoopPlan = planAudioMix({
+  fps: 30,
+  normalizeLoudness: false,
+  tracks: [
+    {
+      asset: { src: "bed.wav", loop: true },
+      track: { id: "offset bed", asset: "bed", role: "music", startFrame: 0, durationFrames: 90, offsetFrames: 30 }
+    }
+  ]
+});
+assert(
+  unsupportedOffsetLoopPlan.steps.some((step) =>
+    step.notes?.some((note) => note.includes("source offset without trimEndFrames does not define the repeat boundary"))
+  ),
+  "ambiguous offset loops retain a clear planner diagnostic"
+);
+assert(
+  !renderFfmpegArgs(unsupportedOffsetLoopPlan).includes("-stream_loop"),
+  "ambiguous offset loops preserve the existing non-looping input behavior"
+);
 
 const audioChains = buildAudioMixFilterChains({
   fps: 30,

@@ -5,11 +5,18 @@ export {
   assembleDirectRenderCommand,
   assembleRenderCommand,
   getDirectRenderSupport,
+  getDirectTransitionSupport,
   type AssembleDirectRenderCommandOptions,
   type AssembleRenderCommandOptions,
-  type DirectRenderSupport
+  type DirectRenderSupport,
+  type DirectTransitionSupport
 } from "./assemble-command.js";
-export { resolveFfmpegPath } from "./binaries.js";
+export {
+  resolveFfmpegDiagnostics,
+  resolveFfmpegPath,
+  type FfmpegBinaryDiagnostics,
+  type FfmpegBinarySource
+} from "./binaries.js";
 export {
   createFfmpegRunner,
   type FfmpegRunner,
@@ -26,10 +33,15 @@ export {
   type RenderHarnessServer,
   type CreateRenderHarnessServerOptions
 } from "./harness-server.js";
-export { PlaywrightDriver, type PlaywrightDriverOptions } from "./playwright-driver.js";
+export {
+  PlaywrightDriver,
+  type HtmlFrameRenderer,
+  type PlaywrightDriverOptions
+} from "./playwright-driver.js";
 export {
   renderComposition,
   type RenderCompositionMode,
+  type ResolvedRenderCompositionMode,
   type RenderCompositionOptions,
   type RenderCompositionResult,
   type RenderStageTimings

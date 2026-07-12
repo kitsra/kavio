@@ -1,5 +1,13 @@
 # @kitsra/kavio-builder
 
+## Unreleased
+
+### Patch Changes
+
+- Add `pictureInPicture(...)` and `layers.pictureInPicture(...)` for responsive
+  corner video insets with proportional sizing, edge inset, muted playback, and
+  stacking defaults.
+
 ## 0.4.0
 
 ### Patch Changes

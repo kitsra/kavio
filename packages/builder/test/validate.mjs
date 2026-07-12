@@ -10,6 +10,7 @@ import {
   exportPreset,
   image,
   keyframes,
+  pictureInPicture,
   presetNamespaces,
   text,
   timing,
@@ -126,7 +127,11 @@ const expandedTransitions = [
   transition.expandMask({ durationFrames: 10, shape: "circle" }),
   transition.letterboxReveal({ durationFrames: 10, axis: "y" }),
   transition.filmFlash({ durationFrames: 6, color: "#fff7dd" }),
-  transition.cameraWhip({ durationFrames: 8, direction: "left", amount: 14, intensity: 10 })
+  transition.cameraWhip({ durationFrames: 8, direction: "left", amount: 14, intensity: 10 }),
+  transition.cover({ durationFrames: 10, direction: "left" }),
+  transition.reveal({ durationFrames: 10, direction: "down" }),
+  transition.diagonalWipe({ durationFrames: 10, corner: "top-right" }),
+  transition.grayscaleDissolve({ durationFrames: 10 })
 ];
 assert.deepEqual(
   expandedTransitions.map((definition) => definition.type),
@@ -154,9 +159,15 @@ assert.deepEqual(
     "expandMask",
     "letterboxReveal",
     "filmFlash",
-    "cameraWhip"
+    "cameraWhip",
+    "cover",
+    "reveal",
+    "diagonalWipe",
+    "grayscaleDissolve"
   ]
 );
+assert.equal(expandedTransitions[12]?.columns, 8);
+assert.equal(expandedTransitions[26]?.corner, "top-right");
 assert.equal(presetNamespaces.transition, transition);
 assert.equal(presetNamespaces.camera, camera);
 assert.equal(presetNamespaces.cinematic, cinematic);
@@ -512,6 +523,53 @@ assert.deepEqual(
   ]
 );
 assert.equal(socialJson.layers[0]?.crop?.mode, "subject");
+
+const mainVideo = asset.video("mainVideo", "https://example.com/main.mp4");
+const insetVideo = asset.video("insetVideo", "https://example.com/inset.mp4");
+const pipComposition = video({ width: 1920, height: 1080, fps: 30, durationFrames: 120 })
+  .assets(mainVideo, insetVideo)
+  .add(
+    videoLayer("main", {
+      asset: mainVideo,
+      startFrame: 0,
+      durationFrames: 120,
+      fit: "cover"
+    }),
+    pictureInPicture("inset", {
+      asset: insetVideo,
+      startFrame: 15,
+      durationFrames: 90,
+      placement: "bottom-left",
+      widthPercent: 30,
+      insetPercent: 4,
+      aspectRatio: 4 / 3
+    })
+  )
+  .exports(exportPreset.landscape());
+const pipJson = pipComposition.toJSON();
+assert.deepEqual(pipComposition.validate(), { ok: true, errors: [] });
+assert.deepEqual(pipJson.layers[1], {
+  id: "inset",
+  type: "video",
+  asset: "insetVideo",
+  startFrame: 15,
+  durationFrames: 90,
+  fit: "cover",
+  muted: true,
+  z: 100,
+  position: { x: "4%w", y: "96%h" },
+  anchor: "bottom-left",
+  size: { width: "30%w", height: "22.5%w" }
+});
+assert.throws(
+  () => pictureInPicture("invalid-pip", {
+    asset: insetVideo,
+    startFrame: 0,
+    durationFrames: 30,
+    widthPercent: 0
+  }),
+  /widthPercent/
+);
 
 assert.deepEqual(cinematic.zoomPush({ durationFrames: 12, direction: "right" }), {
   transitionIn: { type: "zoom", durationFrames: 12, amount: 0.18, easing: "outCubic" },

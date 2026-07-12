@@ -102,9 +102,12 @@ Reels, TikTok, Shorts, square feed, and landscape feed presets.
 
 ### `plan_render`
 
-Expands `template x rows x presets` without rendering and returns FFmpeg
-argument lists for each job. It is pure and does not require Chromium or FFmpeg
-binaries.
+Expands `template x rows x presets` without rendering. Each job includes a
+machine-readable `renderMode` (`ffmpeg-direct` or `browser-overlay`), an
+actionable `reason`, and FFmpeg arguments for that selected path. Eligibility
+is evaluated after props and export overrides are applied, so jobs from the
+same template may select different paths. The tool is pure and does not require
+Chromium or FFmpeg binaries.
 
 Input:
 
@@ -120,6 +123,9 @@ Input:
 ```
 
 Use this for review, debugging, and agent planning before allowing a real render.
+Use the returned `renderMode` explicitly when rendering. FFmpeg-direct skips
+browser capture; browser-overlay remains the fallback for unsupported layers,
+layout, effects, masks, transitions, or motion.
 
 ### `render`
 

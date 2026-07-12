@@ -79,7 +79,7 @@ export function createCatalog(options: CreateCatalogOptions = {}): Catalog {
     },
     {
       name: "plan_render",
-      description: "Expand template x rows x presets and assemble the FFmpeg command(s) without rendering. Always available.",
+      description: "Expand template x rows x presets, select FFmpeg-direct or browser-overlay per job, and explain why. Always available.",
       inputSchema: batchInput(),
       handler: planRender
     },

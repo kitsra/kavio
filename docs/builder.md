@@ -114,7 +114,9 @@ Top-level helpers:
   `transition.zoomBlur(...)`, `transition.bookFlip(...)`,
   `transition.pageCurlLite(...)`, `transition.skewSlide(...)`,
   `transition.expandMask(...)`, `transition.letterboxReveal(...)`,
-  `transition.filmFlash(...)`, and `transition.cameraWhip(...)`: create native
+  `transition.filmFlash(...)`, `transition.cameraWhip(...)`,
+  `transition.cover(...)`, `transition.reveal(...)`,
+  `transition.diagonalWipe(...)`, and `transition.grayscaleDissolve(...)`: create native
   transition definitions.
 - `track(id, clips?)`, `trackClip(id, options)`, and
   `transitionSeries.fromPrevious(...)`: create composition-level transition
@@ -151,6 +153,8 @@ Asset helpers:
 Layer helpers:
 
 - `clip(id, options)` or `videoLayer(id, options)`
+- `pictureInPicture(id, options)` for a responsive, muted video inset with
+  corner placement, proportional sizing, and safe stacking defaults.
 - `image(id, options)`
 - `text(id, options)`
 - `shape(id, options)`
@@ -161,6 +165,56 @@ Layer helpers:
 Layer builders also support `.transitionIn(...)`, `.transitionOut(...)`,
 `.enter(...)`, `.exit(...)`, and `.motion(...)` for fluent transition and
 keyframe assignment.
+
+### Picture In Picture
+
+Add the full-frame base video before the inset so overlapping video layers are
+stacked in document order. The helper defaults to top-right, 32% canvas width,
+16:9, a 3% edge inset, `fit: "cover"`, `muted: true`, and `z: 100`.
+
+```ts
+import {
+  asset,
+  exportPreset,
+  pictureInPicture,
+  video,
+  videoLayer
+} from "@kitsra/kavio-builder";
+
+const main = asset.video("main", "./main.mp4");
+const guest = asset.video("guest", "./guest.mp4");
+
+const composition = video({
+  width: 1920,
+  height: 1080,
+  fps: 30,
+  durationFrames: 300
+})
+  .assets(main, guest)
+  .add(
+    videoLayer("main", {
+      asset: main,
+      startFrame: 0,
+      durationFrames: 300,
+      fit: "cover"
+    }),
+    pictureInPicture("guest", {
+      asset: guest,
+      startFrame: 30,
+      durationFrames: 240,
+      placement: "bottom-right",
+      widthPercent: 30,
+      insetPercent: 4,
+      aspectRatio: 4 / 3
+    })
+  )
+  .exports(exportPreset.landscape());
+```
+
+Placements are `top-left`, `top-right`, `bottom-left`, and `bottom-right`.
+Override `position`, `anchor`, or `size` for fully custom geometry. PiP source
+audio is intentionally not mixed automatically; declare the desired Kavio
+audio track explicitly to avoid playing both video sources at once.
 
 Transition series helpers emit top-level `tracks` while preserving ordinary
 layers:

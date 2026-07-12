@@ -87,7 +87,11 @@ test("inspectComposition includes transition series overlap windows", () => {
       startFrame: 48,
       endFrame: 60,
       durationFrames: 12,
-      transitionType: "push"
+      transitionType: "push",
+      renderSupport: {
+        browser: { supported: true },
+        ffmpegDirect: { supported: false, reason: "image transition tracks only support linear FFmpeg-direct timing" }
+      }
     }
   ]);
 });
@@ -184,8 +188,34 @@ test("planRender returns jobs with ffmpeg args", () => {
   const r = planRender({ document: valid, rows: [{ id: "a", props: {} }], presets: ["reels"] });
   assert.equal(r.ok, true);
   assert.equal(r.data.jobs.length, 1);
+  assert.equal(r.data.jobs[0].renderMode, "browser-overlay");
+  assert.match(r.data.jobs[0].reason, /layer "t".*text.*browser rendering/i);
   assert.ok(r.data.jobs[0].ffmpegArgs.join(" ").includes("-filter_complex"));
+  assert.ok(r.data.jobs[0].ffmpegArgs.includes("overlay-%05d.png"));
   assert.ok(r.data.jobs[0].outputName.endsWith(".mp4"));
+});
+
+test("planRender chooses FFmpeg-direct for eligible jobs", () => {
+  const document = {
+    ...valid,
+    layers: [{
+      id: "background",
+      type: "shape",
+      shape: "rect",
+      fill: "#ff3366",
+      startFrame: 0,
+      durationFrames: 30,
+      position: { x: 0, y: 0 },
+      size: { width: 1080, height: 1920 }
+    }]
+  };
+  const r = planRender({ document, presets: ["reels"] });
+
+  assert.equal(r.ok, true);
+  assert.equal(r.data.jobs[0].renderMode, "ffmpeg-direct");
+  assert.match(r.data.jobs[0].reason, /eligible.*skip browser capture/i);
+  assert.ok(!r.data.jobs[0].ffmpegArgs.includes("overlay-%05d.png"));
+  assert.match(r.data.jobs[0].ffmpegArgs.join(" "), /drawbox/);
 });
 
 test("planRender expands rows x presets", () => {

@@ -1,5 +1,17 @@
 # @kitsra/kavio-mcp
 
+## Unreleased
+
+### Patch Changes
+
+- Document first-class `pictureInPicture(...)` authoring in the bundled agent
+  skill, including layer order and explicit audio guidance.
+
+- Report FFmpeg-direct eligibility for linear full-frame image transition tracks
+  using fade/crossfade, directional wipe/slide/push, circular iris/expand-mask,
+  default clockwise clock-wipe, zoom, blur dissolve, squeeze, letterbox reveal,
+  and constrained dip/color/flash handoffs.
+
 ## 0.4.0
 
 ### Patch Changes

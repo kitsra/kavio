@@ -20,6 +20,7 @@
       "@kitsra/kavio-core": ["./packages/core/src/index.ts"],
       "@kitsra/kavio-ffmpeg": ["./packages/ffmpeg/src/index.ts"],
       "@kitsra/kavio-mcp": ["./packages/mcp/src/index.ts"],
+      "@kitsra/kavio-react": ["./packages/react/src/index.ts"],
       "@kitsra/kavio-render": ["./packages/render/src/index.ts"],
       "@kitsra/kavio-render-worker": ["./packages/render-worker/src/index.ts"],
       "@kitsra/kavio-schema": ["./packages/schema/src/index.ts"]

@@ -649,6 +649,8 @@ interface ResolvedAudioTrackPlan {
   outputLabel: string;
   sourceStartFrame: number;
   durationFrames?: number;
+  loop?: { segmentFrames: number; outputFrames: number };
+  streamLoop: boolean;
   notes: string[];
 }
 
@@ -759,52 +761,72 @@ function buildAudioMixPlanParts(options: FfmpegAudioMixPlanOptions): AudioMixPla
       startFrame: resolved.sourceStartFrame,
       fps: options.fps
     };
-    if (resolved.durationFrames !== undefined) {
+    if (resolved.loop !== undefined) {
+      trimOptions.durationFrames = resolved.loop.segmentFrames;
+    } else if (resolved.durationFrames !== undefined) {
       trimOptions.durationFrames = resolved.durationFrames;
+    }
+    const args = buildInputTrimArgs(trimOptions);
+    if (resolved.streamLoop) {
+      args.unshift("-stream_loop", "-1");
     }
     return createInputStep({
       id: `${sanitizeLabelPart(resolved.option.track.id)}:audio-input`,
       description: `Read ${resolved.option.track.role} audio asset "${resolved.option.track.asset}" for track "${resolved.option.track.id}".`,
-      args: buildInputTrimArgs(trimOptions),
+      args,
       inputIndex: resolved.inputIndex,
       source: resolved.option.asset.src,
       notes: resolved.notes
     });
   });
 
-  for (const resolved of resolvedTracks) {
-    chains.push(buildAudioTrackFilterChain(resolved, options, resolved.outputLabel));
-  }
-
   const mixLabels = new Map<string, string>();
   for (const resolved of resolvedTracks) {
     mixLabels.set(resolved.option.track.id, resolved.outputLabel);
   }
 
-  for (const resolved of resolvedTracks) {
+  const duckingPlans = resolvedTracks.flatMap((resolved) => {
     const duck = resolved.option.track.duck;
     if (duck === undefined) {
-      continue;
+      return [];
     }
+    return [{ resolved, duck, sidechain: findAudioTrackByRole(resolvedTracks, duck.against, resolved.option.track.id) }];
+  });
+  const sidechainUses = new Map<string, number>();
+  for (const plan of duckingPlans) {
+    sidechainUses.set(plan.sidechain.option.track.id, (sidechainUses.get(plan.sidechain.option.track.id) ?? 0) + 1);
+  }
 
-    const sidechain = findAudioTrackByRole(resolvedTracks, duck.against, resolved.option.track.id);
-    const sidechainDuration = sidechain.durationFrames ?? sidechain.option.track.durationFrames;
-    if (sidechainDuration === undefined) {
-      throw new Error(`Audio ducking against "${duck.against}" requires the sidechain track durationFrames.`);
+  for (const resolved of resolvedTracks) {
+    chains.push(buildAudioTrackFilterChain(resolved, options, resolved.outputLabel));
+    const uses = sidechainUses.get(resolved.option.track.id) ?? 0;
+    if (uses > 0) {
+      const labels = [
+        `${resolved.outputLabel}_mix`,
+        ...Array.from({ length: uses }, (_, index) => `${resolved.outputLabel}_sidechain_${index}`)
+      ];
+      chains.push(buildAudioSplitFilterChain(resolved.outputLabel, labels));
+      mixLabels.set(resolved.option.track.id, labels[0]!);
     }
+  }
 
+  const sidechainIndexes = new Map<string, number>();
+  for (const { resolved, duck, sidechain } of duckingPlans) {
+    const sidechainIndex = sidechainIndexes.get(sidechain.option.track.id) ?? 0;
+    sidechainIndexes.set(sidechain.option.track.id, sidechainIndex + 1);
+    const sidechainLabel = `${sidechain.outputLabel}_sidechain_${sidechainIndex}`;
+    const paddedSidechainLabel = `${sidechainLabel}_padded`;
     const duckedLabel = `${sanitizeLabelPart(resolved.option.track.id)}_ducked`;
+    chains.push(createFilterChain([sidechainLabel], ["apad"], paddedSidechainLabel));
     chains.push(
       createFilterChain(
-        [mixLabels.get(resolved.option.track.id) ?? resolved.outputLabel],
-        [buildAudioDuckingFilter(duck, sidechain.option.track.startFrame, sidechainDuration, options.fps)],
+        [mixLabels.get(resolved.option.track.id) ?? resolved.outputLabel, paddedSidechainLabel],
+        [buildAudioDuckingFilter(duck, options.fps)],
         duckedLabel
       )
     );
     mixLabels.set(resolved.option.track.id, duckedLabel);
-    notes.push(
-      `${resolved.option.track.id}: ducking represented as a timeline volume envelope against ${duck.against}; sidechain compression execution is deferred`
-    );
+    notes.push(`${resolved.option.track.id}: sidechain compression emitted against ${duck.against}`);
   }
 
   const finalTrackLabels = resolvedTracks.map((resolved) => mixLabels.get(resolved.option.track.id) ?? resolved.outputLabel);
@@ -831,13 +853,15 @@ function resolveAudioTrackPlan(option: FfmpegAudioTrackPlanOptions, index: numbe
   const notes: string[] = [];
 
   const trimEndFrames = option.asset.trimEndFrames === null ? undefined : option.asset.trimEndFrames;
+  const loopRequested = option.track.loop === true || option.asset.loop === true;
   let durationFrames = option.track.durationFrames;
+  let availableFrames: number | undefined;
   if (durationFrames !== undefined) {
     assertPositiveFrame(durationFrames, "track.durationFrames");
   }
   if (trimEndFrames !== undefined) {
     assertNonNegativeFrame(trimEndFrames, "asset.trimEndFrames");
-    const availableFrames = Math.max(0, trimEndFrames - sourceStartFrame);
+    availableFrames = Math.max(0, trimEndFrames - sourceStartFrame);
     if (durationFrames === undefined) {
       durationFrames = availableFrames;
     } else if (!option.track.loop && !option.asset.loop) {
@@ -845,8 +869,22 @@ function resolveAudioTrackPlan(option: FfmpegAudioTrackPlanOptions, index: numbe
     }
   }
 
-  if (option.track.loop || option.asset.loop) {
-    notes.push("loop is recorded for inspection; audio loop expansion is not emitted by this primitive yet");
+  let loop: ResolvedAudioTrackPlan["loop"];
+  let streamLoop = false;
+  if (loopRequested && durationFrames === undefined) {
+    notes.push("loop expansion not emitted because durationFrames and trimEndFrames do not define a finite output duration");
+  } else if (loopRequested && availableFrames !== undefined && durationFrames !== undefined && durationFrames > availableFrames) {
+    if (availableFrames > 0) {
+      loop = { segmentFrames: availableFrames, outputFrames: durationFrames };
+    } else {
+      notes.push("loop expansion not emitted because the trimmed source range is empty");
+    }
+  } else if (loopRequested && trimEndFrames === undefined && durationFrames !== undefined) {
+    if (sourceStartFrame === 0) {
+      streamLoop = true;
+    } else {
+      notes.push("loop expansion not emitted because a source offset without trimEndFrames does not define the repeat boundary");
+    }
   }
 
   const resolved: ResolvedAudioTrackPlan = {
@@ -855,10 +893,14 @@ function resolveAudioTrackPlan(option: FfmpegAudioTrackPlanOptions, index: numbe
     inputLabel,
     outputLabel,
     sourceStartFrame,
+    streamLoop,
     notes
   };
   if (durationFrames !== undefined) {
     resolved.durationFrames = durationFrames;
+  }
+  if (loop !== undefined) {
+    resolved.loop = loop;
   }
   return resolved;
 }
@@ -870,6 +912,16 @@ function buildAudioTrackFilterChain(
 ): FfmpegFilterChain {
   const track = resolved.option.track;
   const filters = ["asetpts=PTS-STARTPTS", "aresample=async=1"];
+
+  if (resolved.loop !== undefined) {
+    const sampleRate = 48_000;
+    const loopSamples = Math.max(1, Math.round(framesToSeconds(resolved.loop.segmentFrames, options.fps) * sampleRate));
+    filters[1] = `aresample=${sampleRate}:async=1`;
+    filters.push(
+      `aloop=loop=-1:size=${loopSamples}`,
+      `atrim=duration=${formatFfmpegTimestamp(framesToSeconds(resolved.loop.outputFrames, options.fps))}`
+    );
+  }
 
   if (track.volume !== undefined) {
     assertNonNegativeFiniteNumber(track.volume, "track.volume");
@@ -918,28 +970,28 @@ function findAudioTrackByRole(
   return track;
 }
 
-function buildAudioDuckingFilter(duck: KavioAudioDuck, sidechainStartFrame: number, sidechainDurationFrames: number, fps: number): string {
+function buildAudioSplitFilterChain(inputLabel: string, outputLabels: string[]): FfmpegFilterChain {
+  const filter = `asplit=outputs=${outputLabels.length}`;
+  return {
+    inputLabels: [unbracketLabel(inputLabel)],
+    filters: [filter],
+    outputLabel: unbracketLabel(outputLabels[0]!),
+    expression: `${bracketLabel(inputLabel)}${filter}${outputLabels.map(bracketLabel).join("")}`
+  };
+}
+
+function buildAudioDuckingFilter(duck: KavioAudioDuck, fps: number): string {
   assertNonPositiveFiniteNumber(duck.amountDb, "duck.amountDb");
-  const amount = formatDecimal(Math.pow(10, duck.amountDb / 20));
-  const start = formatFfmpegTimestamp(framesToSeconds(sidechainStartFrame, fps));
-  const end = formatFfmpegTimestamp(framesToSeconds(sidechainStartFrame + sidechainDurationFrames, fps));
   const attackFrames = duck.attackFrames ?? 0;
   const releaseFrames = duck.releaseFrames ?? 0;
   assertNonNegativeFrame(attackFrames, "duck.attackFrames");
   assertNonNegativeFrame(releaseFrames, "duck.releaseFrames");
-  const attack = formatFfmpegTimestamp(framesToSeconds(attackFrames, fps));
-  const release = formatFfmpegTimestamp(framesToSeconds(releaseFrames, fps));
-  let expression: string;
-  if (attackFrames === 0 && releaseFrames === 0) {
-    expression = `if(between(t,${start},${end}),${amount},1)`;
-  } else if (attackFrames === 0) {
-    expression = `if(lt(t,${start}),1,if(lte(t,${end}),${amount},if(lt(t,${end}+${release}),${amount}+(1-${amount})*(t-${end})/${release},1)))`;
-  } else if (releaseFrames === 0) {
-    expression = `if(lt(t,${start}),1,if(lt(t,${start}+${attack}),1-(1-${amount})*(t-${start})/${attack},if(lte(t,${end}),${amount},1)))`;
-  } else {
-    expression = `if(lt(t,${start}),1,if(lt(t,${start}+${attack}),1-(1-${amount})*(t-${start})/${attack},if(lte(t,${end}),${amount},if(lt(t,${end}+${release}),${amount}+(1-${amount})*(t-${end})/${release},1))))`;
-  }
-  return `volume='${escapeFilterExpression(expression)}'`;
+  const ratio = 20;
+  // At a full-scale key, this threshold produces amountDb gain reduction at FFmpeg's maximum ratio.
+  const threshold = Math.max(0.000976563, Math.pow(10, duck.amountDb / (20 * (1 - 1 / ratio))));
+  const attackMs = Math.max(0.01, framesToSeconds(attackFrames, fps) * 1000);
+  const releaseMs = Math.max(0.01, framesToSeconds(releaseFrames, fps) * 1000);
+  return `sidechaincompress=threshold=${formatDecimal(threshold)}:ratio=${ratio}:attack=${formatDecimal(attackMs)}:release=${formatDecimal(releaseMs)}:knee=1:link=maximum:detection=peak`;
 }
 
 function buildLoudnessNormalizationFilter(options: boolean | FfmpegLoudnessNormalizationOptions | undefined): string {

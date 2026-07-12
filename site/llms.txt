@@ -28,6 +28,22 @@ bundle, and MVP demo fixtures.
 `kavio render` supports opaque `mp4`, `webm`, `mov`, `gif`, and transparent
 `webm`/`mov` outputs. Schema-valid `png-sequence` outputs are reserved for a
 later archive render path.
+FFmpeg-direct image transition tracks support linear fade/crossfade,
+directional wipe/slide/push, circular iris/expandMask, and default clockwise
+clockWipe handoffs. Default-strength zoom, blurDissolve, squeeze, and
+letterboxReveal plus constrained black/white dip, colorDissolve, and filmFlash
+handoffs are also direct. Directional cover/reveal, corner diagonalWipe,
+grayscaleDissolve, and default-count barWipe are native too; unsupported variants fall back to browser-overlay in
+auto mode.
+Transition windows returned by CLI and MCP inspection include
+`renderSupport.browser.supported` and `renderSupport.ffmpegDirect`; supported
+native transitions expose the exact `xfade` filter, while fallbacks include a
+reason. `diagonalWipe` uses `corner`: `top-left`, `top-right`, `bottom-left`, or
+`bottom-right`.
+Opaque graphics-only Kavio browser renders paint the effective background into
+the captured stage and encode it as the primary stream, preserving intermediate
+transition frames during live capture. Hybrid video and custom React drivers
+retain overlay compositing.
 
 ## Website Pages
 
@@ -45,6 +61,7 @@ later archive render path.
 - CLI reference: `docs/cli.html`
 - Browser preview: `docs/preview.html`
 - Rendering status: `docs/rendering.html`
+- React rendering: `docs/react.html`
 - API overview: `docs/api.html`
 - MCP server and AI plugins: `docs/mcp.html`
 - Troubleshooting: `docs/troubleshooting.html`
@@ -72,7 +89,8 @@ Important builder exports include `video`, `prop`, `validate`, `keyframes`,
 `transition.tileReveal`, `transition.radialBlur`, `transition.zoomBlur`,
 `transition.bookFlip`, `transition.pageCurlLite`, `transition.skewSlide`,
 `transition.expandMask`, `transition.letterboxReveal`,
-`transition.filmFlash`, `transition.cameraWhip`, `camera.kenBurns`,
+`transition.filmFlash`, `transition.cameraWhip`, `transition.cover`,
+`transition.reveal`, `transition.diagonalWipe`, `transition.grayscaleDissolve`, `camera.kenBurns`,
 `camera.pushIn`, `camera.pullBack`, `camera.pan`, `camera.tilt`,
 `camera.parallax`, `camera.orbitLite`, `camera.handheld`,
 `camera.crashZoom`, `camera.dollyZoomLite`, `cinematic.zoomPush`,
@@ -86,6 +104,7 @@ Important builder exports include `video`, `prop`, `validate`, `keyframes`,
 `textMotion.trackingIn`, `timing.tween`, `timing.spring`,
 `timing.steps`, `timing.sequence`, `timing.stagger`,
 `easing.cubicBezier`, `crop.center`, `crop.subject`,
+`pictureInPicture`,
 `exportPreset.vertical`, `exportPreset.reels`,
 `exportPreset.instagramReels`, `exportPreset.tiktok`,
 `exportPreset.youtubeShorts`, `exportPreset.facebookReels`,
@@ -99,6 +118,7 @@ Important builder exports include `video`, `prop`, `validate`, `keyframes`,
 - `@kitsra/kavio-core`: timeline evaluation, frame math, easing, prop resolution, layout, captions, and limits.
 - `@kitsra/kavio-builder`: TypeScript authoring SDK with social export presets that outputs canonical Kavio JSON.
 - `@kitsra/kavio-browser-renderer`: browser preview and DOM rendering runtime for text, video, image, shape, and captions.
+- `@kitsra/kavio-react`: opt-in deterministic React static-markup frame rendering through Playwright capture and FFmpeg encoding.
 - `@kitsra/kavio-render-worker`: browser-driver contracts, frame capture helpers, batch expansion, metadata, and cleanup primitives.
 - `@kitsra/kavio-ffmpeg`: inspectable FFmpeg plan construction.
 - `@kitsra/kavio-cli`: local commands for validation, inspection, migration, preview, presets, and rendering.

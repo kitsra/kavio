@@ -115,10 +115,15 @@ Supported transition types:
 - `letterboxReveal`: opens from horizontal or vertical letterbox bars.
 - `filmFlash`: overlays a warm flash wash.
 - `cameraWhip`: combines a fast directional move, blur, and skew.
+- `cover`: moves the incoming layer over a stationary outgoing layer.
+- `reveal`: moves the outgoing layer away from a stationary incoming layer.
+- `diagonalWipe`: reveals from `top-left`, `top-right`, `bottom-left`, or
+  `bottom-right` via `corner`.
+- `grayscaleDissolve`: fades while moving between grayscale and full color.
 
 `slide` and `wipe` support `direction`: `up`, `down`, `left`, or `right`.
 `clockWipe`, `barWipe`, `gridWipe`, `skewSlide`, `pageCurlLite`, and
-`cameraWhip` also support `direction`. `flip`, `bookFlip`, `pageCurlLite`,
+`cameraWhip`, `cover`, and `reveal` also support `direction`. `flip`, `bookFlip`, `pageCurlLite`,
 `stretch`, `squeeze`, and `letterboxReveal` support `axis`: `x` or `y`.
 `iris` and `expandMask` support `shape`: `circle` or `diamond`. `dip`,
 `colorDissolve`, and `filmFlash` support `color`. `barWipe`, `gridWipe`, and

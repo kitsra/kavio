@@ -14,6 +14,7 @@ import type {
   KavioTiming,
   KavioTrack,
   KavioTrackClip,
+  KavioTransitionCorner,
   KavioTransitionSeriesDefinition,
   KavioTransition
 } from "@kitsra/kavio-schema";
@@ -166,7 +167,7 @@ export interface RevealShape {
   progress: number;
 }
 
-export type RevealPatternKind = "clock" | "bars" | "grid" | "tiles";
+export type RevealPatternKind = "clock" | "bars" | "grid" | "tiles" | "diagonal";
 
 export interface RevealPattern {
   kind: RevealPatternKind;
@@ -174,6 +175,7 @@ export interface RevealPattern {
   direction: TransitionDirection;
   rows: number;
   columns: number;
+  corner?: KavioTransitionCorner;
 }
 
 export interface TransitionWash {
@@ -183,6 +185,7 @@ export interface TransitionWash {
 
 export interface TransitionFilter {
   blur?: number;
+  grayscale?: number;
 }
 
 export interface TransitionTransform {
@@ -494,7 +497,7 @@ export function evaluateLayer(layer: TimelineLayer, frame: number, dimensions: C
   if (transition.wash && transition.wash.opacity > 0) {
     evaluated.wash = transition.wash;
   }
-  if (transition.filter && transition.filter.blur !== undefined && transition.filter.blur > 0) {
+  if (transition.filter && ((transition.filter.blur ?? 0) > 0 || (transition.filter.grayscale ?? 0) > 0)) {
     evaluated.filter = transition.filter;
   }
   if (!isIdentityTransitionTransform(transition.transform)) {
@@ -627,6 +630,9 @@ export function normalizeTransitionSeriesDefinition(definition: KavioTransitionS
   if (definition.presentation.shape !== undefined) {
     transition.shape = definition.presentation.shape;
   }
+  if (definition.presentation.corner !== undefined) {
+    transition.corner = definition.presentation.corner;
+  }
   if (definition.presentation.color !== undefined) {
     transition.color = definition.presentation.color;
   }
@@ -706,9 +712,13 @@ function transitionSeriesTimelineLayer(
   };
 
   if (role === "previous") {
-    timelineLayer.transitionOut = window.transition;
+    if (window.transition.type !== "cover") {
+      timelineLayer.transitionOut = window.transition;
+    }
   } else {
-    timelineLayer.transitionIn = window.transition;
+    if (window.transition.type !== "reveal") {
+      timelineLayer.transitionIn = window.transition;
+    }
   }
 
   return timelineLayer;
@@ -1161,6 +1171,27 @@ function applyTransition(
       state.filter = mergeTransitionFilter(state.filter, { blur: transitionAmount(transition, 14) * hiddenProgress });
       break;
     }
+    case "cover":
+    case "reveal": {
+      const offset = transitionOffset(transition.direction ?? "left", phase, hiddenProgress, progress, dimensions, 1);
+      state.offset.x += offset.x;
+      state.offset.y += offset.y;
+      break;
+    }
+    case "diagonalWipe":
+      state.revealPattern = mergeRevealPattern(state.revealPattern, {
+        kind: "diagonal",
+        progress: clamp01(visibleProgress),
+        direction: "right",
+        rows: 1,
+        columns: 1,
+        corner: phase === "in" ? transition.corner ?? "top-left" : oppositeCorner(transition.corner ?? "top-left")
+      });
+      break;
+    case "grayscaleDissolve":
+      state.opacity *= visibleProgress;
+      state.filter = mergeTransitionFilter(state.filter, { grayscale: hiddenProgress });
+      break;
   }
 }
 
@@ -1185,7 +1216,9 @@ function defaultTransitionEasing(type: KavioTransition["type"], phase: "in" | "o
     type === "bookFlip" ||
     type === "pageCurlLite" ||
     type === "skewSlide" ||
-    type === "cameraWhip"
+    type === "cameraWhip" ||
+    type === "cover" ||
+    type === "reveal"
   ) {
     return phase === "in" ? "outCubic" : "inCubic";
   }
@@ -1416,8 +1449,22 @@ function letterboxReveal(axis: "x" | "y", visibleProgress: number): RevealInset 
 
 function mergeTransitionFilter(current: TransitionFilter | null, next: TransitionFilter): TransitionFilter {
   return {
-    blur: Math.max(current?.blur ?? 0, next.blur ?? 0)
+    blur: Math.max(current?.blur ?? 0, next.blur ?? 0),
+    grayscale: Math.max(current?.grayscale ?? 0, next.grayscale ?? 0)
   };
+}
+
+function oppositeCorner(corner: KavioTransitionCorner): KavioTransitionCorner {
+  switch (corner) {
+    case "top-left":
+      return "bottom-right";
+    case "top-right":
+      return "bottom-left";
+    case "bottom-left":
+      return "top-right";
+    case "bottom-right":
+      return "top-left";
+  }
 }
 
 function mergeTransitionWash(current: TransitionWash | null, next: TransitionWash): TransitionWash {

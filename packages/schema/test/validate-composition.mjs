@@ -110,6 +110,18 @@ transitionSeriesComposition.tracks = [
 ];
 assert.deepEqual(validateComposition(transitionSeriesComposition), { ok: true, errors: [] });
 
+const portableTransitionComposition = structuredClone(transitionSeriesComposition);
+portableTransitionComposition.tracks[0].clips[1].transitionFromPrevious.presentation = {
+  type: "diagonalWipe",
+  corner: "bottom-right"
+};
+portableTransitionComposition.tracks[0].clips[1].transitionFromPrevious.timing.easing = "linear";
+assert.deepEqual(validateComposition(portableTransitionComposition), { ok: true, errors: [] });
+
+const invalidTransitionCorner = structuredClone(portableTransitionComposition);
+invalidTransitionCorner.tracks[0].clips[1].transitionFromPrevious.presentation.corner = "middle";
+assert.equal(validateComposition(invalidTransitionCorner).ok, false);
+
 const invalidTransitionSeries = structuredClone(transitionSeriesComposition);
 invalidTransitionSeries.tracks[0].clips[1].startFrame = 55;
 const invalidTransitionSeriesResult = validateComposition(invalidTransitionSeries);
