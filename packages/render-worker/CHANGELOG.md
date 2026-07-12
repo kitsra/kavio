@@ -1,5 +1,12 @@
 # @kitsra/kavio-render-worker
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [8683091]
+  - @kitsra/kavio-schema@0.4.1
+
 ## 0.4.0
 
 ### Patch Changes

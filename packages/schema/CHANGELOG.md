@@ -1,5 +1,15 @@
 # @kitsra/kavio-schema
 
+## 0.4.1
+
+### Patch Changes
+
+- 8683091: Add portable cover, reveal, diagonal-wipe, and grayscale-dissolve transitions
+  with deterministic browser rendering and equivalent FFmpeg-direct mappings.
+  Default-count bar wipes can now use FFmpeg-direct, while custom grids retain the
+  browser fallback. Composition inspection reports browser and native support for
+  each transition window.
+
 ## 0.4.0
 
 ## 0.3.0

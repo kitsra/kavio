@@ -1,5 +1,22 @@
 # @kitsra/kavio-browser-renderer
 
+## 0.4.1
+
+### Patch Changes
+
+- 8683091: Add portable cover, reveal, diagonal-wipe, and grayscale-dissolve transitions
+  with deterministic browser rendering and equivalent FFmpeg-direct mappings.
+  Default-count bar wipes can now use FFmpeg-direct, while custom grids retain the
+  browser fallback. Composition inspection reports browser and native support for
+  each transition window.
+- 8683091: Improve rendering performance and quality with automatic direct-render selection,
+  capture and batch browser reuse, PNG-sequence export, FFmpeg 8 diagnostics,
+  direct-render discovery, transition fixes, quality gates, and executable audio
+  loop/sidechain behavior.
+- Updated dependencies [8683091]
+  - @kitsra/kavio-schema@0.4.1
+  - @kitsra/kavio-core@0.4.1
+
 ## Unreleased
 
 ### Patch Changes
